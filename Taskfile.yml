@@ -1,0 +1,47 @@
+version: "3"
+
+tasks:
+  install:
+    desc: Instala las dependencias del proyecto (uv sync)
+    cmds:
+      - uv sync
+
+  test:
+    desc: Ejecuta la suite de tests (pytest)
+    cmds:
+      - uv run pytest -v
+
+  lint:
+    desc: Comprueba PEP 8 con ruff
+    cmds:
+      - uv run ruff check .
+
+  fmt:
+    desc: Formatea el código con ruff
+    cmds:
+      - uv run ruff format .
+
+  dev:
+    desc: Arranca el servidor con recarga (desarrollo)
+    cmds:
+      - uv run uvicorn main:app --reload
+
+  start:
+    desc: Arranca el servidor sin recarga
+    cmds:
+      - uv run uvicorn main:app
+
+  db:up:
+    desc: Levanta MySQL con docker compose
+    cmds:
+      - docker compose up -d --wait
+
+  db:down:
+    desc: Detiene MySQL
+    cmds:
+      - docker compose down
+
+  migrate:
+    desc: Aplica las migraciones pendientes (alembic)
+    cmds:
+      - uv run alembic upgrade head
