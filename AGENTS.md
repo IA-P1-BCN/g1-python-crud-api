@@ -87,6 +87,7 @@ src/
   minúsculas e imperativo; `!` para cambios rompientes
   (p. ej. `feat(health): añade healthcheck de base de datos`).
 - Flujo: issue → rama → commit → PR a `main` con `Closes #N` → review → merge.
+- `main` está protegida: los cambios entran solo vía PR con 1 approval.
 
 ## Pendiente por issue
 
