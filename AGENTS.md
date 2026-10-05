@@ -60,8 +60,9 @@ src/
 
 - **uv** gestiona dependencias y entorno virtual (`pyproject.toml` + `uv.lock`).
   No se usa pip ni requirements.txt.
-- **Taskfile** expone las tareas: `install`, `test`, `lint`, `fmt`, `dev`,
-  `start`, `db:up`, `db:down`, `migrate`.
+- **Taskfile** expone las tareas: `demo`, `install`, `test`, `lint`, `fmt`,
+  `dev`, `start`, `db:up`, `db:down`, `migrate`. `task demo` monta el proyecto
+  desde cero (dependencias, `.env`, MySQL, migraciones y tests).
 
 ## Estilo (PEP 8)
 

@@ -1,6 +1,21 @@
 version: "3"
 
 tasks:
+  demo:
+    desc: Monta todo desde cero (deps, .env, MySQL, migraciones y tests)
+    cmds:
+      - task: install
+      - cmd: '[ -f .env ] || cp .env.example .env'
+      - task: db:up
+      - task: migrate
+      - task: test
+      - |-
+        echo ""
+        echo "Demo lista. Arranca el servidor con: task dev"
+        echo "  Swagger:   http://127.0.0.1:8000/docs"
+        echo "  Health:    http://127.0.0.1:8000/health"
+        echo "  Health DB: http://127.0.0.1:8000/health/db"
+
   install:
     desc: Instala las dependencias del proyecto (uv sync)
     cmds:

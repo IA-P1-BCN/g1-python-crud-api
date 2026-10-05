@@ -33,6 +33,7 @@ task db:up && task migrate && task test
 
 | Comando | Descripción |
 |---|---|
+| `task demo` | Monta todo desde cero (deps, `.env`, MySQL, migraciones y tests) |
 | `task install` | Instala dependencias (`uv sync`) |
 | `task test` | Ejecuta la suite de tests (`pytest`) |
 | `task lint` | Comprueba PEP 8 (`ruff check`) |
