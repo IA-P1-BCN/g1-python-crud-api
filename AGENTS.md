@@ -22,7 +22,8 @@ src/
 - Flujo de una petición: route → controller → use case → entidad de dominio,
   y de vuelta al schema de respuesta.
 - Carpetas raíz: `config/` (settings), `logs/` (salida de logs), `tests/`
-  (suite de tests), `migrations/` (Alembic).
+  (suite de tests), `migrations/` (Alembic), `docs/` (documentación, incluida
+  la del cliente en `docs/client/`).
 
 ## Endpoints
 
