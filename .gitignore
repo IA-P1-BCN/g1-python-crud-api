@@ -39,6 +39,9 @@ db.sqlite3
 .zcodeignore
 skills-lock.json
 
+# Documentación original del cliente en trabajo (se consolida en docs/)
+tmp_docs/
+
 # Estado efímero de los scripts de bootstrap
 scripts/.project-number
 scripts/.milestone-map
