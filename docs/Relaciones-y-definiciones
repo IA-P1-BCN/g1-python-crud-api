@@ -1,0 +1,42 @@
+ESTRUCTURA DE DATOS DE NEGOCIO PARA UN GIMNASIO
+Descripción del proyecto:
+•	Objetivo General: Desarrollar una API REST conectada a una base de datos relacional orientada a centralizar y automatizar el control de membresías, asignación de instructores, facturación y el aforo en las clases grupales programadas.
+•	Público Objetivo (Roles del Sistema):
+o	Administradores: Monitoreo de ingresos de membresías y reportes de aforo.
+o	Entrenadores: Visualización de listas de alumnos inscritos en sus sesiones asignadas.
+o	Clientes: Reserva de clases y validación del estado de su suscripción a través de apps cliente.
+•	Valor del Motor SQL:
+Un entorno relacional garantiza que no haya sobreventa de cupos en actividades controladas (gracias al aislamiento de transacciones SQL) y evita que clientes inactivos o sin pagos asociados reserven turnos de entrenamiento.
+
+Estructura y Diccionario de Datos Relacionales (SQL)
+La arquitectura de datos está normalizada en Tercera Forma Normal (3FN) y consta de 5 tablas principales. La relación original de Muchos a Muchos (\(N:N\)) entre Clientes y Clases se ha resuelto mediante una tabla intermedia cruzada (Reservas), garantizando indexación rápida y óptima.
+Entidad (Tabla)	Atributo (Campo)	Tipo de Dato & Restricciones	Rol de Clave	Descripción
+CLIENTES	id_cliente	INT AUTO_INCREMENT	PK	ID único del miembro.
+	nombre	VARCHAR(100) NOT NULL	Atributo	Nombre completo del afiliado.
+	email	VARCHAR(150) UNIQUE	Atributo	Email corporativo/personal.
+	estado_membresia	VARCHAR(20)	Atributo	Estado: 'Activo', 'Inactivo'.
+ENTRENADORES	id_entrenador	INT AUTO_INCREMENT	PK	ID único del instructor.
+	nombre	VARCHAR(100) NOT NULL	Atributo	Nombre del profesional técnico.
+	especialidad	VARCHAR(100)	Atributo	Área (e.g., CrossFit, Yoga).
+CLASES	id_clase	INT AUTO_INCREMENT	PK	ID de la sesión programada.
+	nombre_clase	VARCHAR(50) NOT NULL	Atributo	Actividad (e.g., Spinning).
+	horario	DATETIME NOT NULL	Atributo	Fecha y hora de inicio.
+	capacidad_max	INT NOT NULL	Atributo	Límite físico de aforo.
+	id_entrenador	INT	FK	Asignado a ENTRENADORES.
+RESERVAS (Intermedia)	id_reserva	INT AUTO_INCREMENT	PK	ID de registro de reserva.
+	id_cliente	INT	FK	Vinculado a CLIENTES.
+	id_clase	INT	FK	Vinculado a CLASES.
+	fecha_reserva	DATETIME	Atributo	Marca de tiempo de la solicitud.
+	asistio	BOOLEAN DEFAULT FALSE	Atributo	Validación de asistencia.
+PAGOS	id_pago	INT AUTO_INCREMENT	PK	Identificador de factura.
+	id_cliente	INT	FK	Vinculado a CLIENTES.
+	monto	DECIMAL(10,2) NOT NULL	Atributo	Cantidad económica procesada.
+	fecha_pago	DATE	Atributo	Fecha de abono.
+
+
+Definición de Relaciones y Cardinalidades:
+1.	CLIENTES — (1:1) -------- (0:N) — PAGOS: Un cliente puede haber realizado cero pagos (si es nuevo) o muchos pagos a lo largo del tiempo. Un pago pertenece obligatoriamente a un único cliente.
+2.	ENTRENADORES — (1:1) -------- (0:N) — CLASES: Un entrenador puede tener asignadas ninguna o múltiples clases en el cronograma. Cada clase es dictada por un único entrenador.
+3.	CLIENTES — (1:1) -------- (0:N) — RESERVAS: Un cliente puede agendar de cero a muchas reservas de clases. Cada fila de reserva le pertenece a un solo cliente.
+4.	CLASES — (1:1) -------- (0:N) — RESERVAS: Una clase programada puede recibir de cero a múltiples reservas (hasta el límite de su aforo). Cada reserva individual apunta a una única clase.
+
