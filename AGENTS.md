@@ -3,6 +3,19 @@
 Decisiones acordadas para `g1-python-crud-api`. Cualquier cambio de estas
 convenciones debe actualizarse aquí en el mismo PR.
 
+## Contexto del equipo y alcance vigente
+
+- Grupo de **5 personas**. El 6 de octubre de 2026 se asignó a Fabiana
+  Leonardo (`fabileoruf`) la issue #10, API REST con operaciones CRUD básicas.
+- La usuaria confirmó que `docs/client/CLIENT_SPECS_V2_USER_MNG.md`
+  **sustituye el alcance GymFlow**: la implementación activa es gestión de
+  usuarios con JWT. `docs/PRD.md`, `DATABASE_SPEC.md` y `EDR_DIAGRAM.md`
+  conservan el diseño anterior del gimnasio como referencia histórica.
+- Para una eventual continuación de GymFlow, la usuaria confirmó incluir
+  `fecha_inscripcion`, `telefono`, `metodo_pago` opcionales y `Suspendido`.
+- El contrato de la issue #10 vive en `specs/10-usuarios-crud.md`.
+  Los prompts y decisiones se registran en `docs/ai-log.md`.
+
 ## Arquitectura por capas (src/)
 
 ```
@@ -55,6 +68,9 @@ src/
 
 - Variables en `.env` (ver `.env.example`), leídas con pydantic-settings:
   `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`.
+- V2: `SECRET_KEY` (mínimo 32 caracteres) y `ACCESS_TOKEN_EXPIRE_MINUTES`.
+  `task env` genera la clave aleatoria. `.env.demo` contiene credenciales
+  locales generadas por `task seed`; nunca se commitea ni se imprime su contenido.
 - `.env` nunca se commitea (está en .gitignore); commitea solo `.env.example`.
 
 ## Tooling
@@ -62,8 +78,21 @@ src/
 - **uv** gestiona dependencias y entorno virtual (`pyproject.toml` + `uv.lock`).
   No se usa pip ni requirements.txt.
 - **Taskfile** expone las tareas: `demo`, `install`, `test`, `lint`, `fmt`,
-  `dev`, `start`, `db:up`, `db:down`, `migrate`. `task demo` monta el proyecto
-  desde cero (dependencias, `.env`, MySQL, migraciones y tests).
+  `dev`, `start`, `db:up`, `db:down`, `migrate`, `env`, `seed`. `task demo` monta
+  dependencias, `.env`, MySQL, migraciones, usuarios demo y tests.
+
+## Contratos V2 de usuarios
+
+- Modelo `users`: id, nombre, email único normalizado, hash Argon2, fecha UTC,
+  estado activo, rol user/admin y versión interna de credenciales.
+- El registro público y POST `/v1/users` crean solo rol user. Listar/crear
+  desde `/v1/users` requiere admin; consultar/editar/borrar requiere propietario
+  o admin. Los administradores demo se crean únicamente por comando local.
+- JWT HS256 con algoritmo fijo, expiración y comprobación de cuenta activa.
+  Cambiar contraseña o estado invalida tokens anteriores mediante token_version.
+- La migración `0002` crea users y siembra la versión de esquema `0.2`.
+  Los schemas de respuesta nunca incluyen password_hash ni token_version;
+  los errores de validación omiten los valores recibidos.
 
 ## Estilo (PEP 8)
 
@@ -90,9 +119,10 @@ src/
 - Flujo: issue → rama → commit → PR a `main` con `Closes #N` → review → merge.
 - `main` está protegida: los cambios entran solo vía PR con 1 approval.
 
-## Pendiente por issue
+## Seguimiento por issue
 
-- #1 tema gimnasio (nombre de la app), #2/#3 modelos y diagrama ER,
-  #7 logging en `logs/` (con reglas de ignore), #8 manejo de excepciones,
-  #10 CRUD bajo `/v1`. #6 (variables sensibles) y #9 (documentación Swagger)
-  quedaron parcialmente cubiertos por esta estructura.
+- #1, #2 y #3 cerradas con el PR #20 (documentación histórica GymFlow).
+- #10: CRUD de usuarios V2, autenticación, migraciones y datos demo.
+- #7 logging, #8 excepciones, #6 variables sensibles y #9 documentación
+  conservan sus responsables del equipo; esta issue incorpora lo necesario
+  para el contrato de usuarios sin asumir las demás entregas completas.

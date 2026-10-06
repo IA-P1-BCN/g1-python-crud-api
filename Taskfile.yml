@@ -5,9 +5,10 @@ tasks:
     desc: Monta todo desde cero (deps, .env, MySQL, migraciones y tests)
     cmds:
       - task: install
-      - cmd: '[ -f .env ] || cp .env.example .env'
+      - task: env
       - task: db:up
       - task: migrate
+      - task: seed
       - task: test
       - |-
         echo ""
@@ -20,6 +21,16 @@ tasks:
     desc: Instala las dependencias del proyecto (uv sync)
     cmds:
       - uv sync
+
+  env:
+    desc: Prepara .env y una clave JWT aleatoria sin sobrescribir ajustes
+    cmds:
+      - uv run python -m scripts.ensure_env
+
+  seed:
+    desc: Crea usuarios de demostración sin sobrescribir registros existentes
+    cmds:
+      - uv run python -m scripts.seed_users
 
   test:
     desc: Ejecuta la suite de tests (pytest)
