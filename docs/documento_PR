@@ -1,0 +1,28 @@
+DOCUMENTO DE REQUISITOS DEL PROYECTO (PRD)
+
+
+Proyecto: GymFlow API & Backend Relacional
+Autor: G1 – Factoría 5
+Fecha: Octubre 2026
+Versión: 1.0
+
+
+
+1.	Objetivos del Proyecto
+El proyecto GymFlow API tiene como objetivo principal diseñar e implementar una arquitectura backend robusta y eficiente para centralizar, gestionar y automatizar las operaciones diarias de un gimnasio o centro deportivo. La solución conecta una API RESTful con una base de datos relacional SQL, garantizando la consistencia, integridad y disponibilidad de la información comercial crítica.
+Objetivos específicos:
+•	Automatización del control de acceso y membresías: Validar en tiempo real si un miembro cuenta con una suscripción activa antes de permitir su ingreso o reserva.
+•	Optimización de la ocupación de clases: Controlar los aforos de las sesiones dirigidas, evitando la sobreventa de cupos y gestionando listas de asistencia.
+•	Centralización de la información: Eliminar el uso de registros físicos o herramientas descentralizadas (como hojas de cálculo) para evitar errores operativos.
+
+2.	Público Objetivo (Target Audience)
+El sistema está diseñado con un enfoque multi-actor, proveyendo endpoints e información estructurada para tres perfiles clave:
+•	Administradores y Dueños del Gimnasio: Requieren visibilidad del estado financiero de las membresías, métricas de asistencia total y rendimiento de los entrenadores.
+•	Staff y Entrenadores: Necesitan conocer la lista de alumnos inscritos en sus clases diarias, actualizar perfiles y validar pagos de forma ágil.
+•	Clientes / Miembros del Gimnasio: A través de aplicaciones cliente conectadas a esta API, buscan reservar clases, visualizar el estado de su plan y registrar su asistencia técnica.
+ 
+3.	Funcionalidades Principales de la API
+•	Gestión de Clientes: Altas, bajas, modificaciones y consulta del estado de membresías.
+•	Control de Clases Dirigidas: Creación de horarios, asignación de instructores y definición de capacidades máximas (aforos).
+•	Sistema de Reservas: Permite a los miembros agendar una plaza en una clase específica y cancelar si es necesario, liberando el cupo automáticamente.
+•	Monitoreo de Asistencia: Registro preciso de la fecha y hora en la que un cliente asiste a una sesión programada.
