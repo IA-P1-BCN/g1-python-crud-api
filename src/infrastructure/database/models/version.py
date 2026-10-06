@@ -1,13 +1,11 @@
-"""Modelos SQLAlchemy (tablas gestionadas por las migraciones de Alembic)."""
+"""Modelo SQLAlchemy del historial de versiones del esquema."""
 
 from datetime import datetime
 
 from sqlalchemy import DateTime, Integer, String, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 
-
-class Base(DeclarativeBase):
-    """Base declarativa de los modelos SQLAlchemy."""
+from src.infrastructure.database.models.base import Base
 
 
 class VersionRecord(Base):

@@ -2,12 +2,13 @@ version: "3"
 
 tasks:
   demo:
-    desc: Monta todo desde cero (deps, .env, MySQL, migraciones y tests)
+    desc: Monta todo desde cero (deps, .env, MySQL, migraciones, datos demo y tests)
     cmds:
       - task: install
       - cmd: '[ -f .env ] || cp .env.example .env'
       - task: db:up
       - task: migrate
+      - task: seed
       - task: test
       - |-
         echo ""
@@ -60,3 +61,8 @@ tasks:
     desc: Aplica las migraciones pendientes (alembic)
     cmds:
       - uv run alembic upgrade head
+
+  seed:
+    desc: Añade datos ficticios de GymFlow sin duplicar ni sobrescribir existentes
+    cmds:
+      - uv run python -m scripts.seed_gym

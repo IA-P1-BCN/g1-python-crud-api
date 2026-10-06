@@ -3,6 +3,38 @@
 Decisiones acordadas para `g1-python-crud-api`. Cualquier cambio de estas
 convenciones debe actualizarse aquí en el mismo PR.
 
+## Contexto del equipo y asignación
+
+- El proyecto se realiza en un grupo de **5 personas**.
+- El **6 de octubre de 2026**, según lo indicado por la usuaria, se le asignó
+  la [issue #10 — API REST con operaciones CRUD básicas](https://github.com/IA-P1-BCN/g1-python-crud-api/issues/10).
+  En GitHub figura asignada a **Fabiana Leonardo (`fabileoruf`)**.
+- La descripción de la issue #10 indica que depende de que estén completas
+  las tareas **#1 y #2**.
+
+## Alcance vigente: V1 (GymFlow)
+
+- La usuaria confirmó que se debe usar `docs/client/CLIENT_SPECS.md` (V1),
+  junto con `docs/PRD.md`, `docs/DATABASE_SPEC.md` y `docs/EDR_DIAGRAM.md`.
+  `CLIENT_SPECS_V2_USER_MNG.md` no define el alcance de esta entrega.
+- #10 implementa CRUD de clientes, entrenadores, clases, reservas y pagos,
+  las migraciones correspondientes y datos ficticios con `task seed`.
+- Se incluyen los campos opcionales `fecha_inscripcion`, `telefono` y
+  `metodo_pago`, y los estados `Activo`, `Inactivo` y `Suspendido`, según la
+  confirmación de la usuaria.
+- Las reservas nuevas o trasladadas requieren un cliente activo, al menos
+  un pago y una plaza disponible. No se calcula caducidad de pagos porque
+  el modelo no define periodos de membresía.
+- `UNIQUE (id_cliente, id_clase)` impide reservas duplicadas; un bloqueo de
+  la clase dentro de la transacción protege el aforo. Las FK usan `RESTRICT`
+  para impedir el borrado de registros con dependencias (HTTP 409).
+- `PUT` sustituye todos los campos editables; los opcionales omitidos quedan
+  en `null` y `asistio` vuelve a `false` si se omite. La fecha de reserva se
+  genera en el servidor y se conserva al actualizar. Fechas/hora: UTC sin zona
+  en los campos MySQL `DATETIME`. `DELETE /v1/reservas/{id_reserva}` libera cupo.
+- Los endpoints V1 son públicos; JWT, roles y `SECRET_KEY` no son requisitos
+  de #10. La entrega CRUD no cierra las tareas independientes del equipo.
+
 ## Arquitectura por capas (src/)
 
 ```
@@ -42,7 +74,10 @@ src/
 ## Base de datos (MySQL + SQLAlchemy + Alembic)
 
 - Motor: MySQL 8.4, levantado con `task db:up` (docker-compose.yml).
-- ORM: SQLAlchemy 2.x. Modelos en `src/infrastructure/database/models.py`.
+- ORM: SQLAlchemy 2.x. Modelos en `src/infrastructure/database/models/`,
+  un archivo por entidad: `cliente.py`, `entrenador.py`, `clase.py`,
+  `reserva.py`, `pago.py` y `version.py`. Todos usan la misma `Base` de
+  `base.py`; `__init__.py` los exporta y registra sus tablas para Alembic.
 - Migraciones: Alembic (`migrations/`); `env.py` toma la URL de
   `config/settings.py`, no de alembic.ini.
 - La tabla `versions` se crea y se **siembra por migración** (versión inicial
@@ -62,8 +97,8 @@ src/
 - **uv** gestiona dependencias y entorno virtual (`pyproject.toml` + `uv.lock`).
   No se usa pip ni requirements.txt.
 - **Taskfile** expone las tareas: `demo`, `install`, `test`, `lint`, `fmt`,
-  `dev`, `start`, `db:up`, `db:down`, `migrate`. `task demo` monta el proyecto
-  desde cero (dependencias, `.env`, MySQL, migraciones y tests).
+  `dev`, `start`, `db:up`, `db:down`, `migrate`, `seed`. `task demo` monta el
+  proyecto desde cero (dependencias, `.env`, MySQL, migraciones, demo y tests).
 
 ## Estilo (PEP 8)
 
