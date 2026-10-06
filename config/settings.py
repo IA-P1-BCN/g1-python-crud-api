@@ -2,7 +2,6 @@
 
 from functools import lru_cache
 
-from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,8 +17,6 @@ class Settings(BaseSettings):
     mysql_user: str = "app_user"
     mysql_password: str = "app_password"
     mysql_database: str = "gym_db"
-    secret_key: SecretStr = Field(min_length=32)
-    access_token_expire_minutes: int = Field(default=30, ge=1, le=1440)
 
     @property
     def database_url(self) -> str:
