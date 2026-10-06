@@ -65,6 +65,23 @@ src/
 - Todo endpoint declara `tags`, `summary` y `response_model` para que la
   documentación Swagger quede completa.
 
+## Manejo de errores
+
+- Las capas internas lanzan errores de dominio (`src/domain/errors.py`:
+  `NotFoundError`, `ConflictError`, `RepositoryUnavailableError`); solo la capa
+  `interfaces` decide el código HTTP (`src/interfaces/http/errors.py`).
+- Correspondencia: `NotFoundError` → 404, `ConflictError` → 409, validación de
+  FastAPI → 422, `RepositoryUnavailableError` → 503 y cualquier otra excepción
+  → 500.
+- Todo error responde `{"detail": "mensaje"}` (los 422 llevan una lista, formato
+  FastAPI). El 500 devuelve siempre `Error interno del servidor`: ni trazas ni
+  detalles internos salen al cliente.
+- Se registran en el log (nivel ERROR, con traza) solo los 500 y los 503. Los
+  errores del cliente (404, 409, 422) no se registran como error.
+- `CRUD_ERRORS` documenta 404, 409, 500 y 503 en Swagger; FastAPI añade el 422.
+- Un error de dominio nuevo se declara en `src/domain/errors.py`, se traduce en
+  `register_crud_error_handlers` y se prueba en `tests/unit/test_errores.py`.
+
 ## Documentación (Swagger / OpenAPI)
 
 - Swagger UI: `http://127.0.0.1:8000/docs` · ReDoc: `/redoc` ·

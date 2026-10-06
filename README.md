@@ -91,9 +91,11 @@ el cuerpo. La fecha de reserva se genera al crear y se conserva al actualizar.
 Los listados admiten `offset >= 0` y `limit` entre 1 y 100.
 
 Errores: **404** registro o relación inexistente; **409** duplicado, borrado con
-dependencias o regla de negocio; **422** datos inválidos; **503** MySQL no
-disponible. Los errores de negocio responden `{"detail": "mensaje"}`; los de
-validación incluyen una lista de detalles de FastAPI.
+dependencias o regla de negocio; **422** datos inválidos; **500** error interno
+inesperado; **503** MySQL no disponible. Los errores responden
+`{"detail": "mensaje"}`; los de validación incluyen una lista de detalles de
+FastAPI. El 500 devuelve siempre `Error interno del servidor`: el detalle y la
+traza se escriben solo en el log, nunca en la respuesta.
 
 ## Probar una reserva desde Swagger
 
