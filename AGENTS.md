@@ -74,7 +74,10 @@ src/
 ## Base de datos (MySQL + SQLAlchemy + Alembic)
 
 - Motor: MySQL 8.4, levantado con `task db:up` (docker-compose.yml).
-- ORM: SQLAlchemy 2.x. Modelos en `src/infrastructure/database/models.py`.
+- ORM: SQLAlchemy 2.x. Modelos en `src/infrastructure/database/models/`,
+  un archivo por entidad: `cliente.py`, `entrenador.py`, `clase.py`,
+  `reserva.py`, `pago.py` y `version.py`. Todos usan la misma `Base` de
+  `base.py`; `__init__.py` los exporta y registra sus tablas para Alembic.
 - Migraciones: Alembic (`migrations/`); `env.py` toma la URL de
   `config/settings.py`, no de alembic.ini.
 - La tabla `versions` se crea y se **siembra por migración** (versión inicial
