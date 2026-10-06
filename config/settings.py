@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     mysql_password: str = "app_password"
     mysql_database: str = "gym_db"
 
+    log_level: str = "INFO"
+    log_file: str = "logs/app.log"
+
     @property
     def database_url(self) -> str:
         """URL de conexión SQLAlchemy para MySQL (driver pymysql)."""

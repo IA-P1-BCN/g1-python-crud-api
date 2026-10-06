@@ -89,8 +89,27 @@ src/
 ## Configuración y entorno
 
 - Variables en `.env` (ver `.env.example`), leídas con pydantic-settings:
-  `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`.
+  `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`,
+  `LOG_LEVEL`, `LOG_FILE`.
 - `.env` nunca se commitea (está en .gitignore); commitea solo `.env.example`.
+
+## Logging
+
+- Configuración en `config/logging.py` (`setup_logging`), llamada al arrancar
+  desde `main.py` con `LOG_LEVEL` y `LOG_FILE` (por defecto `INFO` y
+  `logs/app.log`).
+- Dos handlers: **consola** (stdout) y **fichero rotativo** en `logs/`
+  (1 MB, 3 backups, utf-8). Formato:
+  `2026-10-06 10:00:00 | INFO     | logger | mensaje`.
+- `setup_logging` es **idempotente**: repetirla (recarga de uvicorn, tests)
+  no duplica handlers; un `LOG_LEVEL` desconocido cae a `INFO`.
+- `sqlalchemy.engine` y `uvicorn.access` se dejan en `WARNING` para que la
+  salida sea limpia.
+- `logs/` está ignorado salvo `.gitkeep` (`.gitignore`: `logs/*`, `*.log`).
+- Dónde se loguea: arranque de la app (`main.py`), éxito/fallo del
+  healthcheck de BD (`get_health_db`) y respuesta 503 de `/health/db`.
+- Tests: `tests/unit/test_logging.py` (fichero de salida en `tmp_path`, nivel,
+  idempotencia y registro de fallos con `caplog`).
 
 ## Tooling
 
@@ -128,6 +147,6 @@ src/
 ## Pendiente por issue
 
 - #1 tema gimnasio (nombre de la app), #2/#3 modelos y diagrama ER,
-  #7 logging en `logs/` (con reglas de ignore), #8 manejo de excepciones,
-  #10 CRUD bajo `/v1`. #6 (variables sensibles) y #9 (documentación Swagger)
-  quedaron parcialmente cubiertos por esta estructura.
+  #8 manejo de excepciones, #10 CRUD bajo `/v1`. #6 (variables sensibles)
+  y #9 (documentación Swagger) quedaron parcialmente cubiertos por esta
+  estructura; #7 (logging) queda cubierto por `config/logging.py`.

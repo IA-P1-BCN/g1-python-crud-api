@@ -1,7 +1,11 @@
 """Punto de entrada de la API."""
 
+import logging
+
 from fastapi import FastAPI
 
+from config.logging import setup_logging
+from config.settings import get_settings
 from src.interfaces.http.errors import register_crud_error_handlers
 from src.interfaces.http.routes.clase_routes import router as clase_router
 from src.interfaces.http.routes.cliente_routes import router as cliente_router
@@ -9,6 +13,10 @@ from src.interfaces.http.routes.entrenador_routes import router as entrenador_ro
 from src.interfaces.http.routes.health_routes import router as health_router
 from src.interfaces.http.routes.pago_routes import router as pago_router
 from src.interfaces.http.routes.reserva_routes import router as reserva_router
+
+settings = get_settings()
+setup_logging(settings.log_level, settings.log_file)
+logger = logging.getLogger(__name__)
 
 DESCRIPTION = """
 API de gestión del gimnasio (proyecto g1).
@@ -42,3 +50,5 @@ app.include_router(clase_router, prefix="/v1")
 app.include_router(reserva_router, prefix="/v1")
 app.include_router(pago_router, prefix="/v1")
 register_crud_error_handlers(app)
+
+logger.info("GymFlow API v%s lista", app.version)

@@ -1,5 +1,6 @@
 """Rutas de healthcheck."""
 
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -9,6 +10,8 @@ from src.domain.repositories.health_port import HealthRepository
 from src.infrastructure.repositories.health_repository import get_health_repository
 from src.interfaces.http.controllers import health_controller, health_db_controller
 from src.interfaces.http.schemas.health_schema import HealthCheck, HealthDbCheck
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["health"])
 
@@ -35,5 +38,6 @@ def health_db(
         status=estado.status, database=estado.database, version=estado.version
     )
     if estado.database != "up":
+        logger.warning("GET /health/db -> 503 (database down)")
         return JSONResponse(status_code=503, content=cuerpo.model_dump(mode="json"))
     return cuerpo
