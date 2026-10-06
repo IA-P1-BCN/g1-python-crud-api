@@ -52,4 +52,4 @@ task db:up && task migrate && task test
 ## Enlaces
 
 - [AGENTS.md](AGENTS.md) — convenciones y decisiones del proyecto
-- [client/CLIENT_SPECS.md](client/CLIENT_SPECS.md) — especificación del cliente
+- [docs/client/CLIENT_SPECS.md](docs/client/CLIENT_SPECS.md) — especificación del cliente
