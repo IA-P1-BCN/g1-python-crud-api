@@ -6,6 +6,8 @@ import httpx
 import pytest
 
 from config.settings import get_settings
+from src.infrastructure.database.engine import SessionLocal
+from src.infrastructure.repositories.health_repository import SqlAlchemyHealthRepository
 
 
 def _mysql_disponible() -> bool:
@@ -31,4 +33,7 @@ def test_health_db_devuelve_200_y_version(base_url):
     cuerpo = response.json()
     assert cuerpo["status"] == "ok"
     assert cuerpo["database"] == "up"
-    assert cuerpo["version"] == "0.1"
+    with SessionLocal() as session:
+        expected = SqlAlchemyHealthRepository(session).get_latest_version()
+    assert expected is not None
+    assert cuerpo["version"] == expected

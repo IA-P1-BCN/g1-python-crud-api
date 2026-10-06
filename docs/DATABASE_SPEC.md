@@ -80,8 +80,24 @@
 
 ## Discrepancias entre documentos
 
+### Resolución aplicada en la issue #10
+
+La responsable de #10 confirmó el alcance V1 y la inclusión de
+`fecha_inscripcion`, `telefono` y `metodo_pago` como campos opcionales, además
+del estado `Suspendido`. La implementación aplica los `NOT NULL` de clases,
+las FK obligatorias de las relaciones y exige estado de membresía y fecha
+de pago al crear esos registros.
+
+Decisiones de implementación para revisión del equipo: `VARCHAR` con `CHECK`
+para estados y métodos de pago, `UNIQUE (id_cliente, id_clase)`, capacidad y
+monto positivos, y FK con `ON DELETE RESTRICT` (HTTP 409 si hay dependencias).
+Las reservas bloquean la fila de la clase durante la transacción para impedir
+la sobreventa. Se exige al menos un pago registrado; no se deduce su vigencia.
+
+### Discrepancias de los documentos originales
+
 Al fusionar el PRD y el diccionario de datos del cliente se detectaron estas
-diferencias — **pendientes de decisión del equipo**:
+diferencias, resueltas para #10 según el apartado anterior:
 
 1. **Campos que solo aparecen en el PRD:** `CLIENTES.fecha_inscripcion`,
    `ENTRENADORES.telefono` y `PAGOS.metodo_pago` no están en el diccionario de
@@ -94,8 +110,8 @@ diferencias — **pendientes de decisión del equipo**:
 
 ## Notas de revisión (equipo G1)
 
-Riesgos detectados al revisar la especificación antes de implementar las
-migraciones:
+Riesgos detectados antes de implementar las migraciones (las decisiones
+aplicadas en #10 se indican arriba):
 
 - **Reservas duplicadas:** ninguna restricción impediría que un cliente reserve
   la misma clase dos veces. Se propone `UNIQUE (id_cliente, id_clase)`.
