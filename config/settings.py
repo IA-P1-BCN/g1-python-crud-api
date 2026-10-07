@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     # Contraseña de administración. Es opcional porque V1 todavía no la usa;
     # SecretStr evita que se imprima en logs, trazas o en `repr()`.
     admin_password: SecretStr | None = None
+    log_level: str = "INFO"
+    log_file: str = "logs/app.log"
 
     @property
     def database_url(self) -> str:

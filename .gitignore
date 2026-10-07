@@ -22,7 +22,10 @@ htmlcov/
 !.env.example
 
 # Logs (AGENTS.md #7: la salida va a logs/)
+logs/*
+!logs/.gitkeep
 *.log
+*.log.*
 
 # Base de datos local
 db.sqlite3
