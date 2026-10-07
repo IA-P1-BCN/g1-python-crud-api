@@ -53,8 +53,9 @@ src/
   El dominio usa dataclasses y `Protocol`.
 - Flujo de una petición: route → controller → use case → entidad de dominio,
   y de vuelta al schema de respuesta.
-- Carpetas raíz: `config/` (settings), `logs/` (salida de logs), `tests/`
-  (suite de tests), `migrations/` (Alembic), `docs/` (documentación, incluida
+- Carpetas raíz: `core/` (utilidades transversales, p. ej. logging),
+  `config/` (settings), `logs/` (salida de logs), `tests/` (suite de
+  tests), `migrations/` (Alembic), `docs/` (documentación, incluida
   la del cliente en `docs/client/`).
 
 ## Endpoints
@@ -95,7 +96,7 @@ src/
 
 ## Logging
 
-- Configuración en `config/logging.py` (`setup_logging`), llamada al arrancar
+- Configuración en `core/logging.py` (`setup_logging`), llamada al arrancar
   desde `main.py` con `LOG_LEVEL` y `LOG_FILE` (por defecto `INFO` y
   `logs/app.log`).
 - Dos handlers: **consola** (stdout) y **fichero rotativo** en `logs/`
@@ -149,4 +150,4 @@ src/
 - #1 tema gimnasio (nombre de la app), #2/#3 modelos y diagrama ER,
   #8 manejo de excepciones, #10 CRUD bajo `/v1`. #6 (variables sensibles)
   y #9 (documentación Swagger) quedaron parcialmente cubiertos por esta
-  estructura; #7 (logging) queda cubierto por `config/logging.py`.
+  estructura; #7 (logging) queda cubierto por `core/logging.py`.

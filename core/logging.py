@@ -2,7 +2,7 @@
 
 Uso:
 
-    from config.logging import setup_logging
+     from core.logging import setup_logging
 
     setup_logging()  # INFO + logs/app.log (los valores por defecto)
 """

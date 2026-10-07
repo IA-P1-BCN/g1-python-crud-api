@@ -4,7 +4,7 @@ import logging
 
 import pytest
 
-from config.logging import setup_logging
+from core.logging import setup_logging
 from src.application.use_cases.health_db_use_case import get_health_db
 
 

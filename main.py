@@ -4,7 +4,7 @@ import logging
 
 from fastapi import FastAPI
 
-from config.logging import setup_logging
+from core.logging import setup_logging
 from config.settings import get_settings
 from src.interfaces.http.errors import register_crud_error_handlers
 from src.interfaces.http.routes.clase_routes import router as clase_router
