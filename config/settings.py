@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 
+from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,6 +19,9 @@ class Settings(BaseSettings):
     mysql_password: str = "app_password"
     mysql_database: str = "gym_db"
 
+    # Contraseña de administración. Es opcional porque V1 todavía no la usa;
+    # SecretStr evita que se imprima en logs, trazas o en `repr()`.
+    admin_password: SecretStr | None = None
     log_level: str = "INFO"
     log_file: str = "logs/app.log"
 

@@ -90,6 +90,13 @@ src/
 ## Configuración y entorno
 
 - Variables en `.env` (ver `.env.example`), leídas con pydantic-settings:
+  `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`
+  y `ADMIN_PASSWORD` (#6).
+- `ADMIN_PASSWORD` es opcional (`SecretStr | None`, sin valor por defecto en el
+  código): V1 no tiene endpoints que la usen. Cuando una funcionalidad la
+  requiera, debe pasar a obligatoria para que la app falle al arrancar si falta.
+- Los secretos se declaran como `SecretStr` y se leen con
+  `get_secret_value()` solo en el punto donde se usan.
   `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`,
   `LOG_LEVEL`, `LOG_FILE`.
 - `.env` nunca se commitea (está en .gitignore); commitea solo `.env.example`.
@@ -147,6 +154,10 @@ src/
 ## Pendiente por issue
 
 - #1 tema gimnasio (nombre de la app), #2/#3 modelos y diagrama ER,
+  #7 logging en `logs/` (con reglas de ignore), #8 manejo de excepciones,
+  #10 CRUD bajo `/v1`. #9 (documentación Swagger) quedó parcialmente cubierto
+  por esta estructura. #6 (variables sensibles) queda resuelta con
+  `ADMIN_PASSWORD` en `.env.example` y `config/settings.py`.
   #8 manejo de excepciones, #10 CRUD bajo `/v1`. #6 (variables sensibles)
   y #9 (documentación Swagger) quedaron parcialmente cubiertos por esta
   estructura; #7 (logging) queda cubierto por `core/logging.py`.

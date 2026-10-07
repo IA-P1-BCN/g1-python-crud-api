@@ -50,6 +50,11 @@ MySQL local de Compose. Si 3306 está ocupado, cambia `MYSQL_PORT=3307` antes de
 `task db:up`; Compose publica el mismo puerto. Las credenciales/base de un
 volumen ya inicializado deben corresponder a las configuradas en MySQL.
 
+`.env.example` incluye también `ADMIN_PASSWORD`, una variable sensible
+reservada: es opcional y ningún endpoint la usa todavía. Se lee como `SecretStr`
+para que no aparezca en logs ni en `repr()`. Pon tu propio valor en `.env`; el
+de `.env.example` es solo un marcador.
+
 Esta V1 no necesita `SECRET_KEY`, JWT, login ni cuentas de administrador.
 Si habías preparado la V2, usa una base nueva para V1 y ajusta `MYSQL_DATABASE`:
 su migración `0002` de usuarios no pertenece a esta cadena de migraciones.
