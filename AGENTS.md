@@ -107,10 +107,9 @@ src/
 - `sqlalchemy.engine` y `uvicorn.access` se dejan en `WARNING` para que la
   salida sea limpia.
 - `logs/` está ignorado salvo `.gitkeep` (`.gitignore`: `logs/*`, `*.log`).
-- Dónde se loguea: arranque de la app (`main.py`), éxito/fallo del
-  healthcheck de BD (`get_health_db`) y respuesta 503 de `/health/db`.
-- Tests: `tests/unit/test_logging.py` (fichero de salida en `tmp_path`, nivel,
-  idempotencia y registro de fallos con `caplog`).
+- Dónde se loguea: arranque y cierre de la app (`main.py`, con `lifespan`).
+- Tests: `tests/unit/test_logging.py` (fichero de salida en `tmp_path`, nivel
+  e idempotencia).
 
 ## Tooling
 

@@ -1,11 +1,10 @@
-"""Tests de la configuración de logging y del registro de fallos de BD."""
+"""Tests de la configuración de logging."""
 
 import logging
 
 import pytest
 
 from core.logging import setup_logging
-from src.application.use_cases.health_db_use_case import get_health_db
 
 
 @pytest.fixture(autouse=True)
@@ -64,22 +63,3 @@ def test_un_nivel_desconocido_usa_info(tmp_path):
     setup_logging(nivel="TRUCO", log_file=str(fichero))
 
     assert logging.getLogger().level == logging.INFO
-
-
-class RepositorioRoto:
-    """Doble de HealthRepository que falla al conectar."""
-
-    def ping(self) -> bool:
-        raise RuntimeError("sin conexión")
-
-    def get_latest_version(self) -> str | None:
-        return None
-
-
-def test_health_db_registra_el_fallo(caplog):
-    with caplog.at_level(logging.ERROR):
-        estado = get_health_db(RepositorioRoto())
-
-    assert estado.status == "error"
-    assert estado.database == "down"
-    assert "fallo consultando MySQL" in caplog.text
