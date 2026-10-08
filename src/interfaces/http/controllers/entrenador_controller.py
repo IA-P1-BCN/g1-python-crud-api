@@ -1,9 +1,13 @@
 """Controlador HTTP de entrenadores: convierte schemas y ejecuta casos de uso."""
 
+import logging
+
 from src.application.use_cases.gym_use_cases import GymUseCases
 from src.domain.entities.gym import Entrenador
 from src.domain.repositories.gym_port import GymRepository
 from src.interfaces.http.schemas.gym_schema import EntrenadorInput, EntrenadorResponse
+
+logger = logging.getLogger(__name__)
 
 
 def list_entrenadores(
@@ -22,6 +26,7 @@ def create_entrenador(
     repository: GymRepository, data: EntrenadorInput
 ) -> EntrenadorResponse:
     entity = GymUseCases(repository).create(Entrenador(**data.model_dump()))
+    logger.info("Entrenador creado: id=%s nombre=%s", entity.id_entrenador, entity.nombre)
     return EntrenadorResponse.model_validate(entity)
 
 
@@ -36,3 +41,4 @@ def update_entrenador(
 
 def delete_entrenador(repository: GymRepository, entity_id: int) -> None:
     GymUseCases(repository).delete(Entrenador, entity_id)
+    logger.info("Entrenador eliminado: id=%s", entity_id)

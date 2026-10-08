@@ -26,9 +26,21 @@ CRUD_ERRORS = {
 
 def register_crud_error_handlers(app: FastAPI) -> None:
     async def not_found(request: Request, exc: NotFoundError) -> JSONResponse:
+        logger.warning(
+            "Recurso no encontrado: %s %s - %s",
+            request.method,
+            request.url.path,
+            exc,
+        )
         return JSONResponse(status_code=404, content={"detail": str(exc)})
 
     async def conflict(request: Request, exc: ConflictError) -> JSONResponse:
+        logger.warning(
+            "Conflicto de datos: %s %s - %s",
+            request.method,
+            request.url.path,
+            exc,
+        )
         return JSONResponse(status_code=409, content={"detail": str(exc)})
 
     async def unavailable(
