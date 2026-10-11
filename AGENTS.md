@@ -65,6 +65,17 @@ src/
 - Los endpoints de negocio van bajo el prefijo `/v1` al incluir sus routers.
 - Todo endpoint declara `tags`, `summary` y `response_model` para que la
   documentación Swagger quede completa.
+- Exportación a CSV: un único endpoint `GET /v1/export/csv?tablas=<tabla>`
+  (issue #18), con `tablas` como enum de las tablas (`ExportTable`) para que
+  FastAPI valide y devuelva 422 si no existe. Ignora la paginación (`list_all`
+  en puerto, repositorio y caso de uso), ordena por ID y devuelve `text/csv`
+  con BOM UTF-8 y `Content-Disposition: attachment`. El nombre de tabla →
+  entidad vive en `src/interfaces/http/csv_exports.py` (`TABLES`) y las
+  columnas en `CSV_FIELDS`, con el ID primero. El endpoint usa
+  `response_class=Response` y documenta el 200 como `text/csv` (no tiene
+  `response_model` JSON).
+- No se exportan datos a formato distinto de CSV; para añadir otro formato se
+  crearía un helper análogo a `csv_exports.py`.
 
 ## Manejo de errores
 
