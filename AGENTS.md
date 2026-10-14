@@ -12,11 +12,21 @@ convenciones debe actualizarse aquí en el mismo PR.
 - La descripción de la issue #10 indica que depende de que estén completas
   las tareas **#1 y #2**.
 
-## Alcance vigente: V1 (GymFlow)
+## Alcance vigente: V1 + V2 (GymFlow con gestión de usuarios)
 
-- La usuaria confirmó que se debe usar `docs/client/CLIENT_SPECS.md` (V1),
+- El alcance es la **suma** de `docs/client/CLIENT_SPECS.md` (V1, entregada)
+  y `docs/client/CLIENT_SPECS_V2_USER_MNG.md` (V2, integrada el 2026-10-14),
   junto con `docs/PRD.md`, `docs/DATABASE_SPEC.md` y `docs/EDR_DIAGRAM.md`.
-  `CLIENT_SPECS_V2_USER_MNG.md` no define el alcance de esta entrega.
+- El plan V2 se migró del proyecto `g1_user_management_api` (su repo y código
+  NO son referencia; solo se migró el plan de su Projects) y se repartió por
+  niveles: V2-Esencial → milestone #2 (Nivel medio), V2-Medio+Avanzado →
+  milestone #3 (Nivel Avanzado), V2-Experto → milestone #4 (Nivel Experto).
+- **Cuenta ≠ Cliente** (ADR `docs/adr/0001-cuenta-separada-de-cliente.md`,
+  glosario en `CONTEXT.md`): tabla `users` (email único, `password_hash`,
+  `activo`, Rol) separada de `clientes`, con vínculo 1:1 opcional. Roles:
+  `admin`, `staff`, `cliente`. Los endpoints V2 son literales a la spec:
+  `/v1/auth/register`, `/v1/auth/login`, `/v1/users/me`, `/v1/users`;
+  `/v1/clientes` sigue siendo el CRUD de perfil del gimnasio.
 - #10 implementa CRUD de clientes, entrenadores, clases, reservas y pagos,
   las migraciones correspondientes y datos ficticios con `task seed`.
 - Se incluyen los campos opcionales `fecha_inscripcion`, `telefono` y
@@ -32,8 +42,11 @@ convenciones debe actualizarse aquí en el mismo PR.
   en `null` y `asistio` vuelve a `false` si se omite. La fecha de reserva se
   genera en el servidor y se conserva al actualizar. Fechas/hora: UTC sin zona
   en los campos MySQL `DATETIME`. `DELETE /v1/reservas/{id_reserva}` libera cupo.
-- Los endpoints V1 son públicos; JWT, roles y `SECRET_KEY` no son requisitos
-  de #10. La entrega CRUD no cierra las tareas independientes del equipo.
+- Los endpoints V1 entregados son públicos por ahora; los nuevos endpoints de
+  V2 (`/v1/auth/*`, `/v1/users*`) exigen token desde su primer PR, y la
+  protección del resto de `/v1` llega con la STORY #38 (milestone #3).
+  `SECRET_KEY` pasa a variable obligatoria cuando se integre el JWT
+  (`SecretStr`, solo en `.env`/`.env.example`).
 
 ## Arquitectura por capas (src/)
 
@@ -168,13 +181,30 @@ src/
 - Flujo: issue → rama → commit → PR a `main` con `Closes #N` → review → merge.
 - `main` está protegida: los cambios entran solo vía PR con 1 approval.
 
+## Planificación (issues, milestones, prioridad y bloqueos)
+
+- Los milestones equivalen a los niveles de entrega: #2 Nivel medio,
+  #3 Nivel Avanzado, #4 Nivel Experto. La prioridad de trabajo es el
+  milestone más bajo primero.
+- Estructura: épico #4 → STORYs (label `story`) → tareas (label `task`) como
+  sub-issues de su STORY. Toda tarea nueva nace con STORY, milestone y AC.
+- **Prioridad** en cada tarea: label `prioridad:P1` (bloquea a otras o núcleo
+  del milestone), `prioridad:P2` (tarea del milestone sin dependientes),
+  `prioridad:P3` (deseable), y campo Priority del Projects de GitHub.
+- **Bloqueos** en el cuerpo de cada tarea: `⛔ Bloqueado por: #N, ...` y
+  `⏫ Bloquea: #N, ...` con referencias reales; label `bloqueado` mientras la
+  dependencia siga abierta. La persona responsable va en Assignees.
+- Lo previsto por V2 que este repo ya cubre (uv/Taskfile, `/health`, capas,
+  Alembic, Swagger base) quedó anotado como omitido en las STORYs, no se
+  duplica en tareas.
+
 ## Pendiente por issue
 
-- #1 tema gimnasio (nombre de la app), #2/#3 modelos y diagrama ER,
-  #7 logging en `logs/` (con reglas de ignore), #8 manejo de excepciones,
-  #10 CRUD bajo `/v1`. #9 (documentación Swagger) quedó parcialmente cubierto
-  por esta estructura. #6 (variables sensibles) queda resuelta con
-  `ADMIN_PASSWORD` en `.env.example` y `config/settings.py`.
-  #8 manejo de excepciones, #10 CRUD bajo `/v1`. #6 (variables sensibles)
-  y #9 (documentación Swagger) quedaron parcialmente cubiertos por esta
-  estructura; #7 (logging) queda cubierto por `core/logging.py`.
+- Milestone #1 (Nivel Esencial, cerrado): #1 tema gimnasio, #2/#3 modelos y
+  diagrama ER, #7 logging en `logs/`, #8 manejo de excepciones, #10 CRUD bajo
+  `/v1`, #6 variables sensibles (`ADMIN_PASSWORD`), #9 documentación Swagger
+  (parcial: tags/summary/response_model y `CRUD_ERRORS`).
+- Milestones #2–#4: plan V1 (STORYs #36–#42) + plan V2 migrado el
+  2026-10-14 (ver «Alcance vigente»). Las STORYs #37, #38, #40 y #42
+  ampliaron sus AC con V2; el resto del plan V2 está en las STORYs nuevas de
+  cada milestone.
