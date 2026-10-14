@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from src.domain.errors import (
     AuthenticationError,
     ConflictError,
+    ForbiddenError,
     InvalidQueryError,
     NotFoundError,
     RepositoryUnavailableError,
@@ -37,7 +38,17 @@ LIST_ERRORS = {
 }
 
 
+PROTECTED_ERRORS = {
+    **CRUD_ERRORS,
+    401: {"model": ErrorResponse, "description": "Token ausente o inválido"},
+    403: {"model": ErrorResponse, "description": "Cuenta inactiva"},
+}
+
+
 def register_crud_error_handlers(app: FastAPI) -> None:
+    async def forbidden(request: Request, exc: ForbiddenError) -> JSONResponse:
+        return JSONResponse(status_code=403, content={"detail": str(exc)})
+
     async def authentication(
         request: Request, exc: AuthenticationError
     ) -> JSONResponse:
@@ -103,6 +114,7 @@ def register_crud_error_handlers(app: FastAPI) -> None:
 
     app.add_exception_handler(NotFoundError, not_found)
     app.add_exception_handler(AuthenticationError, authentication)
+    app.add_exception_handler(ForbiddenError, forbidden)
     app.add_exception_handler(RequestValidationError, validation)
     app.add_exception_handler(InvalidQueryError, invalid_query)
     app.add_exception_handler(ConflictError, conflict)

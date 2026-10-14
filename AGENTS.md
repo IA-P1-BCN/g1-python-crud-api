@@ -143,6 +143,14 @@ src/
 - Nueva migración: `uv run alembic revision -m "descripcion"` y editar el
   fichero generado en `migrations/versions/`.
 
+## Perfil autenticado (#56)
+
+- `get_current_user` verifica JWT y vuelve a leer Cuenta: sin identidad válida
+  (incluida Cuenta borrada) → 401 Bearer; Cuenta inactiva tras login → 403.
+- GET `/v1/users/me` usa CuentaResponse sin credenciales. Se registra antes
+  de `/{id}`. La dependencia finaliza su transacción antes del CRUD protegido.
+- La autorización granular por roles permanece en #64/#65.
+
 ## Autenticación (#55)
 
 - POST `/v1/auth/login` usa formulario OAuth2: `username` es el email y
