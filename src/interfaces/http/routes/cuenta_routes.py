@@ -24,6 +24,7 @@ CuentaId = Annotated[int, Path(gt=0, le=2147483647)]
 @router.get(
     "/me",
     summary="Consultar mi Cuenta",
+    description="Resuelve la Cuenta del JWT y comprueba su estado actual; nunca devuelve credenciales.",
     response_model=CuentaResponse,
     responses=PROTECTED_ERRORS,
 )
@@ -34,6 +35,7 @@ def me(cuenta: CurrentCuenta) -> CuentaResponse:
 @router.get(
     "",
     summary="Listar Cuentas",
+    description="Cuenta activa autenticada. Filtros combinados antes de paginar, orden por id y máximo 100 resultados. Rangos UTC inclusivos sin zona. En esta entrega permite acceso a cualquier Cuenta activa autenticada.",
     response_model=list[CuentaResponse],
     responses={**PROTECTED_ERRORS, 400: LIST_ERRORS[400]},
 )
@@ -60,6 +62,7 @@ def get_cuenta(
 @router.put(
     "/{id}",
     summary="Sustituir los datos de una Cuenta",
+    description="Exige nombre y email. Password es opcional y conserva el hash si se omite; si se envía, se sustituye con hash. No permite rol, activo ni id_cliente.",
     response_model=CuentaResponse,
     responses=PROTECTED_ERRORS,
 )
@@ -72,6 +75,7 @@ def put_cuenta(
 @router.patch(
     "/{id}",
     summary="Editar parcialmente una Cuenta",
+    description="Solo nombre, email y password; conserva campos omitidos. Null explícito, campos protegidos o cuerpo vacío producen 422.",
     response_model=CuentaResponse,
     responses=PROTECTED_ERRORS,
 )
@@ -84,6 +88,7 @@ def patch_cuenta(
 @router.delete(
     "/{id}",
     summary="Borrar una Cuenta",
+    description="Borrado físico: conserva Cliente e historial del gimnasio. Los tokens de la Cuenta eliminada dejan de resolver identidad.",
     status_code=204,
     response_model=None,
     responses=PROTECTED_ERRORS,

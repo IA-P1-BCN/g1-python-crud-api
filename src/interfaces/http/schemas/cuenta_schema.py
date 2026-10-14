@@ -11,6 +11,7 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+from pydantic.json_schema import SkipJsonSchema
 
 from src.interfaces.http.schemas.gym_schema import ApiSchema
 
@@ -45,12 +46,23 @@ class CuentaResponse(ApiSchema):
     id_cliente: int | None
 
 
+def omit_default(schema: dict) -> None:
+    """La ausencia conserva el dato; null explícito no pertenece al contrato."""
+    schema.pop("default", None)
+
+
 class CuentaPatch(ApiSchema):
     model_config = ConfigDict(str_strip_whitespace=False)
 
-    nombre: str | None = Field(default=None, min_length=1, max_length=100)
-    email: EmailStr | None = Field(default=None, max_length=150)
-    password: SecretStr | None = Field(default=None, min_length=12, max_length=128)
+    nombre: str | SkipJsonSchema[None] = Field(
+        default=None, min_length=1, max_length=100, json_schema_extra=omit_default
+    )
+    email: EmailStr | SkipJsonSchema[None] = Field(
+        default=None, max_length=150, json_schema_extra=omit_default
+    )
+    password: SecretStr | SkipJsonSchema[None] = Field(
+        default=None, min_length=12, max_length=128, json_schema_extra=omit_default
+    )
 
     @field_validator("nombre", "email", "password", mode="before")
     @classmethod

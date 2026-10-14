@@ -8,16 +8,18 @@
 **GymFlow:** API REST con FastAPI y MySQL para clientes, entrenadores,
 clases, reservas y pagos. Sigue [CLIENT_SPECS.md](docs/client/CLIENT_SPECS.md),
 el [PRD](docs/PRD.md) y el [modelo de datos](docs/DATABASE_SPEC.md).
-El CRUD V1 está entregado. Desde el 14/10/2026 el alcance incluye también
-[V2](docs/client/CLIENT_SPECS_V2_USER_MNG.md): cuentas, autenticación y flujo
-de desarrollo con IA. Su integración se sigue en las issues; incluirlo en el
-alcance no implica que sus endpoints ya estén implementados.
+Incluye [V2](docs/client/CLIENT_SPECS_V2_USER_MNG.md): Cuentas separadas de
+Clientes, registro, login JWT, CRUD de Cuentas protegido y filtros. El flujo de
+desarrollo usa OpenSpec, bitácora y revisión humana. La política granular por
+roles y las funciones avanzadas de seguridad siguen en las tareas del equipo.
 
 Requisitos: [uv](https://docs.astral.sh/uv/), [Task](https://taskfile.dev), Docker.
 
 ## Ejecutar
 
-Para preparar dependencias, MySQL, tablas y datos ficticios, y ejecutar los tests:
+Primero crea `.env` desde `.env.example` si no existe y configura `SECRET_KEY`,
+`ADMIN_EMAIL` y `ADMIN_PASSWORD` como se explica abajo. Después prepara
+dependencias, MySQL, tablas y datos ficticios y ejecuta los tests:
 
 ```bash
 task demo
@@ -28,10 +30,11 @@ O paso a paso:
 
 ```bash
 task install          # instala dependencias
-cp .env.example .env  # solo si todavía no tienes .env
+test -f .env || cp .env.example .env
+# Edita .env: SECRET_KEY propia, ADMIN_EMAIL y ADMIN_PASSWORD propia
 task db:up            # levanta MySQL (docker compose)
-task migrate          # crea las cinco tablas y actualiza la versión de esquema
-task seed             # añade datos ficticios para probar el CRUD
+task migrate          # crea tablas y registra la versión de esquema 0.3
+task seed             # datos demo y Cuentas iniciales, sin sobrescribir
 task dev              # servidor con recarga en http://127.0.0.1:8000
 ```
 
@@ -46,22 +49,30 @@ Si el puerto HTTP 8000 está ocupado, usa
 
 ## Configuración del equipo
 
-Cada persona mantiene su propio `.env`, sin subirlo a Git. Las cinco variables
-necesarias están en `.env.example`: `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`,
+Cada persona mantiene su propio `.env`, sin subirlo a Git. La conexión MySQL
+usa las variables de `.env.example`: `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`,
 `MYSQL_PASSWORD` y `MYSQL_DATABASE`. Los valores del ejemplo corresponden al
 MySQL local de Compose. Si 3306 está ocupado, cambia `MYSQL_PORT=3307` antes de
 `task db:up`; Compose publica el mismo puerto. Las credenciales/base de un
 volumen ya inicializado deben corresponder a las configuradas en MySQL.
 
-`.env.example` incluye también `ADMIN_PASSWORD`, una variable sensible
-reservada: es opcional y ningún endpoint la usa todavía. Se lee como `SecretStr`
-para que no aparezca en logs ni en `repr()`. Pon tu propio valor en `.env`; el
-de `.env.example` es solo un marcador.
+`SECRET_KEY` es obligatoria, con al menos 32 caracteres aleatorios y sin valor
+por defecto. Genera una clave propia y guárdala solo en `.env`:
 
-Esta V1 no necesita `SECRET_KEY`, JWT, login ni cuentas de administrador.
-Si habías preparado la V2, usa una base nueva para V1 y ajusta `MYSQL_DATABASE`:
-su migración `0002` de usuarios no pertenece a esta cadena de migraciones.
-Conserva la base anterior; no es necesario borrarla para trabajar en V1.
+```bash
+uv run python -c "import secrets; print(secrets.token_hex(32))"
+```
+
+`ADMIN_PASSWORD` es obligatoria para `task seed`/`task demo`: 12–128 caracteres
+y un valor propio, nunca el marcador. `ADMIN_EMAIL` identifica el admin inicial.
+El seed crea cuentas **inactivas** para clientes con email válido, con secretos
+aleatorios individuales; no inventa emails, no activa esas cuentas ni cambia
+contraseñas existentes. El admin se crea activo y sin perfil Cliente.
+
+Los secretos se cargan como `SecretStr`; no se publican ni se incluyen en errores
+de configuración. Los tests y la CI tienen claves exclusivas de prueba.
+Las migraciones de este repositorio incorporan Cuentas sin recrear la base V1;
+no uses migraciones de otros repositorios.
 
 ## Swagger
 
@@ -75,7 +86,8 @@ consultar y probar en Swagger. Postman puede importar `/openapi.json`.
 
 ## CRUD de las cinco entidades
 
-Cada recurso ofrece cinco operaciones: **25 endpoints de negocio** en total.
+Cada recurso V1 ofrece cinco operaciones: **25 endpoints del gimnasio**, además
+de la exportación CSV y los endpoints de Cuentas V2.
 
 | Recurso | Colección | Identificador |
 |---|---|---|
@@ -141,7 +153,7 @@ GET /v1/pagos?id_cliente=1&fecha_pago_desde=2026-10-01&fecha_pago_hasta=2026-10-
 
 `GET /v1/export/csv?tablas=clientes` mantiene el contrato de #18: exporta la
 tabla completa, sin aplicar los filtros ni la paginación de estos GET.
-Los filtros de `/v1/users` pertenecen a #61 y dependen de la implementación de #57.
+Los filtros de `/v1/users` se describen en la sección de Cuentas y requieren token.
 
 ## Probar una reserva desde Swagger
 
@@ -232,7 +244,7 @@ cada cambio y su entrada en [la bitácora de IA](docs/ai-log.md) acompañan a la
 | `task db:up` | Levanta MySQL (`docker compose up -d --wait`) |
 | `task db:down` | Detiene MySQL |
 | `task migrate` | Aplica migraciones (`alembic upgrade head`) |
-| `task seed` | Añade datos ficticios de las cinco tablas sin duplicar los existentes |
+| `task seed` | Añade datos del gimnasio y Cuentas iniciales sin sobrescribir existentes |
 
 ## Enlaces
 
@@ -241,38 +253,62 @@ cada cambio y su entrada en [la bitácora de IA](docs/ai-log.md) acompañan a la
 - [docs/DATABASE_SPEC.md](docs/DATABASE_SPEC.md) — campos, relaciones y decisiones de #10
 - [docs/EDR_DIAGRAM.md](docs/EDR_DIAGRAM.md) — diagrama ER
 
-### Cuentas V2 (#53)
+## Cuentas y autenticación V2
 
-`task migrate` incorpora `users` sin alterar clientes. Antes de `task seed` o
-`task demo`, configura `ADMIN_EMAIL` y una `ADMIN_PASSWORD` propia de 12–128
-caracteres en `.env`. El marcador de `.env.example` se rechaza. El seed crea
-un admin y cuentas inactivas para clientes con email válido; informa cuántas
-crea u omite y conserva cuentas y contraseñas previas. Los clientes sin email
-no reciben identidades inventadas. Registro y login llegan en #54/#55.
+Cuenta es la identidad de acceso, Cliente es el socio del gimnasio. `activo`
+de Cuenta y `estado_membresia` de Cliente son independientes. Un Cliente puede
+tener una Cuenta vinculada; admin/staff no necesitan ser socios.
 
-### Registro (#54)
+| Método y ruta | Acceso y resultado |
+|---|---|
+| `POST /v1/auth/register` | Público; 201 con Cuenta de rol cliente |
+| `POST /v1/auth/login` | Público; formulario OAuth2, 200 con JWT |
+| `GET /v1/users/me` | Token; perfil de la Cuenta actual |
+| `GET /v1/users` | Token; listado, filtros y paginación |
+| `GET /v1/users/{id}` | Token; detalle o 404 |
+| `PUT /v1/users/{id}` | Token; nombre/email obligatorios, contraseña opcional |
+| `PATCH /v1/users/{id}` | Token; solo cambia campos enviados |
+| `DELETE /v1/users/{id}` | Token; 204, borrado físico que conserva Cliente |
 
-`POST /v1/auth/register` es público. JSON de entrada: `nombre`, `email`,
-`password` (12–128 caracteres) y `crear_cliente` opcional (false por defecto).
-Devuelve 201 sin credenciales. `crear_cliente=true` crea un Cliente Inactivo
-nuevo, nunca asocia uno existente por email. Email duplicado → 409; datos o
-campos no permitidos → 422.
+El registro recibe `nombre`, `email`, `password` (12–128 caracteres) y
+`crear_cliente=false` por defecto. Con true crea un Cliente Inactivo nuevo en
+la misma transacción; no se apropia de clientes existentes por email.
 
-### Login OAuth2 (#55)
+El login recibe `application/x-www-form-urlencoded`, con `username=<email>`
+y `password=<contraseña>`. Devuelve `access_token` y `token_type=bearer`.
+En Swagger pulsa **Authorize**, usa el email en username y después consulta
+`/v1/users/me`. El token caduca a los 30 minutos.
 
-Configura `SECRET_KEY` propia (al menos 32 caracteres) en `.env`; la API falla
-si falta. Puedes generarla con `uv run python -c "import secrets;
-print(secrets.token_hex(32))"`. No la publiques ni uses la clave de los tests.
+PUT/PATCH solo aceptan nombre, email y password. La contraseña se conserva
+literal, se guarda con Argon2 y nunca se devuelve. Si se omite, conserva el
+hash anterior. No se aceptan null explícitos, PATCH vacío ni campos rol,
+activo, id_cliente o fecha_creacion. La Cuenta conserva su fecha y vínculo.
 
-`POST /v1/auth/login` recibe formulario `username=<email>&password=<contraseña>`
-y devuelve `access_token` y `token_type=bearer`. Swagger → **Authorize** usa
-ese mismo formulario. El token caduca a los 30 minutos. Credenciales incorrectas
-o Cuenta inactiva → 401 genérico. #56 incorpora `/v1/users/me`.
+Los endpoints de Cuentas exigen una Cuenta activa autenticada. En este nivel
+aún no restringen listado/edición/borrado por propietario o rol; la autorización
+granular está pendiente en STORY #38. El CRUD V1 continúa público.
 
-### Filtros de Cuentas (#61)
+### Filtros de Cuentas
 
-`GET /v1/users` requiere Bearer token. Admite `nombre`, `email`, `q`, `activo`,
-`rol`, `id_cliente`, `fecha_creacion_desde`, `fecha_creacion_hasta`, `offset` y
-`limit` (1–100). Texto literal sin distinguir mayúsculas, criterios combinados
-antes de paginar y rangos inclusivos UTC sin zona. Rango invertido → 400;
-parámetro inválido → 422. Ejemplo: `/v1/users?rol=staff&activo=true&limit=10`.
+`GET /v1/users` admite `nombre`, `email`, `q`, `activo`, `rol`, `id_cliente`,
+`fecha_creacion_desde`, `fecha_creacion_hasta`, `offset` y `limit` (1–100).
+Texto literal sin distinguir mayúsculas; criterios con AND antes de paginar y
+rangos inclusivos UTC sin zona. `q` busca nombre/email con OR.
+Ejemplo: `/v1/users?rol=staff&activo=true&limit=10`.
+
+### Errores de auth y Cuentas
+
+| Código | Significado observable |
+|---|---|
+| 400 | Rango de fechas invertido en el listado |
+| 401 | Login incorrecto/inactivo, token ausente/inválido/expirado o Cuenta borrada; incluye `WWW-Authenticate: Bearer` |
+| 403 | Cuenta identificada por JWT que fue desactivada; sin reto Bearer |
+| 404 | Cuenta solicitada inexistente |
+| 409 | Email o vínculo duplicado, o conflicto concurrente |
+| 422 | Datos, campos o parámetros inválidos; omite valores sensibles |
+| 500 | Error interno genérico |
+| 503 | MySQL no disponible |
+
+Swagger y ReDoc muestran ejemplos JSON, schemas y cabecera de autenticación
+para los errores que corresponden a cada operación. Registro/login permanecen
+públicos; no se documentan 400/403 artificiales en esas operaciones.

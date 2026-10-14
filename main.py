@@ -29,6 +29,11 @@ API de gestión del gimnasio (proyecto g1).
 Incluye healthchecks y operaciones CRUD de clientes, entrenadores, clases,
 reservas y pagos bajo `/v1`. Las reservas requieren un cliente activo con
 un pago registrado y una plaza disponible en la clase.
+
+La Cuenta de acceso está separada del Cliente del gimnasio. Registro y login
+OAuth2 son públicos; `/v1/users*` exige Bearer JWT. Incluye perfil, consultas,
+edición, baja física y filtros. La política granular de roles está pendiente
+en el alcance avanzado; el CRUD V1 sigue siendo público en esta entrega.
 """
 
 

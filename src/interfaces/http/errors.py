@@ -34,14 +34,57 @@ CRUD_ERRORS = {
 
 LIST_ERRORS = {
     **CRUD_ERRORS,
-    400: {"model": ErrorResponse, "description": "Intervalo de fechas invertido"},
+    400: {
+        "model": ErrorResponse,
+        "description": "Intervalo incoherente: la fecha inicial supera la final",
+        "content": {
+            "application/json": {
+                "example": {
+                    "detail": "El inicio del intervalo no puede superar el final"
+                }
+            }
+        },
+    },
 }
 
+BEARER_CHALLENGE = {
+    "WWW-Authenticate": {
+        "description": "Esquema necesario para acreditar identidad",
+        "schema": {"type": "string", "example": "Bearer"},
+    }
+}
+
+LOGIN_ERRORS = {
+    **CRUD_ERRORS,
+    401: {
+        "model": ErrorResponse,
+        "description": "Email o contraseña incorrectos, o Cuenta inactiva; mensaje indistinguible",
+        "headers": BEARER_CHALLENGE,
+        "content": {
+            "application/json": {"example": {"detail": "Credenciales incorrectas"}}
+        },
+    },
+}
 
 PROTECTED_ERRORS = {
     **CRUD_ERRORS,
-    401: {"model": ErrorResponse, "description": "Token ausente o inválido"},
-    403: {"model": ErrorResponse, "description": "Cuenta inactiva"},
+    401: {
+        "model": ErrorResponse,
+        "description": "Token ausente, inválido o expirado, o Cuenta eliminada",
+        "headers": BEARER_CHALLENGE,
+        "content": {
+            "application/json": {
+                "example": {"detail": "No se pudieron validar las credenciales"}
+            }
+        },
+    },
+    403: {
+        "model": ErrorResponse,
+        "description": "Identidad autenticada cuya Cuenta ha sido desactivada",
+        "content": {
+            "application/json": {"example": {"detail": "La Cuenta está inactiva"}}
+        },
+    },
 }
 
 

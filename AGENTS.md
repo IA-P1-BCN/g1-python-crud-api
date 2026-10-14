@@ -127,6 +127,15 @@ src/
 - Un error de dominio nuevo se declara en `src/domain/errors.py`, se traduce en
   `register_crud_error_handlers` y se prueba en `tests/unit/test_errores.py`.
 
+## Errores documentados de auth/Cuentas (#60)
+
+- `LOGIN_ERRORS`: 401 genérico con ejemplo y cabecera WWW-Authenticate.
+  `PROTECTED_ERRORS`: 401/403 con ejemplos y semántica actual.
+  `LIST_ERRORS`: 400 para rango invertido, también en listado de Cuentas.
+- No inventar errores no observables: registro/login públicos no reciben
+  401 por token ni 403 por desactivación posterior. Swagger y ReDoc leen la
+  misma especificación, comprobada por HTTP en la suite.
+
 ## Documentación (Swagger / OpenAPI)
 
 - Swagger UI: `http://127.0.0.1:8000/docs` · ReDoc: `/redoc` ·
