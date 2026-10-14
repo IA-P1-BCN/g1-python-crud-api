@@ -5,6 +5,10 @@ herramienta y modelos usados, prompts clave, errores o alucinaciones del
 agente y cómo se corrigieron, y decisiones tomadas (qué se aceptó, qué se
 rechazó y por qué). Cada funcionalidad principal deja aquí su entrada.
 
+## Registros detallados
+
+- [2026-10-14 — #79: uso de las skills de verificación y revisión](ai-log/2026-10-14-skills.md).
+
 ## Formato de entrada
 
 - **Fecha** — Tarea/PR — Herramienta y modelo — Qué se pidió (resumen) —
