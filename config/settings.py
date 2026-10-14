@@ -10,7 +10,10 @@ class Settings(BaseSettings):
     """Ajustes de la aplicación y de la conexión a MySQL."""
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        hide_input_in_errors=True,
     )
 
     mysql_host: str = "127.0.0.1"

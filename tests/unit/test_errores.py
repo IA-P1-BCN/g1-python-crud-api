@@ -6,8 +6,13 @@ import pytest
 from fastapi.testclient import TestClient
 
 from main import app
-from src.domain.errors import RepositoryUnavailableError
-from src.interfaces.http.dependencies import get_gym_repository
+from src.domain.errors import (
+    AuthenticationError,
+    ForbiddenError,
+    InvalidQueryError,
+    RepositoryUnavailableError,
+)
+from src.interfaces.http.dependencies import get_current_user, get_gym_repository
 from src.interfaces.http.errors import INTERNAL_ERROR_MESSAGE
 
 DETALLE_INTERNO = "password=secreto-que-no-debe-salir"
@@ -109,3 +114,29 @@ def test_openapi_documenta_el_error_500_en_todos_los_endpoints_de_negocio(client
     for operation in operaciones:
         schema = operation["responses"]["500"]["content"]["application/json"]["schema"]
         assert schema["$ref"].endswith("/ErrorResponse")
+
+
+@pytest.mark.parametrize(
+    "error,status",
+    [
+        (InvalidQueryError("Intervalo invertido"), 400),
+        (AuthenticationError("No se pudieron validar las credenciales"), 401),
+        (ForbiddenError("La Cuenta está inactiva"), 403),
+    ],
+)
+def test_errores_semanticos_uniformes_sin_log_error(client, caplog, error, status):
+    def fail():
+        raise error
+
+    app.dependency_overrides[get_current_user] = fail
+    caplog.set_level(logging.ERROR)
+    try:
+        response = client.get("/v1/users/me")
+    finally:
+        app.dependency_overrides.pop(get_current_user, None)
+    assert response.status_code == status
+    assert response.json() == {"detail": str(error)}
+    assert response.headers.get("www-authenticate") == (
+        "Bearer" if status == 401 else None
+    )
+    assert _registros_de_error(caplog) == []

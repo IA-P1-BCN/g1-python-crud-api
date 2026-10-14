@@ -110,9 +110,14 @@ src/
 - Las capas internas lanzan errores de dominio (`src/domain/errors.py`:
   `NotFoundError`, `ConflictError`, `RepositoryUnavailableError`); solo la capa
   `interfaces` decide el código HTTP (`src/interfaces/http/errors.py`).
-- Correspondencia: `NotFoundError` → 404, `ConflictError` → 409, validación de
+- Correspondencia: `InvalidQueryError` → 400, `AuthenticationError` → 401,
+  `ForbiddenError` → 403, `NotFoundError` → 404, `ConflictError` → 409, validación de
   FastAPI → 422, `RepositoryUnavailableError` → 503 y cualquier otra excepción
   → 500.
+- 401 incluye `WWW-Authenticate: Bearer`; 403 no pide reautenticación.
+  403 actual significa Cuenta autenticada inactiva; permisos por rol son #65.
+- Settings oculta valores de entrada al representar errores de configuración.
+  Validación de auth/users omite input/ctx para no reflejar credenciales.
 - Todo error responde `{"detail": "mensaje"}` (los 422 llevan una lista, formato
   FastAPI). El 500 devuelve siempre `Error interno del servidor`: ni trazas ni
   detalles internos salen al cliente.
