@@ -143,6 +143,19 @@ src/
 - Nueva migración: `uv run alembic revision -m "descripcion"` y editar el
   fichero generado en `migrations/versions/`.
 
+## Autenticación (#55)
+
+- POST `/v1/auth/login` usa formulario OAuth2: `username` es el email y
+  `password` se conserva literal. Registro y login son públicos.
+- Cuenta inexistente, contraseña incorrecta o Cuenta inactiva → mismo 401
+  con `WWW-Authenticate: Bearer`. Se verifica un hash ficticio para email inexistente.
+- JWT HS256, sub=id string, iat, exp de 30 minutos, iss=gymflow y aud=gymflow-api.
+  Validación exige firma, algoritmo fijo y todas las claims; expiración configurable
+  queda en #67. SECRET_KEY obligatoria sin valor por defecto.
+- Swagger declara OAuth2 password flow con tokenUrl `v1/auth/login`.
+- `tests/conftest.py` y CI configuran secretos exclusivos de prueba; nunca usar
+  esos valores para desplegar.
+
 ## Registro (#54)
 
 - POST `/v1/auth/register`: nombre, email y password (12–128 caracteres);
@@ -161,7 +174,7 @@ src/
 - El seed crea admin y cuentas inactivas para clientes con email válido; no inventa
   emails ni comparte contraseñas. Omite conflictos sin vincular identidades ajenas.
 - El rol mínimo permite el admin del seed; la política completa de roles sigue
-  en #64/#65. `SECRET_KEY` es SecretStr y pasa a obligatoria con JWT (#55).
+  en #64/#65. `SECRET_KEY` es SecretStr obligatoria (mínimo 32 caracteres) desde JWT (#55).
 
 ## Configuración y entorno
 

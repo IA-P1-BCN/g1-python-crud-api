@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from config.settings import get_settings
 from core.logging import setup_logging
 from src.interfaces.http.errors import register_crud_error_handlers
+from src.interfaces.http.oauth import oauth2_scheme
 from src.interfaces.http.routes.auth_routes import router as auth_router
 from src.interfaces.http.routes.clase_routes import router as clase_router
 from src.interfaces.http.routes.cliente_routes import router as cliente_router
@@ -68,3 +69,18 @@ app.include_router(reserva_router, prefix="/v1")
 app.include_router(pago_router, prefix="/v1")
 app.include_router(export_router, prefix="/v1")
 register_crud_error_handlers(app)
+
+# Hace visible Authorize también antes de incorporar las rutas protegidas (#56).
+default_openapi = app.openapi
+
+
+def openapi_with_oauth() -> dict:
+    schema = default_openapi()
+    schemes = schema.setdefault("components", {}).setdefault("securitySchemes", {})
+    schemes[oauth2_scheme.scheme_name] = oauth2_scheme.model.model_dump(
+        by_alias=True, exclude_none=True, mode="json"
+    )
+    return schema
+
+
+app.openapi = openapi_with_oauth

@@ -15,3 +15,7 @@ class RepositoryUnavailableError(Exception):
 
 class InvalidQueryError(Exception):
     """Los criterios de una consulta son incompatibles entre sí."""
+
+
+class AuthenticationError(Exception):
+    """No se ha acreditado una identidad válida."""

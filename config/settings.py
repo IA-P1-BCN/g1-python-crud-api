@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     # SecretStr evita que se imprima en logs, trazas o en `repr()`.
     admin_password: SecretStr | None = None
     admin_email: str = "admin@example.com"
-    secret_key: SecretStr | None = None
+    secret_key: SecretStr = Field(min_length=32)
     log_level: str = "INFO"
     log_file: str = "logs/app.log"
 
