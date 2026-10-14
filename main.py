@@ -12,6 +12,7 @@ from src.interfaces.http.errors import register_crud_error_handlers
 from src.interfaces.http.routes.clase_routes import router as clase_router
 from src.interfaces.http.routes.cliente_routes import router as cliente_router
 from src.interfaces.http.routes.entrenador_routes import router as entrenador_router
+from src.interfaces.http.routes.export_routes import router as export_router
 from src.interfaces.http.routes.health_routes import router as health_router
 from src.interfaces.http.routes.pago_routes import router as pago_router
 from src.interfaces.http.routes.reserva_routes import router as reserva_router
@@ -52,6 +53,7 @@ app = FastAPI(
         {"name": "clases", "description": "Sesiones, horarios UTC y aforo"},
         {"name": "reservas", "description": "Reservas de plazas y asistencia"},
         {"name": "pagos", "description": "Registro de pagos de clientes"},
+        {"name": "export", "description": "Exportación de tablas a CSV"},
     ],
 )
 
@@ -61,4 +63,5 @@ app.include_router(entrenador_router, prefix="/v1")
 app.include_router(clase_router, prefix="/v1")
 app.include_router(reserva_router, prefix="/v1")
 app.include_router(pago_router, prefix="/v1")
+app.include_router(export_router, prefix="/v1")
 register_crud_error_handlers(app)

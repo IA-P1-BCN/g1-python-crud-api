@@ -25,6 +25,10 @@ class GymUseCases:
         with self._repository.transaction():
             return self._repository.list(entity_type, offset, limit)
 
+    def list_all[T: GymEntity](self, entity_type: type[T]) -> list[T]:
+        with self._repository.transaction():
+            return self._repository.list_all(entity_type)
+
     def get[T: GymEntity](self, entity_type: type[T], entity_id: int) -> T:
         with self._repository.transaction():
             return self._require(entity_type, entity_id)

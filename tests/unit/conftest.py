@@ -31,6 +31,9 @@ class MemoryRepository:
     def list(self, entity_type, offset, limit):
         return list(self.data[entity_type].values())[offset : offset + limit]
 
+    def list_all(self, entity_type):
+        return list(self.data[entity_type].values())
+
     def get(self, entity_type, entity_id, *, lock=False):
         return self.data[entity_type].get(entity_id)
 

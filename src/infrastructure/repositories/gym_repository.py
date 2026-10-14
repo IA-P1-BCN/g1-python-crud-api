@@ -72,6 +72,14 @@ class SqlAlchemyGymRepository:
             for record in self._session.scalars(statement)
         ]
 
+    def list_all[T: GymEntity](self, entity_type: type[T]) -> list[T]:
+        model = MODELS[entity_type]
+        statement = select(model).order_by(getattr(model, ID_FIELDS[entity_type]))
+        return [
+            self._entity(entity_type, record)
+            for record in self._session.scalars(statement)
+        ]
+
     def get[T: GymEntity](
         self, entity_type: type[T], entity_id: int, *, lock: bool = False
     ) -> T | None:
