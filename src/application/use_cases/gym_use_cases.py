@@ -11,7 +11,8 @@ from src.domain.entities.gym import (
     Pago,
     Reserva,
 )
-from src.domain.errors import ConflictError, NotFoundError
+from src.domain.errors import ConflictError, InvalidQueryError, NotFoundError
+from src.domain.list_filters import ListFilters
 from src.domain.repositories.gym_port import GymRepository
 
 
@@ -20,10 +21,21 @@ class GymUseCases:
         self._repository = repository
 
     def list[T: GymEntity](
-        self, entity_type: type[T], offset: int = 0, limit: int = 100
+        self,
+        entity_type: type[T],
+        offset: int = 0,
+        limit: int = 100,
+        filters: ListFilters | None = None,
     ) -> list[T]:
+        if (
+            filters is not None
+            and filters.date_from is not None
+            and filters.date_to is not None
+            and filters.date_from > filters.date_to
+        ):
+            raise InvalidQueryError("El inicio del intervalo no puede superar el final")
         with self._repository.transaction():
-            return self._repository.list(entity_type, offset, limit)
+            return self._repository.list(entity_type, offset, limit, filters)
 
     def list_all[T: GymEntity](self, entity_type: type[T]) -> list[T]:
         with self._repository.transaction():

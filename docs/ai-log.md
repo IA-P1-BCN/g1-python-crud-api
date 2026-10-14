@@ -23,3 +23,5 @@ rechazó y por qué). Cada funcionalidad principal deja aquí su entrada.
   tareas de tests fusionadas en su tarea de feature (convención del repo).
   Decisión de diseño: Cuenta (`users`) separada de Cliente con vínculo 1:1
   (ADR 0001). Prioridades P1/P2/P3 y bloqueos (#refs) añadidos a cada tarea.
+
+- [2026-10-14 — #22: filtros de listados, decisiones y validación](ai-log/2026-10-14-filtros.md).

@@ -102,6 +102,44 @@ inesperado; **503** MySQL no disponible. Los errores responden
 FastAPI. El 500 devuelve siempre `Error interno del servidor`: el detalle y la
 traza se escriben solo en el log, nunca en la respuesta.
 
+## Filtrar y buscar en los listados (#22)
+
+Los filtros se combinan con AND, se ordenan los resultados por ID y después
+se aplica `offset`/`limit` (máximo 100). Sin filtros se conserva el listado
+completo paginado; sin coincidencias se devuelve `200 []`.
+
+| Listado | Filtros disponibles |
+|---|---|
+| `/v1/clientes` | `nombre`, `email`, `estado_membresia`, `fecha_inscripcion_desde`, `fecha_inscripcion_hasta`, `q` |
+| `/v1/entrenadores` | `nombre`, `especialidad`, `telefono`, `q` |
+| `/v1/clases` | `nombre_clase`, `id_entrenador`, `horario_desde`, `horario_hasta`, `q` |
+| `/v1/reservas` | `id_cliente`, `id_clase`, `asistio`, `fecha_reserva_desde`, `fecha_reserva_hasta` |
+| `/v1/pagos` | `id_cliente`, `metodo_pago`, `fecha_pago_desde`, `fecha_pago_hasta` |
+
+Los campos de texto buscan fragmentos literales sin distinguir mayúsculas;
+`%` y `_` no son comodines. `q` busca en nombre/email de clientes,
+nombre/especialidad/teléfono de entrenadores, o nombre de clase. Los demás
+filtros siguen aplicándose aunque se use `q`.
+
+Los intervalos incluyen ambos extremos. Fechas: `YYYY-MM-DD`; horarios y fechas
+de reserva: UTC sin sufijo de zona. Un campo null no coincide con un filtro
+sobre ese campo. Los filtros opcionales se omiten cuando no se necesitan;
+enviar texto vacío, parámetros desconocidos, tipos o valores inválidos devuelve
+422. Un intervalo válido por tipo pero invertido devuelve 400 con `detail`.
+
+Ejemplos (también disponibles como parámetros en Swagger):
+
+```text
+GET /v1/clientes?estado_membresia=Activo&q=ana&limit=10
+GET /v1/clases?id_entrenador=1&horario_desde=2026-11-01T00:00:00
+GET /v1/reservas?id_cliente=1&asistio=false
+GET /v1/pagos?id_cliente=1&fecha_pago_desde=2026-10-01&fecha_pago_hasta=2026-10-31
+```
+
+`GET /v1/export/csv?tablas=clientes` mantiene el contrato de #18: exporta la
+tabla completa, sin aplicar los filtros ni la paginación de estos GET.
+Los filtros de `/v1/users` pertenecen a #61 y dependen de la implementación de #57.
+
 ## Probar una reserva desde Swagger
 
 Ejecuta los `POST` en este orden y reutiliza los IDs devueltos (los valores 1

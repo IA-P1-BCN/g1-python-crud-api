@@ -306,3 +306,165 @@ def test_seed_repetido_no_duplica_ni_sobrescribe(mysql_ready):
             assert ana.estado_membresia == "Suspendido"
         finally:
             session.rollback()
+
+
+def test_filtros_clientes_busqueda_y_paginacion(api):
+    token = uuid4().hex
+    rows = [
+        api.create(
+            "clientes",
+            {
+                "nombre": f"{token} Ana {i}",
+                "email": f"{token}.{i}@example.com",
+                "estado_membresia": state,
+                "fecha_inscripcion": day,
+            },
+        )
+        for i, (state, day) in enumerate(
+            [
+                ("Inactivo", "2026-10-01"),
+                ("Activo", "2026-10-01"),
+                ("Activo", "2026-10-02"),
+                ("Suspendido", None),
+            ]
+        )
+    ]
+
+    def listed(**params):
+        response = api.client.get("/v1/clientes", params=params)
+        assert response.status_code == 200, response.text
+        return response.json()
+
+    assert listed(nombre=token.upper(), estado_membresia="Activo") == rows[1:3]
+    assert listed(q=token, estado_membresia="Activo", offset=1, limit=1) == [rows[2]]
+    assert listed(email=f"{token}.1@EXAMPLE") == [rows[1]]
+    assert listed(q=f"{token}.2@") == [rows[2]]
+    assert listed(
+        q=token,
+        fecha_inscripcion_desde="2026-10-02",
+        fecha_inscripcion_hasta="2026-10-02",
+    ) == [rows[2]]
+    assert listed(q=token, fecha_inscripcion_hasta="2026-10-01") == rows[:2]
+    assert listed(q=token, nombre="no-coincide") == []
+    assert listed(q=token, estado_membresia="Suspendido") == [rows[3]]
+    assert listed(q="' OR 1=1 --") == []
+
+
+def test_filtros_entrenadores_y_comodines_literales(api):
+    token = uuid4().hex
+    exact = api.create(
+        "entrenadores",
+        {
+            "nombre": f"{token} Yoga_100%/A",
+            "especialidad": "Pilates",
+            "telefono": "600123456",
+        },
+    )
+    api.create(
+        "entrenadores", {"nombre": f"{token} YogaX100algo/A", "especialidad": None}
+    )
+    for params in [
+        {"nombre": f"{token} Yoga_100%/A"},
+        {"q": token, "especialidad": "PIL", "telefono": "123"},
+        {"q": "_100%/A", "nombre": token},
+    ]:
+        response = api.client.get("/v1/entrenadores", params=params)
+        assert response.status_code == 200, response.text
+        assert response.json() == [exact]
+
+
+def test_filtros_clases_pagos_y_reservas(api, clase):
+    cliente = api.member()
+    other = api.member()
+    second = api.create(
+        "clases",
+        {
+            "nombre_clase": "Pilates filtrado",
+            "horario": "2026-11-02T10:00:00",
+            "capacidad_max": 2,
+            "id_entrenador": clase["id_entrenador"],
+        },
+    )
+    extra = api.create(
+        "pagos",
+        {
+            "id_cliente": cliente["id_cliente"],
+            "monto": "10.00",
+            "fecha_pago": "2026-10-07",
+            "metodo_pago": "Tarjeta",
+        },
+    )
+    first = api.create(
+        "reservas",
+        {
+            "id_cliente": cliente["id_cliente"],
+            "id_clase": clase["id_clase"],
+        },
+    )
+    attended = api.create(
+        "reservas",
+        {
+            "id_cliente": cliente["id_cliente"],
+            "id_clase": second["id_clase"],
+            "asistio": True,
+        },
+    )
+    api.create(
+        "reservas", {"id_cliente": other["id_cliente"], "id_clase": clase["id_clase"]}
+    )
+    cases = [
+        (
+            "clases",
+            {
+                "id_entrenador": clase["id_entrenador"],
+                "horario_desde": clase["horario"],
+                "horario_hasta": clase["horario"],
+                "q": "YOGA",
+            },
+            [clase],
+        ),
+        (
+            "clases",
+            {"id_entrenador": clase["id_entrenador"], "nombre_clase": "PILATES"},
+            [second],
+        ),
+        (
+            "pagos",
+            {
+                "id_cliente": cliente["id_cliente"],
+                "metodo_pago": "Tarjeta",
+                "fecha_pago_desde": "2026-10-07",
+                "fecha_pago_hasta": "2026-10-07",
+            },
+            [extra],
+        ),
+        ("pagos", {"id_cliente": 2147483647}, []),
+        (
+            "reservas",
+            {
+                "id_cliente": cliente["id_cliente"],
+                "id_clase": clase["id_clase"],
+                "asistio": "false",
+            },
+            [first],
+        ),
+        (
+            "reservas",
+            {"id_cliente": cliente["id_cliente"], "asistio": "true"},
+            [attended],
+        ),
+        (
+            "reservas",
+            {
+                "id_cliente": cliente["id_cliente"],
+                "id_clase": clase["id_clase"],
+                "fecha_reserva_desde": first["fecha_reserva"],
+                "fecha_reserva_hasta": first["fecha_reserva"],
+            },
+            [first],
+        ),
+    ]
+    for resource, params, expected in cases:
+        response = api.client.get(f"/v1/{resource}", params=params)
+        assert response.status_code == 200, response.text
+        assert response.json() == expected

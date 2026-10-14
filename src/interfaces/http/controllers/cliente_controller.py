@@ -6,14 +6,17 @@ from src.application.use_cases.gym_use_cases import GymUseCases
 from src.domain.entities.gym import Cliente
 from src.domain.repositories.gym_port import GymRepository
 from src.interfaces.http.schemas.gym_schema import ClienteInput, ClienteResponse
+from src.interfaces.http.schemas.list_query import ClienteQuery
 
 logger = logging.getLogger(__name__)
 
 
 def list_clientes(
-    repository: GymRepository, offset: int, limit: int
+    repository: GymRepository, query: ClienteQuery
 ) -> list[ClienteResponse]:
-    entities = GymUseCases(repository).list(Cliente, offset, limit)
+    entities = GymUseCases(repository).list(
+        Cliente, query.offset, query.limit, query.to_filters()
+    )
     return [ClienteResponse.model_validate(entity) for entity in entities]
 
 

@@ -6,14 +6,15 @@ from src.application.use_cases.gym_use_cases import GymUseCases
 from src.domain.entities.gym import Clase
 from src.domain.repositories.gym_port import GymRepository
 from src.interfaces.http.schemas.gym_schema import ClaseInput, ClaseResponse
+from src.interfaces.http.schemas.list_query import ClaseQuery
 
 logger = logging.getLogger(__name__)
 
 
-def list_clases(
-    repository: GymRepository, offset: int, limit: int
-) -> list[ClaseResponse]:
-    entities = GymUseCases(repository).list(Clase, offset, limit)
+def list_clases(repository: GymRepository, query: ClaseQuery) -> list[ClaseResponse]:
+    entities = GymUseCases(repository).list(
+        Clase, query.offset, query.limit, query.to_filters()
+    )
     return [ClaseResponse.model_validate(entity) for entity in entities]
 
 
