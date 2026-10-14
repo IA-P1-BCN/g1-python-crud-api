@@ -3,28 +3,6 @@
 import pytest
 
 
-@pytest.fixture
-def authenticated_accounts(registration_client):
-    client, repository = registration_client
-    rows = [
-        client.post(
-            "/v1/auth/register",
-            json={
-                "nombre": f"Cuenta {i}",
-                "email": f"cuenta{i}@example.com",
-                "password": "contraseña de prueba",
-            },
-        ).json()
-        for i in range(3)
-    ]
-    token = client.post(
-        "/v1/auth/login",
-        data={"username": rows[0]["email"], "password": "contraseña de prueba"},
-    ).json()["access_token"]
-    client.headers["Authorization"] = f"Bearer {token}"
-    return client, repository, rows
-
-
 def test_listado_detalle_y_404(authenticated_accounts):
     client, _, rows = authenticated_accounts
     assert client.get("/v1/users").json() == rows

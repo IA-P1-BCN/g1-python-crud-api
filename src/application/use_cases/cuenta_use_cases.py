@@ -1,5 +1,7 @@
 """Casos de uso de identidad; depende únicamente del dominio."""
 
+from dataclasses import replace
+
 from src.domain.entities.cuenta import Cuenta
 from src.domain.errors import ConflictError, NotFoundError
 from src.domain.repositories.cuenta_port import CuentaRepository
@@ -24,6 +26,27 @@ class CuentaUseCases:
         if cuenta is None:
             raise NotFoundError(f"Cuenta con id {cuenta_id} no existe")
         return cuenta
+
+    def update(
+        self,
+        cuenta_id: int,
+        nombre: str | None = None,
+        email: str | None = None,
+        password: str | None = None,
+    ) -> Cuenta:
+        with self._repository.transaction():
+            previous = self._require(cuenta_id, lock=True)
+            cuenta = replace(previous)
+            if nombre is not None:
+                cuenta.nombre = nombre
+            if email is not None:
+                cuenta.email = email.lower()
+                existing = self._repository.get_by_email(cuenta.email)
+                if existing is not None and existing.id != cuenta_id:
+                    raise ConflictError("Email de Cuenta ya registrado")
+            if password is not None:
+                cuenta.password_hash = self._hasher.hash(password)
+            return self._repository.update(cuenta)
 
     def register(
         self, nombre: str, email: str, password: str, crear_cliente: bool = False

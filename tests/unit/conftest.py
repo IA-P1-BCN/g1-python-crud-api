@@ -147,6 +147,13 @@ class RegistrationRepository:
     def get_by_email(self, email):
         return next((cuenta for cuenta in self.cuentas if cuenta.email == email), None)
 
+    def update(self, cuenta):
+        index = next(
+            i for i, current in enumerate(self.cuentas) if current.id == cuenta.id
+        )
+        self.cuentas[index] = cuenta
+        return cuenta
+
     def get(self, cuenta_id, *, lock=False):
         return next((cuenta for cuenta in self.cuentas if cuenta.id == cuenta_id), None)
 
@@ -170,3 +177,25 @@ def registration_client():
             yield client, repository
     finally:
         app.dependency_overrides.pop(get_cuenta_repository, None)
+
+
+@pytest.fixture
+def authenticated_accounts(registration_client):
+    client, repository = registration_client
+    rows = [
+        client.post(
+            "/v1/auth/register",
+            json={
+                "nombre": f"Cuenta {i}",
+                "email": f"cuenta{i}@example.com",
+                "password": "contraseña de prueba",
+            },
+        ).json()
+        for i in range(3)
+    ]
+    token = client.post(
+        "/v1/auth/login",
+        data={"username": rows[0]["email"], "password": "contraseña de prueba"},
+    ).json()["access_token"]
+    client.headers["Authorization"] = f"Bearer {token}"
+    return client, repository, rows

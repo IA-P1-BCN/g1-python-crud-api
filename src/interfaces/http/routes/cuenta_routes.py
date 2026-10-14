@@ -8,7 +8,11 @@ from src.domain.entities.cuenta import Cuenta
 from src.interfaces.http.controllers.cuenta_controller import CuentaController
 from src.interfaces.http.dependencies import get_cuenta_controller, get_current_user
 from src.interfaces.http.errors import PROTECTED_ERRORS
-from src.interfaces.http.schemas.cuenta_schema import CuentaResponse
+from src.interfaces.http.schemas.cuenta_schema import (
+    CuentaPatch,
+    CuentaPut,
+    CuentaResponse,
+)
 from src.interfaces.http.schemas.list_query import ListQuery
 
 router = APIRouter(prefix="/users", tags=["cuentas"])
@@ -49,3 +53,27 @@ def get_cuenta(
     id: CuentaId, cuenta: CurrentCuenta, controller: Controller
 ) -> CuentaResponse:
     return controller.get(id)
+
+
+@router.put(
+    "/{id}",
+    summary="Sustituir los datos de una Cuenta",
+    response_model=CuentaResponse,
+    responses=PROTECTED_ERRORS,
+)
+def put_cuenta(
+    id: CuentaId, data: CuentaPut, cuenta: CurrentCuenta, controller: Controller
+) -> CuentaResponse:
+    return controller.update(id, data)
+
+
+@router.patch(
+    "/{id}",
+    summary="Editar parcialmente una Cuenta",
+    response_model=CuentaResponse,
+    responses=PROTECTED_ERRORS,
+)
+def patch_cuenta(
+    id: CuentaId, data: CuentaPatch, cuenta: CurrentCuenta, controller: Controller
+) -> CuentaResponse:
+    return controller.update(id, data)

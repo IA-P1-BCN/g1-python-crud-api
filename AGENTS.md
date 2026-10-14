@@ -143,6 +143,17 @@ src/
 - Nueva migración: `uv run alembic revision -m "descripcion"` y editar el
   fichero generado en `migrations/versions/`.
 
+## Edición de Cuentas (#58)
+
+- PUT/PATCH `/v1/users/{id}` exigen Cuenta activa autenticada. Solo nombre,
+  email y password son editables; rol, activo y vínculo siguen fuera del contrato.
+- PUT exige nombre/email; password omitida conserva hash (excepción explícita
+  al reemplazo de campos del CRUD V1, según #58). PATCH conserva los omitidos.
+- Null explícito, PATCH vacío o campo protegido → 422; duplicado → 409,
+  inexistente → 404. La edición bloquea la fila y conserva fecha de creación.
+- Contraseña nueva siempre Argon2 y literal. #66 sigue cubriendo el flujo propio
+  con verificación de la contraseña actual.
+
 ## Consulta de Cuentas (#57)
 
 - GET `/v1/users` y `/v1/users/{id}` exigen Cuenta activa autenticada.
