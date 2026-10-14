@@ -1,7 +1,7 @@
 """Casos de uso de identidad; depende únicamente del dominio."""
 
 from src.domain.entities.cuenta import Cuenta
-from src.domain.errors import ConflictError
+from src.domain.errors import ConflictError, NotFoundError
 from src.domain.repositories.cuenta_port import CuentaRepository
 from src.domain.security import PasswordHasher
 
@@ -10,6 +10,20 @@ class CuentaUseCases:
     def __init__(self, repository: CuentaRepository, hasher: PasswordHasher) -> None:
         self._repository = repository
         self._hasher = hasher
+
+    def list(self, offset: int = 0, limit: int = 100) -> list[Cuenta]:
+        with self._repository.transaction():
+            return self._repository.list(offset, limit)
+
+    def get(self, cuenta_id: int) -> Cuenta:
+        with self._repository.transaction():
+            return self._require(cuenta_id)
+
+    def _require(self, cuenta_id: int, *, lock: bool = False) -> Cuenta:
+        cuenta = self._repository.get(cuenta_id, lock=lock)
+        if cuenta is None:
+            raise NotFoundError(f"Cuenta con id {cuenta_id} no existe")
+        return cuenta
 
     def register(
         self, nombre: str, email: str, password: str, crear_cliente: bool = False

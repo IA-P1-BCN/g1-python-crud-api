@@ -234,7 +234,7 @@ def test_traduce_errores(client, repository, monkeypatch, error, status):
 def test_openapi_documenta_todos_los_endpoints(client):
     spec = client.get("/openapi.json").json()
     paths = spec["paths"]
-    assert "/v1/users" not in paths
+    assert "/v1/users" in paths
     assert "/v1/auth/login" in paths
     assert "OAuth2PasswordBearer" in spec["components"]["securitySchemes"]
     for resource, id_field, _, _ in CASES:

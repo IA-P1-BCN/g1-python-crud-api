@@ -143,6 +143,13 @@ src/
 - Nueva migración: `uv run alembic revision -m "descripcion"` y editar el
   fichero generado en `migrations/versions/`.
 
+## Consulta de Cuentas (#57)
+
+- GET `/v1/users` y `/v1/users/{id}` exigen Cuenta activa autenticada.
+  Listado por id, offset >= 0, limit 1–100. Id inexistente → 404.
+- Respuesta CuentaResponse sin credenciales; parámetros desconocidos → 422.
+- Restricción de listado a admin sigue siendo el alcance independiente de #65.
+
 ## Perfil autenticado (#56)
 
 - `get_current_user` verifica JWT y vuelve a leer Cuenta: sin identidad válida
