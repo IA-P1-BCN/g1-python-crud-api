@@ -159,6 +159,22 @@ src/
 - Tests: `tests/unit/test_logging.py` (fichero de salida en `tmp_path`, nivel
   e idempotencia).
 
+## Skills del equipo (#79)
+
+- Se versionan dos skills en `.opencode/skills/`: `gymflow-verify` comprueba
+  una entrega y su evidencia; `gymflow-review` revisa el diff contra la spec,
+  las capas y las reglas de negocio.
+- OpenCode las descubre automáticamente. Sus comandos son `/gymflow-verify`
+  y `/gymflow-review`, definidos en `.opencode/commands/`; aceptan el alcance
+  de la revisión como texto. Usan el agente/modelo ya configurado por la persona.
+- Otros agentes pueden leer directamente el `SKILL.md` correspondiente y
+  seguirlo; no se instala configuración global ni se presupone autodetección
+  fuera de OpenCode.
+- Ejemplo: `/gymflow-review cambios de la issue #22 frente a origin/main`.
+  Para verificar una entrega, `/gymflow-verify rama actual`.
+- Registrar su uso real en `docs/ai-log.md`. Estas skills no autorizan publicar,
+  aprobar ni mergear; la revisión humana continúa siendo obligatoria.
+
 ## Tooling
 
 - **uv** gestiona dependencias y entorno virtual (`pyproject.toml` + `uv.lock`).
