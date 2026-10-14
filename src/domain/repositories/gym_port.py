@@ -4,13 +4,18 @@ from contextlib import AbstractContextManager
 from typing import Protocol
 
 from src.domain.entities.gym import GymEntity
+from src.domain.list_filters import ListFilters
 
 
 class GymRepository(Protocol):
     def transaction(self) -> AbstractContextManager[None]: ...
 
     def list[T: GymEntity](
-        self, entity_type: type[T], offset: int, limit: int
+        self,
+        entity_type: type[T],
+        offset: int,
+        limit: int,
+        filters: ListFilters | None = None,
     ) -> list[T]: ...
 
     def list_all[T: GymEntity](self, entity_type: type[T]) -> list[T]: ...

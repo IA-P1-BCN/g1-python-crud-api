@@ -11,6 +11,7 @@ from fastapi.testclient import TestClient
 
 from main import app
 from src.domain.entities.gym import ID_FIELDS, Clase, Cliente, Entrenador, Pago, Reserva
+from src.domain.list_filters import SEARCH_FIELDS
 from src.interfaces.http.dependencies import get_gym_repository
 
 
@@ -28,8 +29,46 @@ class MemoryRepository:
             self.data = snapshot
             raise
 
-    def list(self, entity_type, offset, limit):
-        return list(self.data[entity_type].values())[offset : offset + limit]
+    def list(self, entity_type, offset, limit, filters=None):
+        rows = list(self.data[entity_type].values())
+        if filters:
+            for name, value in filters.contains:
+                rows = [
+                    row
+                    for row in rows
+                    if value.lower() in (getattr(row, name) or "").lower()
+                ]
+            for name, value in filters.equals:
+                rows = [row for row in rows if getattr(row, name) == value]
+            if filters.date_field and filters.date_from is not None:
+                rows = [
+                    row
+                    for row in rows
+                    if (
+                        getattr(row, filters.date_field) is not None
+                        and getattr(row, filters.date_field) >= filters.date_from
+                    )
+                ]
+            if filters.date_field and filters.date_to is not None:
+                rows = [
+                    row
+                    for row in rows
+                    if (
+                        getattr(row, filters.date_field) is not None
+                        and getattr(row, filters.date_field) <= filters.date_to
+                    )
+                ]
+            if filters.search is not None:
+                rows = [
+                    row
+                    for row in rows
+                    if any(
+                        filters.search.lower() in (getattr(row, name) or "").lower()
+                        for name in SEARCH_FIELDS[entity_type]
+                    )
+                ]
+        rows.sort(key=lambda row: getattr(row, ID_FIELDS[entity_type]))
+        return rows[offset : offset + limit]
 
     def list_all(self, entity_type):
         return list(self.data[entity_type].values())

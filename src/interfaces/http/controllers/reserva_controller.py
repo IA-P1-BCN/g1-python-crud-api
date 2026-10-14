@@ -7,14 +7,17 @@ from src.application.use_cases.gym_use_cases import GymUseCases
 from src.domain.entities.gym import Reserva
 from src.domain.repositories.gym_port import GymRepository
 from src.interfaces.http.schemas.gym_schema import ReservaInput, ReservaResponse
+from src.interfaces.http.schemas.list_query import ReservaQuery
 
 logger = logging.getLogger(__name__)
 
 
 def list_reservas(
-    repository: GymRepository, offset: int, limit: int
+    repository: GymRepository, query: ReservaQuery
 ) -> list[ReservaResponse]:
-    entities = GymUseCases(repository).list(Reserva, offset, limit)
+    entities = GymUseCases(repository).list(
+        Reserva, query.offset, query.limit, query.to_filters()
+    )
     return [ReservaResponse.model_validate(entity) for entity in entities]
 
 
@@ -29,7 +32,12 @@ def create_reserva(repository: GymRepository, data: ReservaInput) -> ReservaResp
             **data.model_dump(), fecha_reserva=datetime.now(UTC).replace(tzinfo=None)
         )
     )
-    logger.info("Reserva creada: id=%s cliente_id=%s clase_id=%s", entity.id_reserva, entity.id_cliente, entity.id_clase)
+    logger.info(
+        "Reserva creada: id=%s cliente_id=%s clase_id=%s",
+        entity.id_reserva,
+        entity.id_cliente,
+        entity.id_clase,
+    )
     return ReservaResponse.model_validate(entity)
 
 

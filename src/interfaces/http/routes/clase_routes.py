@@ -7,8 +7,9 @@ from fastapi import APIRouter, Depends, Path, Query, Response
 from src.domain.repositories.gym_port import GymRepository
 from src.interfaces.http.controllers import clase_controller as controller
 from src.interfaces.http.dependencies import get_gym_repository
-from src.interfaces.http.errors import CRUD_ERRORS
+from src.interfaces.http.errors import CRUD_ERRORS, LIST_ERRORS
 from src.interfaces.http.schemas.gym_schema import ClaseInput, ClaseResponse
+from src.interfaces.http.schemas.list_query import ClaseQuery
 
 router = APIRouter(prefix="/clases", tags=["clases"])
 Repository = Annotated[GymRepository, Depends(get_gym_repository)]
@@ -19,14 +20,13 @@ EntityId = Annotated[int, Path(gt=0, le=2147483647)]
     "",
     response_model=list[ClaseResponse],
     summary="Lista clases",
-    responses=CRUD_ERRORS,
+    responses=LIST_ERRORS,
 )
 def list_clases(
     repository: Repository,
-    offset: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(ge=1, le=100)] = 100,
+    query: Annotated[ClaseQuery, Query()],
 ) -> list[ClaseResponse]:
-    return controller.list_clases(repository, offset, limit)
+    return controller.list_clases(repository, query)
 
 
 @router.get(

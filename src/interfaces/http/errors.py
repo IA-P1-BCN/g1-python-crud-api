@@ -5,7 +5,12 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from src.domain.errors import ConflictError, NotFoundError, RepositoryUnavailableError
+from src.domain.errors import (
+    ConflictError,
+    InvalidQueryError,
+    NotFoundError,
+    RepositoryUnavailableError,
+)
 from src.interfaces.http.schemas.gym_schema import ErrorResponse
 
 logger = logging.getLogger(__name__)
@@ -23,8 +28,16 @@ CRUD_ERRORS = {
     503: {"model": ErrorResponse, "description": "Base de datos no disponible"},
 }
 
+LIST_ERRORS = {
+    **CRUD_ERRORS,
+    400: {"model": ErrorResponse, "description": "Intervalo de fechas invertido"},
+}
+
 
 def register_crud_error_handlers(app: FastAPI) -> None:
+    async def invalid_query(request: Request, exc: InvalidQueryError) -> JSONResponse:
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
+
     async def not_found(request: Request, exc: NotFoundError) -> JSONResponse:
         logger.warning(
             "Recurso no encontrado: %s %s - %s",
@@ -64,6 +77,7 @@ def register_crud_error_handlers(app: FastAPI) -> None:
         return JSONResponse(status_code=500, content={"detail": INTERNAL_ERROR_MESSAGE})
 
     app.add_exception_handler(NotFoundError, not_found)
+    app.add_exception_handler(InvalidQueryError, invalid_query)
     app.add_exception_handler(ConflictError, conflict)
     app.add_exception_handler(RepositoryUnavailableError, unavailable)
     app.add_exception_handler(Exception, unexpected)

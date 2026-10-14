@@ -7,8 +7,9 @@ from fastapi import APIRouter, Depends, Path, Query, Response
 from src.domain.repositories.gym_port import GymRepository
 from src.interfaces.http.controllers import cliente_controller as controller
 from src.interfaces.http.dependencies import get_gym_repository
-from src.interfaces.http.errors import CRUD_ERRORS
+from src.interfaces.http.errors import CRUD_ERRORS, LIST_ERRORS
 from src.interfaces.http.schemas.gym_schema import ClienteInput, ClienteResponse
+from src.interfaces.http.schemas.list_query import ClienteQuery
 
 router = APIRouter(prefix="/clientes", tags=["clientes"])
 Repository = Annotated[GymRepository, Depends(get_gym_repository)]
@@ -19,14 +20,13 @@ EntityId = Annotated[int, Path(gt=0, le=2147483647)]
     "",
     response_model=list[ClienteResponse],
     summary="Lista clientes",
-    responses=CRUD_ERRORS,
+    responses=LIST_ERRORS,
 )
 def list_clientes(
     repository: Repository,
-    offset: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(ge=1, le=100)] = 100,
+    query: Annotated[ClienteQuery, Query()],
 ) -> list[ClienteResponse]:
-    return controller.list_clientes(repository, offset, limit)
+    return controller.list_clientes(repository, query)
 
 
 @router.get(

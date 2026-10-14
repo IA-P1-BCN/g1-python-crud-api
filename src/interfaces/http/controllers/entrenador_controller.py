@@ -6,14 +6,17 @@ from src.application.use_cases.gym_use_cases import GymUseCases
 from src.domain.entities.gym import Entrenador
 from src.domain.repositories.gym_port import GymRepository
 from src.interfaces.http.schemas.gym_schema import EntrenadorInput, EntrenadorResponse
+from src.interfaces.http.schemas.list_query import EntrenadorQuery
 
 logger = logging.getLogger(__name__)
 
 
 def list_entrenadores(
-    repository: GymRepository, offset: int, limit: int
+    repository: GymRepository, query: EntrenadorQuery
 ) -> list[EntrenadorResponse]:
-    entities = GymUseCases(repository).list(Entrenador, offset, limit)
+    entities = GymUseCases(repository).list(
+        Entrenador, query.offset, query.limit, query.to_filters()
+    )
     return [EntrenadorResponse.model_validate(entity) for entity in entities]
 
 
@@ -26,7 +29,9 @@ def create_entrenador(
     repository: GymRepository, data: EntrenadorInput
 ) -> EntrenadorResponse:
     entity = GymUseCases(repository).create(Entrenador(**data.model_dump()))
-    logger.info("Entrenador creado: id=%s nombre=%s", entity.id_entrenador, entity.nombre)
+    logger.info(
+        "Entrenador creado: id=%s nombre=%s", entity.id_entrenador, entity.nombre
+    )
     return EntrenadorResponse.model_validate(entity)
 
 

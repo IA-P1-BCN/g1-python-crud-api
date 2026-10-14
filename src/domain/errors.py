@@ -11,3 +11,7 @@ class ConflictError(Exception):
 
 class RepositoryUnavailableError(Exception):
     """No se puede acceder a la persistencia."""
+
+
+class InvalidQueryError(Exception):
+    """Los criterios de una consulta son incompatibles entre sí."""

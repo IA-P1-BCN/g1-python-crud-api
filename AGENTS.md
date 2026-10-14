@@ -90,6 +90,21 @@ src/
 - No se exportan datos a formato distinto de CSV; para añadir otro formato se
   crearía un helper análogo a `csv_exports.py`.
 
+## Listados filtrados (#22)
+
+- Los cinco GET de listado aceptan filtros tipados en
+  `src/interfaces/http/schemas/list_query.py`. Los controladores los convierten
+  a `ListFilters` (dataclass de dominio); SQLAlchemy los aplica antes de paginar.
+- Texto: fragmentos literales, sin distinguir mayúsculas; escapar `%`, `_` y el
+  carácter de escape en LIKE. `q` agrupa campos de texto con OR; los filtros
+  distintos se combinan con AND. Mantener orden por ID y `limit <= 100`.
+- Rangos inclusivos; DATE y DATETIME UTC sin zona, según el campo. Los valores
+  null no coinciden con un filtro explícito sobre ese campo.
+- Tipos/valores/parámetros desconocidos inválidos → 422. El caso de uso rechaza
+  un intervalo invertido con `InvalidQueryError` → 400; `LIST_ERRORS` lo documenta.
+- La exportación CSV sigue usando `list_all`, sin filtros ni paginación. Los
+  filtros de cuentas (#61) y los errores 401/403 (#23) esperan la base de auth.
+
 ## Manejo de errores
 
 - Las capas internas lanzan errores de dominio (`src/domain/errors.py`:

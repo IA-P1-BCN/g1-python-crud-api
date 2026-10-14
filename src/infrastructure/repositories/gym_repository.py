@@ -4,7 +4,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import asdict, fields
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
@@ -18,6 +18,7 @@ from src.domain.entities.gym import (
     Reserva,
 )
 from src.domain.errors import ConflictError, RepositoryUnavailableError
+from src.domain.list_filters import SEARCH_FIELDS, ListFilters
 from src.infrastructure.database.models import (
     ClaseRecord,
     ClienteRecord,
@@ -58,12 +59,42 @@ class SqlAlchemyGymRepository:
             raise RepositoryUnavailableError("Base de datos no disponible") from exc
 
     def list[T: GymEntity](
-        self, entity_type: type[T], offset: int, limit: int
+        self,
+        entity_type: type[T],
+        offset: int,
+        limit: int,
+        filters: ListFilters | None = None,
     ) -> list[T]:
         model = MODELS[entity_type]
+        filters = filters or ListFilters()
+        statement = select(model)
+        for name, value in filters.contains:
+            statement = statement.where(
+                func.lower(getattr(model, name)).contains(
+                    value.lower(), autoescape=True
+                )
+            )
+        for name, value in filters.equals:
+            statement = statement.where(getattr(model, name) == value)
+        if filters.date_field is not None:
+            column = getattr(model, filters.date_field)
+            if filters.date_from is not None:
+                statement = statement.where(column >= filters.date_from)
+            if filters.date_to is not None:
+                statement = statement.where(column <= filters.date_to)
+        if filters.search is not None:
+            statement = statement.where(
+                or_(
+                    *(
+                        func.lower(getattr(model, name)).contains(
+                            filters.search.lower(), autoescape=True
+                        )
+                        for name in SEARCH_FIELDS[entity_type]
+                    )
+                )
+            )
         statement = (
-            select(model)
-            .order_by(getattr(model, ID_FIELDS[entity_type]))
+            statement.order_by(getattr(model, ID_FIELDS[entity_type]))
             .offset(offset)
             .limit(limit)
         )

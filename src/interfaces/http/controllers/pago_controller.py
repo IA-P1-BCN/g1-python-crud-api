@@ -6,14 +6,15 @@ from src.application.use_cases.gym_use_cases import GymUseCases
 from src.domain.entities.gym import Pago
 from src.domain.repositories.gym_port import GymRepository
 from src.interfaces.http.schemas.gym_schema import PagoInput, PagoResponse
+from src.interfaces.http.schemas.list_query import PagoQuery
 
 logger = logging.getLogger(__name__)
 
 
-def list_pagos(
-    repository: GymRepository, offset: int, limit: int
-) -> list[PagoResponse]:
-    entities = GymUseCases(repository).list(Pago, offset, limit)
+def list_pagos(repository: GymRepository, query: PagoQuery) -> list[PagoResponse]:
+    entities = GymUseCases(repository).list(
+        Pago, query.offset, query.limit, query.to_filters()
+    )
     return [PagoResponse.model_validate(entity) for entity in entities]
 
 
@@ -24,7 +25,12 @@ def get_pago(repository: GymRepository, entity_id: int) -> PagoResponse:
 
 def create_pago(repository: GymRepository, data: PagoInput) -> PagoResponse:
     entity = GymUseCases(repository).create(Pago(**data.model_dump()))
-    logger.info("Pago creado: id=%s cliente_id=%s monto=%s", entity.id_pago, entity.id_cliente, entity.monto)
+    logger.info(
+        "Pago creado: id=%s cliente_id=%s monto=%s",
+        entity.id_pago,
+        entity.id_cliente,
+        entity.monto,
+    )
     return PagoResponse.model_validate(entity)
 
 
