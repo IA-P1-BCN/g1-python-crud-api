@@ -220,6 +220,19 @@ src/
 - Flujo: issue → rama → commit → PR a `main` con `Closes #N` → review → merge.
 - `main` está protegida: los cambios entran solo vía PR con 1 approval.
 
+## Bitácora de IA y revisión de PR (#63)
+
+- Cada funcionalidad principal registra en `docs/ai-log.md` herramienta/modelo,
+  prompts clave, errores/correcciones y decisiones aceptadas o rechazadas.
+  Indicar lo que no se pudo comprobar y los tests saltados; no inventar evidencia.
+- Cada autor mantiene la entrada de su trabajo y la enlaza desde la PR junto
+  con la issue y la spec. La responsable de #63 revisa que el registro continúe
+  durante las entregas; no tiene que reconstruir las sesiones de otras personas.
+- Usar `.github/pull_request_template.md` como checklist de revisión. Verificar
+  la bitácora forma parte del DoD de cada PR de funcionalidad; la revisión
+  humana sigue siendo obligatoria antes del merge.
+- Nunca incluir secretos, tokens, contenido de `.env` ni datos personales.
+
 ## Planificación (issues, milestones, prioridad y bloqueos)
 
 - Los milestones equivalen a los niveles de entrega: #2 Nivel medio,
