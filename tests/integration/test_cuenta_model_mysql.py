@@ -8,7 +8,11 @@ from sqlalchemy.exc import IntegrityError, OperationalError
 
 from scripts.seed_accounts import seed_accounts
 from src.infrastructure.database.engine import SessionLocal, engine
-from src.infrastructure.database.models import ClienteRecord, CuentaRecord
+from src.infrastructure.database.models import (
+    ClienteRecord,
+    CuentaRecord,
+    VersionRecord,
+)
 from src.infrastructure.security.passwords import Argon2PasswordHasher
 
 
@@ -29,6 +33,10 @@ def account_session():
 
 def test_migracion_unicidad_y_vinculo(account_session):
     session = account_session
+    assert (
+        session.scalar(select(VersionRecord).where(VersionRecord.version == "0.3"))
+        is not None
+    )
     cliente = ClienteRecord(nombre="Prueba", estado_membresia="Activo")
     session.add(cliente)
     session.flush()

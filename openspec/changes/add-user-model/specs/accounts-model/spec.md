@@ -6,7 +6,8 @@ fecha_creacion UTC, rol admin/staff/cliente e id_cliente opcional y único.
 
 #### Scenario: Esquema aplicado
 - **WHEN** se ejecuta la migración
-- **THEN** users existe y rechaza emails duplicados y vínculos repetidos
+- **THEN** la tabla versions registra 0.3 para que /health/db lea la versión del esquema
+- **AND** users existe y rechaza emails duplicados y vínculos repetidos
 - **AND** borrar un Cliente vinculado se bloquea; borrar su Cuenta conserva el Cliente
 
 ### Requirement: Credenciales protegidas
