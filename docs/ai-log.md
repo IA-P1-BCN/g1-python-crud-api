@@ -40,6 +40,8 @@ La [plantilla de PR](../.github/pull_request_template.md) recuerda enlazar esta
 entrada, la issue y la spec, y comprobar evidencia y revisión humana. Esta
 checklist es una ayuda de revisión; no es una barrera automática de CI.
 La bitácora sigue viva hasta completar las funcionalidades del proyecto.
+La preparación de este proceso queda registrada en
+[la entrada de #63](ai-log/2026-10-14-bitacora.md).
 
 ## Entradas
 
@@ -54,21 +56,3 @@ La bitácora sigue viva hasta completar las funcionalidades del proyecto.
   tareas de tests fusionadas en su tarea de feature (convención del repo).
   Decisión de diseño: Cuenta (`users`) separada de Cliente con vínculo 1:1
   (ADR 0001). Prioridades P1/P2/P3 y bloqueos (#refs) añadidos a cada tarea.
-
-### 2026-10-14 — #63 — Continuidad de la bitácora
-
-- **Herramienta/modelo:** Codex, GPT-6 (identificación del entorno).
-- **Qué se pidió y prompts clave:** completar las tareas de Fabiana,
-  priorizando la STORY #49 según el PO, y dejar un resumen breve para el equipo.
-- **Qué salió bien:** se define una plantilla de entradas y se incorpora su
-  enlace a la checklist de cada PR de funcionalidad.
-- **Errores y corrección:** no se detectaron errores funcionales en este cambio
-  documental. Se distingue la comprobación humana de una barrera automática.
-- **Decisiones:** mantener una bitácora compartida; cada autor aporta la
-  evidencia de su funcionalidad. No cerrar #63 al crear la plantilla porque su
-  alcance exige continuar el registro durante las siguientes entregas.
-- **Validación:** revisión de enlaces y `git diff --check`. El código Python
-  coincide con la base validada durante #62: 101 tests aprobados con MySQL,
-  sin skips; este cambio no introduce lógica ejecutable.
-- **Spec:** la issue #63 indica expresamente que no requiere carpeta de cambio.
-- **Pendiente:** continuar las entradas por funcionalidad y revisión humana.
