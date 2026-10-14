@@ -147,6 +147,9 @@ class RegistrationRepository:
     def get_by_email(self, email):
         return next((cuenta for cuenta in self.cuentas if cuenta.email == email), None)
 
+    def delete(self, cuenta):
+        self.cuentas = [row for row in self.cuentas if row.id != cuenta.id]
+
     def update(self, cuenta):
         index = next(
             i for i, current in enumerate(self.cuentas) if current.id == cuenta.id

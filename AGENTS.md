@@ -143,6 +143,13 @@ src/
 - Nueva migración: `uv run alembic revision -m "descripcion"` y editar el
   fichero generado en `migrations/versions/`.
 
+## Baja de Cuentas (#59)
+
+- DELETE `/v1/users/{id}` requiere Cuenta activa autenticada, borra físicamente
+  y responde 204 sin cuerpo. Inexistente → 404. Conserva Cliente e historial.
+- Los tokens de una Cuenta borrada devuelven 401 al resolver su identidad.
+- Soft delete y restricción admin-only siguen en #73 y #65 respectivamente.
+
 ## Edición de Cuentas (#58)
 
 - PUT/PATCH `/v1/users/{id}` exigen Cuenta activa autenticada. Solo nombre,

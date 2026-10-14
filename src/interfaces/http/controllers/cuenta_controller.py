@@ -27,6 +27,9 @@ class CuentaController:
     def get(self, cuenta_id: int) -> CuentaResponse:
         return CuentaResponse.model_validate(self._use_cases.get(cuenta_id))
 
+    def delete(self, cuenta_id: int) -> None:
+        self._use_cases.delete(cuenta_id)
+
     def update(self, cuenta_id: int, data: CuentaPatch) -> CuentaResponse:
         password = (
             data.password.get_secret_value() if data.password is not None else None
