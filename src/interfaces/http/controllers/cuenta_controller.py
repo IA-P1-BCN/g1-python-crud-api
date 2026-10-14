@@ -7,7 +7,7 @@ from src.interfaces.http.schemas.cuenta_schema import (
     CuentaRegister,
     CuentaResponse,
 )
-from src.interfaces.http.schemas.list_query import ListQuery
+from src.interfaces.http.schemas.list_query import CuentaQuery
 
 
 class CuentaController:
@@ -18,10 +18,12 @@ class CuentaController:
     def me(cuenta: Cuenta) -> CuentaResponse:
         return CuentaResponse.model_validate(cuenta)
 
-    def list(self, query: ListQuery) -> list[CuentaResponse]:
+    def list(self, query: CuentaQuery) -> list[CuentaResponse]:
         return [
             CuentaResponse.model_validate(cuenta)
-            for cuenta in self._use_cases.list(query.offset, query.limit)
+            for cuenta in self._use_cases.list(
+                query.offset, query.limit, query.to_filters()
+            )
         ]
 
     def get(self, cuenta_id: int) -> CuentaResponse:

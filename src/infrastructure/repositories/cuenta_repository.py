@@ -11,7 +11,9 @@ from sqlalchemy.orm import Session
 
 from src.domain.entities.cuenta import Cuenta
 from src.domain.errors import ConflictError, RepositoryUnavailableError
+from src.domain.list_filters import ListFilters
 from src.infrastructure.database.models import ClienteRecord, CuentaRecord
+from src.infrastructure.repositories.listing import apply_list_filters
 
 
 class SqlAlchemyCuentaRepository:
@@ -50,10 +52,13 @@ class SqlAlchemyCuentaRepository:
         record = self._session.scalar(statement)
         return self._entity(record) if record is not None else None
 
-    def list(self, offset: int, limit: int) -> list[Cuenta]:
-        statement = (
-            select(CuentaRecord).order_by(CuentaRecord.id).offset(offset).limit(limit)
+    def list(
+        self, offset: int, limit: int, filters: ListFilters | None = None
+    ) -> list[Cuenta]:
+        statement = apply_list_filters(
+            select(CuentaRecord), CuentaRecord, filters, ("nombre", "email")
         )
+        statement = statement.order_by(CuentaRecord.id).offset(offset).limit(limit)
         return [self._entity(record) for record in self._session.scalars(statement)]
 
     def create_cliente(self, nombre: str, email: str) -> int:

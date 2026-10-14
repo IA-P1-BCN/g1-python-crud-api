@@ -106,3 +106,5 @@ La preparación de este proceso queda registrada en
 - [2026-10-14 — Edición de Cuentas #58](ai-log/2026-10-14-editar-cuentas-58.md)
 
 - [2026-10-14 — Baja de Cuentas #59](ai-log/2026-10-14-borrar-cuentas-59.md)
+
+- [2026-10-14 — Filtros de Cuentas #61](ai-log/2026-10-14-filtros-cuentas-61.md)

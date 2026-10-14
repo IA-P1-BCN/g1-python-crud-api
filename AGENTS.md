@@ -103,7 +103,7 @@ src/
 - Tipos/valores/parámetros desconocidos inválidos → 422. El caso de uso rechaza
   un intervalo invertido con `InvalidQueryError` → 400; `LIST_ERRORS` lo documenta.
 - La exportación CSV sigue usando `list_all`, sin filtros ni paginación. Los
-  filtros de cuentas (#61) y los errores 401/403 (#23) esperan la base de auth.
+  filtros de cuentas (#61) usan el mismo contrato con protección JWT (#56).
 
 ## Manejo de errores
 
@@ -142,6 +142,14 @@ src/
   se hardcodea en el código.
 - Nueva migración: `uv run alembic revision -m "descripcion"` y editar el
   fichero generado en `migrations/versions/`.
+
+## Filtros de Cuentas (#61)
+
+- GET `/v1/users` acepta nombre/email por fragmento, q con OR entre ambos,
+  activo/rol/id_cliente exactos y fecha_creacion_desde/hasta inclusivas UTC sin zona.
+- Combinar con AND antes de paginar; conservar false, escapar comodines literales.
+  `CuentaQuery` → `ListFilters`; constructor SQL compartido con V1.
+- Parámetros inválidos/desconocidos → 422, rango invertido → 400.
 
 ## Baja de Cuentas (#59)
 

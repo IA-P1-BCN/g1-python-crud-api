@@ -46,6 +46,24 @@ class TextQuery(ListQuery):
     )
 
 
+class CuentaQuery(TextQuery):
+    text_fields = ("nombre", "email")
+    exact_fields = ("activo", "rol", "id_cliente")
+    range_field = "fecha_creacion"
+
+    nombre: TextFilter | None = None
+    email: TextFilter | None = None
+    activo: bool | None = None
+    rol: Literal["admin", "staff", "cliente"] | None = None
+    id_cliente: PositiveId | None = None
+    fecha_creacion_desde: NaiveDatetime | None = Field(
+        default=None, description="Inicio inclusivo, UTC sin zona"
+    )
+    fecha_creacion_hasta: NaiveDatetime | None = Field(
+        default=None, description="Fin inclusivo, UTC sin zona"
+    )
+
+
 class ClienteQuery(TextQuery):
     text_fields = ("nombre", "email")
     exact_fields = ("estado_membresia",)
