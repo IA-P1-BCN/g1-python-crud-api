@@ -3,6 +3,8 @@
 import logging
 
 from fastapi import FastAPI, Request
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from src.domain.errors import (
@@ -35,6 +37,19 @@ LIST_ERRORS = {
 
 
 def register_crud_error_handlers(app: FastAPI) -> None:
+    async def validation(request: Request, exc: RequestValidationError) -> JSONResponse:
+        if request.url.path.startswith(("/v1/auth/", "/v1/users")):
+            errors = [
+                {
+                    key: value
+                    for key, value in error.items()
+                    if key not in {"input", "ctx"}
+                }
+                for error in exc.errors()
+            ]
+            return JSONResponse(status_code=422, content={"detail": errors})
+        return await request_validation_exception_handler(request, exc)
+
     async def invalid_query(request: Request, exc: InvalidQueryError) -> JSONResponse:
         return JSONResponse(status_code=400, content={"detail": str(exc)})
 
@@ -77,6 +92,7 @@ def register_crud_error_handlers(app: FastAPI) -> None:
         return JSONResponse(status_code=500, content={"detail": INTERNAL_ERROR_MESSAGE})
 
     app.add_exception_handler(NotFoundError, not_found)
+    app.add_exception_handler(RequestValidationError, validation)
     app.add_exception_handler(InvalidQueryError, invalid_query)
     app.add_exception_handler(ConflictError, conflict)
     app.add_exception_handler(RepositoryUnavailableError, unavailable)

@@ -43,7 +43,7 @@ convenciones debe actualizarse aquí en el mismo PR.
   genera en el servidor y se conserva al actualizar. Fechas/hora: UTC sin zona
   en los campos MySQL `DATETIME`. `DELETE /v1/reservas/{id_reserva}` libera cupo.
 - Los endpoints V1 entregados son públicos por ahora; los nuevos endpoints de
-  V2 (`/v1/auth/*`, `/v1/users*`) exigen token desde su primer PR, y la
+  V2 `/v1/users*` exigen token desde su primer PR. Registro y login son públicos; la
   protección del resto de `/v1` llega con la STORY #38 (milestone #3).
   `SECRET_KEY` pasa a variable obligatoria cuando se integre el JWT
   (`SecretStr`, solo en `.env`/`.env.example`).
@@ -142,6 +142,15 @@ src/
   se hardcodea en el código.
 - Nueva migración: `uv run alembic revision -m "descripcion"` y editar el
   fichero generado en `migrations/versions/`.
+
+## Registro (#54)
+
+- POST `/v1/auth/register`: nombre, email y password (12–128 caracteres);
+  `crear_cliente=false` por defecto. True crea Cliente Inactivo nuevo en la
+  misma transacción; nunca vincula uno existente por email. Duplicados → 409.
+- Rol cliente y activo=true se fijan en servidor. Entrada rechaza rol, activo
+  e id_cliente. Salida sin password ni hash, incluso en errores 422.
+- Email normalizado en minúsculas; contraseña literal, sin recortar espacios.
 
 ## Cuentas (#53)
 

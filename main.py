@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from config.settings import get_settings
 from core.logging import setup_logging
 from src.interfaces.http.errors import register_crud_error_handlers
+from src.interfaces.http.routes.auth_routes import router as auth_router
 from src.interfaces.http.routes.clase_routes import router as clase_router
 from src.interfaces.http.routes.cliente_routes import router as cliente_router
 from src.interfaces.http.routes.entrenador_routes import router as entrenador_router
@@ -48,6 +49,7 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_tags=[
         {"name": "health", "description": "Healthchecks de la API y de MySQL"},
+        {"name": "auth", "description": "Registro y autenticación de Cuentas"},
         {"name": "clientes", "description": "Clientes y estado de membresía"},
         {"name": "entrenadores", "description": "Instructores y especialidades"},
         {"name": "clases", "description": "Sesiones, horarios UTC y aforo"},
@@ -58,6 +60,7 @@ app = FastAPI(
 )
 
 app.include_router(health_router)
+app.include_router(auth_router, prefix="/v1")
 app.include_router(cliente_router, prefix="/v1")
 app.include_router(entrenador_router, prefix="/v1")
 app.include_router(clase_router, prefix="/v1")
