@@ -5,10 +5,13 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.142.2-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge-v2.json)](https://github.com/astral-sh/ruff)
 
-**GymFlow V1:** API REST con FastAPI y MySQL para clientes, entrenadores,
+**GymFlow:** API REST con FastAPI y MySQL para clientes, entrenadores,
 clases, reservas y pagos. Sigue [CLIENT_SPECS.md](docs/client/CLIENT_SPECS.md),
 el [PRD](docs/PRD.md) y el [modelo de datos](docs/DATABASE_SPEC.md).
-La especificación V2 de gestión de usuarios no se aplica a esta entrega.
+El CRUD V1 está entregado. Desde el 14/10/2026 el alcance incluye también
+[V2](docs/client/CLIENT_SPECS_V2_USER_MNG.md): cuentas, autenticación y flujo
+de desarrollo con IA. Su integración se sigue en las issues; incluirlo en el
+alcance no implica que sus endpoints ya estén implementados.
 
 Requisitos: [uv](https://docs.astral.sh/uv/), [Task](https://taskfile.dev), Docker.
 
@@ -166,6 +169,18 @@ Si MySQL no está disponible, los tests que lo necesitan se saltan con un
 mensaje. Para validar toda la entrega, debe estar arrancado y migrado.
 
 ## Comandos
+
+Para definir funcionalidades antes de implementarlas, consulta el
+[flujo OpenSpec](docs/SPEC_WORKFLOW.md). Requiere Node.js >=20.19.0:
+
+```bash
+task spec:install
+task spec:validate
+task spec -- list
+```
+
+Las dependencias de la API siguen gestionándose con uv. La especificación de
+cada cambio y su entrada en [la bitácora de IA](docs/ai-log.md) acompañan a la PR.
 
 | Comando | Descripción |
 |---|---|

@@ -167,6 +167,34 @@ src/
   `dev`, `start`, `db:up`, `db:down`, `migrate`, `seed`. `task demo` monta el
   proyecto desde cero (dependencias, `.env`, MySQL, migraciones, demo y tests).
 
+## Especificación antes del código (OpenSpec, #62)
+
+- CLI local fijada en `package.json` + `package-lock.json`: Node.js >=20.19.0
+  y `task spec:install`. npm solo gestiona esta herramienta; Python sigue con uv.
+- La carpeta `specs/` de V2 es `openspec/specs/` en este repositorio. No crear
+  una segunda carpeta raíz ni presentar funcionalidades pendientes como entregadas.
+- Estructura: `openspec/config.yaml` (contexto/reglas),
+  `openspec/specs/<capacidad>/spec.md` (contratos vigentes),
+  `openspec/changes/<cambio>/` (proposal, specs, design y tasks del trabajo activo),
+  y `openspec/changes/archive/` (histórico tras revisión).
+- Una funcionalidad empieza por su issue y sus dependencias. Leer `CONTEXT.md`
+  y estas convenciones; crear el cambio con `task spec -- new change <cambio>`.
+  Escribir propuesta, requisitos y escenarios de aceptación **antes del código**.
+- Flujo del agente: `openspec-new-change` (si está habilitado) →
+  `openspec-propose` → `openspec-apply-change`. `new` es opcional si `propose`
+  crea el cambio. El perfil `core` de OpenSpec incluye propose/apply, pero `new`
+  requiere el perfil ampliado; los comandos de terminal funcionan sin skills.
+- Cada persona puede generar su integración: `task spec -- init --tools opencode`
+  (u otro ID soportado). La instalación base usa `--tools none` y no modifica
+  la configuración global del agente. Reiniciar el agente si no detecta skills.
+- Validar con `task spec:validate`. La CLI comprueba estructura, no que la
+  implementación satisfaga los requisitos: revisar escenarios y ejecutar tests.
+- Antes de abrir PR: `task spec:validate`, `task lint`, `task test`, entrada en
+  `docs/ai-log.md` y enlaces a issue/spec. La validación automática en CI es #75.
+- Después de la revisión, archivar con `task spec -- archive <cambio> --yes`
+  y volver a validar; el archivo consolida los deltas en `openspec/specs/`.
+- Guía y ejemplo: [docs/SPEC_WORKFLOW.md](docs/SPEC_WORKFLOW.md).
+
 ## Estilo (PEP 8)
 
 - Se aplica y verifica con **ruff** (`task lint`, `task fmt`), line-length 88.

@@ -1,0 +1,34 @@
+schema: spec-driven
+
+context: |
+  GymFlow es una API de gimnasio con FastAPI, Python 3.14, MySQL 8.4,
+  SQLAlchemy y Alembic. uv gestiona Python; npm solo instala OpenSpec.
+  Escribir en español conservando los encabezados estructurales de OpenSpec
+  y las palabras normativas SHALL/MUST, WHEN/THEN en inglés.
+  Leer AGENTS.md, CONTEXT.md, docs/PRD.md, docs/DATABASE_SPEC.md,
+  docs/EDR_DIAGRAM.md y la issue antes de proponer una funcionalidad.
+  El alcance es V1 + V2; la existencia de un requisito V2 no implica que
+  ya esté implementado. Cuenta (users) y Cliente son entidades distintas.
+  Respetar interfaces -> application -> domain; infrastructure implementa
+  puertos. Pydantic solo vive en interfaces/http/schemas.
+  Especificaciones vigentes: openspec/specs/<capacidad>/spec.md.
+  Propuestas: openspec/changes/<cambio>/; una tarea, una rama, una PR.
+  Para cada funcionalidad, escribir requisitos y escenarios antes del código.
+  Verificar task spec:validate, task lint y task test. Para integración,
+  arrancar MySQL con task db:up y aplicar task migrate; informar los skips.
+  Registrar prompts, modelo, errores y decisiones en docs/ai-log.md.
+  No registrar secretos, credenciales, tokens ni contenido de .env.
+  Revisión humana obligatoria antes de integrar en main.
+
+rules:
+  proposal:
+    - Referenciar la issue, su STORY y los bloqueos pendientes.
+    - Distinguir comportamiento existente de requisitos nuevos.
+  specs:
+    - Incluir escenarios positivos, errores y límites observables relevantes.
+    - Cada requisito usa SHALL o MUST y al menos un Scenario con WHEN/THEN.
+  design:
+    - Respetar las capas y las decisiones de AGENTS.md y CONTEXT.md.
+  tasks:
+    - Incluir validación y documentación en cada bloque que las necesite.
+    - Registrar evidencia real en docs/ai-log.md, sin inventar resultados.

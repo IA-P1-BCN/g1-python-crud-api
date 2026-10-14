@@ -1,0 +1,11 @@
+{
+  "name": "gymflow-spec-tooling",
+  "private": true,
+  "description": "Herramientas de especificación; las dependencias de la API se gestionan con uv.",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "devDependencies": {
+    "@fission-ai/openspec": "1.14.1"
+  }
+}

@@ -1,6 +1,28 @@
 version: "3"
 
 tasks:
+  spec:install:
+    desc: Instala la versión fijada de OpenSpec (requiere Node.js >=20.19.0)
+    cmds:
+      - npm ci --ignore-scripts
+
+  spec:
+    desc: Ejecuta la CLI local de OpenSpec (task spec -- <comando>)
+    env:
+      OPENSPEC_TELEMETRY: "0"
+    preconditions:
+      - sh: test -x node_modules/.bin/openspec
+        msg: Ejecuta task spec:install para instalar OpenSpec.
+    cmds:
+      - ./node_modules/.bin/openspec {{.CLI_ARGS}}
+
+  spec:validate:
+    desc: Valida todas las specs y cambios con reglas estrictas, sin interacción
+    cmds:
+      - task: spec
+        vars:
+          CLI_ARGS: validate --all --strict --no-interactive
+
   demo:
     desc: Monta todo desde cero (deps, .env, MySQL, migraciones, datos demo y tests)
     cmds:
