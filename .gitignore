@@ -7,6 +7,9 @@ venv/
 build/
 dist/
 
+# Herramientas de especificación (npm; la API usa uv)
+node_modules/
+
 # Tests, lint y cobertura
 .pytest_cache/
 .ruff_cache/
@@ -41,6 +44,9 @@ db.sqlite3
 .zcode/
 .zcodeignore
 skills-lock.json
+# Integraciones OpenSpec generadas por persona; los comandos propios sí se versionan
+.opencode/skills/openspec-*/
+.opencode/commands/opsx-*.md
 
 # Documentación original del cliente en trabajo (se consolida en docs/)
 tmp_docs/
