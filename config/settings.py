@@ -19,9 +19,11 @@ class Settings(BaseSettings):
     mysql_password: str = "app_password"
     mysql_database: str = "gym_db"
 
-    # Contraseña de administración. Es opcional porque V1 todavía no la usa;
+    # Contraseña de administración: obligatoria en el seed, opcional en la API;
     # SecretStr evita que se imprima en logs, trazas o en `repr()`.
     admin_password: SecretStr | None = None
+    admin_email: str = "admin@example.com"
+    secret_key: SecretStr | None = None
     log_level: str = "INFO"
     log_file: str = "logs/app.log"
 

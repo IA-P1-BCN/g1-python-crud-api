@@ -1,0 +1,84 @@
+"""Cuentas iniciales sin reiniciar credenciales ni apropiarse de identidades."""
+
+from secrets import token_urlsafe
+
+from email_validator import EmailNotValidError, validate_email
+from sqlalchemy import or_, select
+from sqlalchemy.orm import Session
+
+from src.domain.errors import ConflictError
+from src.domain.security import PasswordHasher
+from src.infrastructure.database.models import ClienteRecord, CuentaRecord
+
+
+def validate_admin_password(password: str | None) -> str:
+    if password is None or not 12 <= len(password) <= 128:
+        raise ValueError("Configura ADMIN_PASSWORD con entre 12 y 128 caracteres")
+    if password.lower().startswith(("change-me", "cambia-", "replace-")):
+        raise ValueError("Sustituye el marcador de ADMIN_PASSWORD")
+    return password
+
+
+def seed_accounts(
+    session: Session, hasher: PasswordHasher, admin_email: str, admin_password: str
+) -> dict[str, int]:
+    """El llamador controla la transacción. No devuelve credenciales."""
+    validate_admin_password(admin_password)
+    admin_email = validate_email(
+        admin_email, check_deliverability=False
+    ).normalized.lower()
+    admin = session.scalar(
+        select(CuentaRecord).where(CuentaRecord.email == admin_email)
+    )
+    if admin is not None and (admin.rol != "admin" or admin.id_cliente is not None):
+        raise ConflictError("ADMIN_EMAIL pertenece a otra Cuenta; usa otro email")
+    if (
+        session.scalar(select(ClienteRecord).where(ClienteRecord.email == admin_email))
+        is not None
+    ):
+        raise ConflictError("ADMIN_EMAIL pertenece a un Cliente; usa otro email")
+    counts = {"creadas": 0, "omitidas": 0}
+    if admin is None:
+        session.add(
+            CuentaRecord(
+                nombre="Administración GymFlow",
+                email=admin_email,
+                password_hash=hasher.hash(admin_password),
+                rol="admin",
+                activo=True,
+            )
+        )
+        counts["creadas"] += 1
+    session.flush()
+    for cliente in session.scalars(select(ClienteRecord)):
+        try:
+            email = validate_email(
+                cliente.email or "", check_deliverability=False
+            ).normalized.lower()
+        except EmailNotValidError:
+            counts["omitidas"] += 1
+            continue
+        existing = session.scalar(
+            select(CuentaRecord).where(
+                or_(
+                    CuentaRecord.id_cliente == cliente.id_cliente,
+                    CuentaRecord.email == email,
+                )
+            )
+        )
+        if existing is not None:
+            counts["omitidas"] += 1
+            continue
+        session.add(
+            CuentaRecord(
+                nombre=cliente.nombre,
+                email=email,
+                id_cliente=cliente.id_cliente,
+                password_hash=hasher.hash(token_urlsafe(32)),
+                rol="cliente",
+                activo=False,
+            )
+        )
+        session.flush()
+        counts["creadas"] += 1
+    return counts

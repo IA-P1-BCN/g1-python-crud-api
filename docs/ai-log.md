@@ -92,3 +92,5 @@ La preparación de este proceso queda registrada en
   (ADR 0001). Prioridades P1/P2/P3 y bloqueos (#refs) añadidos a cada tarea.
 
 - [2026-10-14 — #22: filtros de listados, decisiones y validación](ai-log/2026-10-14-filtros.md).
+
+- [2026-10-14 — Cuentas #53](ai-log/2026-10-14-cuentas-53.md)

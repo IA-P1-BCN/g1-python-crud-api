@@ -143,14 +143,26 @@ src/
 - Nueva migración: `uv run alembic revision -m "descripcion"` y editar el
   fichero generado en `migrations/versions/`.
 
+## Cuentas (#53)
+
+- `Cuenta` vive en dominio y `CuentaRecord` en la tabla `users`;
+  `id_cliente` es nullable, UNIQUE y FK RESTRICT. Borrar Cuenta conserva Cliente.
+- Contraseñas Argon2id mediante `PasswordHasher` (Protocol) y pwdlib en infraestructura.
+  Los hashes no aparecen en repr de Cuenta ni en respuestas HTTP.
+- El seed crea admin y cuentas inactivas para clientes con email válido; no inventa
+  emails ni comparte contraseñas. Omite conflictos sin vincular identidades ajenas.
+- El rol mínimo permite el admin del seed; la política completa de roles sigue
+  en #64/#65. `SECRET_KEY` es SecretStr y pasa a obligatoria con JWT (#55).
+
 ## Configuración y entorno
 
 - Variables en `.env` (ver `.env.example`), leídas con pydantic-settings:
   `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`
   y `ADMIN_PASSWORD` (#6).
 - `ADMIN_PASSWORD` es opcional (`SecretStr | None`, sin valor por defecto en el
-  código): V1 no tiene endpoints que la usen. Cuando una funcionalidad la
-  requiera, debe pasar a obligatoria para que la app falle al arrancar si falta.
+  código) para arrancar la API, pero **obligatoria para `task seed`**: se valida
+  antes de escribir (12–128 caracteres, sin marcadores). `ADMIN_EMAIL` identifica
+  al administrador inicial; repetir el seed no restablece sus credenciales.
 - Los secretos se declaran como `SecretStr` y se leen con
   `get_secret_value()` solo en el punto donde se usan.
   `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`,

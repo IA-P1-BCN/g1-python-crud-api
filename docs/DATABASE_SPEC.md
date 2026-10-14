@@ -124,3 +124,12 @@ aplicadas en #10 se indican arriba):
 - **Borrado en cascada:** decidir `ON DELETE` de las FK (p. ej. borrar un
   cliente, ¿borra sus pagos/reservas o se bloquea si tiene historial?). Los
   documentos del cliente no lo especifican.
+
+## Cuenta (V2, #53)
+
+Tabla `users`, separada de `clientes`: `id` INT PK, `nombre` VARCHAR(100),
+`email` VARCHAR(150) NOT NULL UNIQUE, `password_hash` VARCHAR(255),
+`activo` BOOLEAN DEFAULT TRUE, `fecha_creacion` DATETIME UTC,
+`rol` VARCHAR(20) CHECK admin/staff/cliente y `id_cliente` INT nullable UNIQUE
+FK RESTRICT. Borrar Cuenta conserva Cliente; borrar Cliente vinculado se bloquea.
+El seed no cambia membresía ni reinicia contraseñas.

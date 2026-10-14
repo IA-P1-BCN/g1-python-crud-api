@@ -7,6 +7,17 @@
 
 ```mermaid
 erDiagram
+    CLIENTES |o--o| USERS : "accede con"
+    USERS {
+        int id PK
+        varchar nombre
+        varchar email UK
+        varchar password_hash
+        boolean activo
+        datetime fecha_creacion
+        varchar rol
+        int id_cliente FK,UK "opcional"
+    }
     CLIENTES ||--o{ PAGOS : "realiza"
     CLIENTES ||--o{ RESERVAS : "agenda"
     CLASES ||--o{ RESERVAS : "recibe"

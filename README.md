@@ -240,3 +240,12 @@ cada cambio y su entrada en [la bitácora de IA](docs/ai-log.md) acompañan a la
 - [docs/client/CLIENT_SPECS.md](docs/client/CLIENT_SPECS.md) — especificación del cliente
 - [docs/DATABASE_SPEC.md](docs/DATABASE_SPEC.md) — campos, relaciones y decisiones de #10
 - [docs/EDR_DIAGRAM.md](docs/EDR_DIAGRAM.md) — diagrama ER
+
+### Cuentas V2 (#53)
+
+`task migrate` incorpora `users` sin alterar clientes. Antes de `task seed` o
+`task demo`, configura `ADMIN_EMAIL` y una `ADMIN_PASSWORD` propia de 12–128
+caracteres en `.env`. El marcador de `.env.example` se rechaza. El seed crea
+un admin y cuentas inactivas para clientes con email válido; informa cuántas
+crea u omite y conserva cuentas y contraseñas previas. Los clientes sin email
+no reciben identidades inventadas. Registro y login llegan en #54/#55.
