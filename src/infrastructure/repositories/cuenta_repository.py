@@ -75,6 +75,10 @@ class SqlAlchemyCuentaRepository:
         self._session.refresh(record)
         return self._entity(record)
 
+    def delete(self, cuenta: Cuenta) -> None:
+        self._session.delete(self._session.get(CuentaRecord, cuenta.id))
+        self._session.flush()
+
     @staticmethod
     def _entity(record: CuentaRecord) -> Cuenta:
         return Cuenta(**{f.name: getattr(record, f.name) for f in fields(Cuenta)})

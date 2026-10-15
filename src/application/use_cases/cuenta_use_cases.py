@@ -21,6 +21,10 @@ class CuentaUseCases:
         with self._repository.transaction():
             return self._require(cuenta_id)
 
+    def delete(self, cuenta_id: int) -> None:
+        with self._repository.transaction():
+            self._repository.delete(self._require(cuenta_id, lock=True))
+
     def _require(self, cuenta_id: int, *, lock: bool = False) -> Cuenta:
         cuenta = self._repository.get(cuenta_id, lock=lock)
         if cuenta is None:

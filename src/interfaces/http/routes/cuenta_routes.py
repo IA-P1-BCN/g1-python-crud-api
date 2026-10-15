@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Path, Query
+from fastapi import APIRouter, Depends, Path, Query, Response
 
 from src.domain.entities.cuenta import Cuenta
 from src.interfaces.http.controllers.cuenta_controller import CuentaController
@@ -77,3 +77,17 @@ def patch_cuenta(
     id: CuentaId, data: CuentaPatch, cuenta: CurrentCuenta, controller: Controller
 ) -> CuentaResponse:
     return controller.update(id, data)
+
+
+@router.delete(
+    "/{id}",
+    summary="Borrar una Cuenta",
+    status_code=204,
+    response_model=None,
+    responses=PROTECTED_ERRORS,
+)
+def delete_cuenta(
+    id: CuentaId, cuenta: CurrentCuenta, controller: Controller
+) -> Response:
+    controller.delete(id)
+    return Response(status_code=204)
