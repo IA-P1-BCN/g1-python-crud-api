@@ -1,12 +1,23 @@
 import { Injectable } from '@angular/core';
-import { InvalidCredentialsError, NetworkError } from './auth.errors';
+import { EmailDuplicadoError, InvalidCredentialsError, NetworkError } from './auth.errors';
 
 export type RolUsuario = 'admin' | 'staff' | 'cliente';
 
 export interface UsuarioAutenticado {
-  readonly id: string;
+  readonly id: number;
+  readonly nombre: string;
   readonly email: string;
   readonly rol: RolUsuario;
+  /** Ficha de socio vinculada; null si la cuenta no tiene ficha. */
+  readonly id_cliente: number | null;
+}
+
+/** Datos del registro público, con los mismos nombres que CuentaRegister de la API. */
+export interface DatosRegistro {
+  readonly nombre: string;
+  readonly email: string;
+  readonly password: string;
+  readonly crear_cliente: boolean;
 }
 
 /**
@@ -21,6 +32,13 @@ export abstract class AuthService {
    * @throws {NetworkError} si no se puede contactar con el servidor.
    */
   abstract login(email: string, password: string): Promise<UsuarioAutenticado>;
+
+  /**
+   * Crea una cuenta de rol cliente.
+   * @throws {EmailDuplicadoError} si el correo ya existe.
+   * @throws {NetworkError} si no se puede contactar con el servidor.
+   */
+  abstract register(datos: DatosRegistro): Promise<void>;
 }
 
-export { InvalidCredentialsError, NetworkError };
+export { EmailDuplicadoError, InvalidCredentialsError, NetworkError };

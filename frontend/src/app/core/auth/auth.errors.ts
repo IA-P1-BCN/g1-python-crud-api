@@ -13,3 +13,11 @@ export class NetworkError extends Error {
     this.name = 'NetworkError';
   }
 }
+
+/** El correo ya identifica una cuenta (HTTP 409 en la API). */
+export class EmailDuplicadoError extends Error {
+  constructor() {
+    super('Ya existe una cuenta con este correo');
+    this.name = 'EmailDuplicadoError';
+  }
+}
