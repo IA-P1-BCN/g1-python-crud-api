@@ -5,6 +5,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from config.settings import get_settings
 from core.logging import setup_logging
@@ -76,3 +77,13 @@ app.include_router(reserva_router, prefix="/v1")
 app.include_router(pago_router, prefix="/v1")
 app.include_router(export_router, prefix="/v1")
 register_crud_error_handlers(app)
+
+# Orígenes permitidos para el frontend (ALLOWED_ORIGINS, separados por comas).
+# Sin orígenes configurados no se permite ningún cruce de dominio.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)

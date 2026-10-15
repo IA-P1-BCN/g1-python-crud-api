@@ -234,8 +234,9 @@ src/
 ## Configuración y entorno
 
 - Variables en `.env` (ver `.env.example`), leídas con pydantic-settings:
-  `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`
-  y `ADMIN_PASSWORD` (#6).
+  `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`,
+  `MYSQL_SSL` (TLS para MySQL gestionados, p. ej. Aiven), `ALLOWED_ORIGINS`
+  (orígenes CORS del frontend, separados por comas) y `ADMIN_PASSWORD` (#6).
 - `ADMIN_PASSWORD` es opcional (`SecretStr | None`, sin valor por defecto en el
   código) para arrancar la API, pero **obligatoria para `task seed`**: se valida
   antes de escribir (12–128 caracteres, sin marcadores). `ADMIN_EMAIL` identifica
@@ -286,6 +287,26 @@ src/
 - **Taskfile** expone las tareas: `demo`, `install`, `test`, `lint`, `fmt`,
   `dev`, `start`, `db:up`, `db:down`, `migrate`, `seed`. `task demo` monta el
   proyecto desde cero (dependencias, `.env`, MySQL, migraciones, demo y tests).
+
+## Despliegue (Render)
+
+- La API se despliega en Render con el Blueprint `render.yaml` (plan gratuito,
+  `runtime: docker`) y el `Dockerfile` de la raíz. Cada push a `main` la
+  redespliega solo (`autoDeployTrigger: commit`); no se usan Actions de GitHub
+  ni secretos en el repositorio para el despliegue.
+- `docker-compose.yml` es solo el MySQL de desarrollo local; Render no lo lee.
+- El MySQL de producción es externo (plan gratuito de Aiven, con TLS
+  obligatorio): `MYSQL_SSL=true` activa un `SSLContext` en
+  `Settings.sqlalchemy_connect_args()`, usado por el engine de la aplicación y
+  por `migrations/env.py`. Local se queda en `false`.
+- El entrypoint del contenedor (`scripts/docker-entrypoint.sh`) ejecuta
+  `alembic upgrade head` antes de arrancar uvicorn en `$PORT` (10000).
+- Secretos del despliegue (`MYSQL_*`, `SECRET_KEY`, `ADMIN_PASSWORD`,
+  `ALLOWED_ORIGINS`) se rellenan en el Dashboard de Render como `sync: false`;
+  nunca en `render.yaml`. La imagen de producción excluye `.env`, tests y docs
+  (`.dockerignore`).
+- El frontend (cuando exista) se despliega como sitio estático gratuito en su
+  propio repositorio con su `render.yaml`; su URL se añade a `ALLOWED_ORIGINS`.
 
 ## Especificación antes del código (OpenSpec, #62)
 

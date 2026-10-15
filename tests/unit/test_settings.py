@@ -1,5 +1,7 @@
 """Carga de las variables de entorno sensibles en `Settings`."""
 
+import ssl
+
 import pytest
 from pydantic import ValidationError
 
@@ -42,3 +44,43 @@ def test_error_de_configuracion_no_imprime_secretos():
         )
     assert "clave-corta" not in str(error.value)
     assert "password-admin-no-publicar" not in str(error.value)
+
+
+def test_mysql_ssl_desactivado_por_defecto(monkeypatch):
+    monkeypatch.delenv("MYSQL_SSL", raising=False)
+
+    ajustes = Settings(_env_file=None)
+
+    assert ajustes.mysql_ssl is False
+    assert ajustes.sqlalchemy_connect_args() == {}
+
+
+def test_mysql_ssl_activado_por_entorno(monkeypatch):
+    monkeypatch.setenv("MYSQL_SSL", "true")
+
+    ajustes = Settings(_env_file=None)
+
+    assert ajustes.mysql_ssl is True
+    argumentos = ajustes.sqlalchemy_connect_args()
+    assert isinstance(argumentos["ssl"], ssl.SSLContext)
+
+
+def test_cors_origins_vacio_por_defecto(monkeypatch):
+    monkeypatch.delenv("ALLOWED_ORIGINS", raising=False)
+
+    ajustes = Settings(_env_file=None)
+
+    assert ajustes.cors_origins == []
+
+
+def test_cors_origins_se_separa_por_comas(monkeypatch):
+    monkeypatch.setenv(
+        "ALLOWED_ORIGINS", "https://gimnasio.onrender.com, http://localhost:5173"
+    )
+
+    ajustes = Settings(_env_file=None)
+
+    assert ajustes.cors_origins == [
+        "https://gimnasio.onrender.com",
+        "http://localhost:5173",
+    ]

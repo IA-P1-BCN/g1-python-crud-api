@@ -1,5 +1,6 @@
 """Variables de configuración leídas de `.env` (pydantic-settings)."""
 
+import ssl
 from functools import lru_cache
 
 from pydantic import Field, SecretStr
@@ -21,6 +22,11 @@ class Settings(BaseSettings):
     mysql_user: str = "app_user"
     mysql_password: str = "app_password"
     mysql_database: str = "gym_db"
+    # TLS obligatorio en MySQL gestionados que lo exigen (p. ej. Aiven).
+    mysql_ssl: bool = False
+
+    # Orígenes CORS permitidos para el frontend, separados por comas.
+    allowed_origins: str = ""
 
     # Contraseña de administración: obligatoria en el seed, opcional en la API;
     # SecretStr evita que se imprima en logs, trazas o en `repr()`.
@@ -37,6 +43,22 @@ class Settings(BaseSettings):
             f"mysql+pymysql://{self.mysql_user}:{self.mysql_password}"
             f"@{self.mysql_host}:{self.mysql_port}/{self.mysql_database}"
         )
+
+    @property
+    def cors_origins(self) -> list[str]:
+        """Lista de orígenes CORS a partir de `allowed_origins`."""
+        return [
+            origen.strip()
+            for origen in self.allowed_origins.split(",")
+            if origen.strip()
+        ]
+
+    def sqlalchemy_connect_args(self) -> dict:
+        """Argumentos extra para `create_engine` (TLS de MySQL si activo)."""
+        if not self.mysql_ssl:
+            return {}
+        contexto = ssl.create_default_context()
+        return {"ssl": contexto}
 
 
 @lru_cache

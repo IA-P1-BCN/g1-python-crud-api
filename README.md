@@ -74,6 +74,35 @@ de configuración. Los tests y la CI tienen claves exclusivas de prueba.
 Las migraciones de este repositorio incorporan Cuentas sin recrear la base V1;
 no uses migraciones de otros repositorios.
 
+## Despliegue en Render
+
+La API se despliega en [Render](https://render.com) con el Blueprint
+[`render.yaml`](render.yaml) y el [`Dockerfile`](Dockerfile). Cada push a
+`main` reconstruye y redespliega el servicio automáticamente; no hace falta
+ninguna Action de GitHub ni secretos en el repositorio. `docker-compose.yml`
+sigue siendo solo el MySQL de desarrollo local: Render no lo usa.
+
+El plan gratuito de Render no admite MySQL con disco, así que la base de datos
+es un MySQL gestionado externo (p. ej. el [plan gratuito de Aiven](https://aiven.io),
+1 GB, con TLS obligatorio). Pasos:
+
+1. Crea el servicio MySQL en Aiven y copia host, puerto, base, usuario y
+   contraseña.
+2. En el Dashboard de Render: **New → Blueprint**, selecciona este repositorio
+   y aplica `render.yaml`.
+3. Rellena los valores marcados como `sync: false` (`MYSQL_*` de Aiven,
+   `SECRET_KEY`, `ADMIN_PASSWORD` y `ALLOWED_ORIGINS` cuando exista frontend).
+   `MYSQL_SSL=true` ya viene fijado en el Blueprint.
+4. Tras el primer deploy, comprueba `GET /health` y `GET /health/db`.
+   Los datos demo se cargan una sola vez desde tu máquina:
+   `MYSQL_HOST=... MYSQL_SSL=true uv run python -m scripts.seed_gym`.
+
+El servicio usa el plan gratuito: se apaga a los 15 minutos sin tráfico y
+tarda ~1 minuto en arrancar de nuevo. Las migraciones se aplican solas en el
+arranque de cada contenedor (`scripts/docker-entrypoint.sh`). Para añadir el
+frontend, crea su repositorio con un `render.yaml` de sitio estático y pon su
+URL en `ALLOWED_ORIGINS`.
+
 ## Swagger
 
 - Swagger UI: http://127.0.0.1:8000/docs

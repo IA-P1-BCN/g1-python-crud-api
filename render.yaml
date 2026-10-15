@@ -1,0 +1,47 @@
+# Blueprint de Render para la GymFlow API.
+# Cada push a `main` reconstruye y redespliega el servicio automáticamente
+# (autoDeployTrigger: commit). docker-compose.yml NO se usa en Render: es
+# solo para el MySQL de desarrollo local.
+#
+# La base de datos MySQL no vive en Render (el plan gratuito no permite
+# contenedores con disco): usa un MySQL gestionado externo, p. ej. el plan
+# gratuito de Aiven (https://aiven.io), y rellena aquí sus datos en el
+# Dashboard de Render. Nunca escribas credenciales en este fichero.
+
+services:
+  - type: web
+    name: g1-gymflow-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: main
+    autoDeployTrigger: commit
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      # Conexión MySQL externa (Aiven u otro). Rellena en el Dashboard.
+      - key: MYSQL_HOST
+        sync: false
+      - key: MYSQL_PORT
+        value: "3306"
+      - key: MYSQL_DATABASE
+        sync: false
+      - key: MYSQL_USER
+        sync: false
+      - key: MYSQL_PASSWORD
+        sync: false
+      # Aiven exige TLS: activa mysql_ssl en config/settings.py.
+      - key: MYSQL_SSL
+        value: "true"
+      # JWT (obligatoria, mínimo 32 caracteres) y seed. Genera la clave con:
+      #   uv run python -c "import secrets; print(secrets.token_hex(32))"
+      - key: SECRET_KEY
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # Frontend: URL del despliegue estático, separadas por comas si hay varias.
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: LOG_LEVEL
+        value: INFO
