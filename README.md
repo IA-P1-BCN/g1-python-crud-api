@@ -249,3 +249,11 @@ caracteres en `.env`. El marcador de `.env.example` se rechaza. El seed crea
 un admin y cuentas inactivas para clientes con email válido; informa cuántas
 crea u omite y conserva cuentas y contraseñas previas. Los clientes sin email
 no reciben identidades inventadas. Registro y login llegan en #54/#55.
+
+### Registro (#54)
+
+`POST /v1/auth/register` es público. JSON de entrada: `nombre`, `email`,
+`password` (12–128 caracteres) y `crear_cliente` opcional (false por defecto).
+Devuelve 201 sin credenciales. `crear_cliente=true` crea un Cliente Inactivo
+nuevo, nunca asocia uno existente por email. Email duplicado → 409; datos o
+campos no permitidos → 422.
