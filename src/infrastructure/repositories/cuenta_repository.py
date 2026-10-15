@@ -50,6 +50,12 @@ class SqlAlchemyCuentaRepository:
         record = self._session.scalar(statement)
         return self._entity(record) if record is not None else None
 
+    def list(self, offset: int, limit: int) -> list[Cuenta]:
+        statement = (
+            select(CuentaRecord).order_by(CuentaRecord.id).offset(offset).limit(limit)
+        )
+        return [self._entity(record) for record in self._session.scalars(statement)]
+
     def create_cliente(self, nombre: str, email: str) -> int:
         record = ClienteRecord(
             nombre=nombre,

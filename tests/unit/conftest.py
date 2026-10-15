@@ -150,6 +150,11 @@ class RegistrationRepository:
     def get(self, cuenta_id, *, lock=False):
         return next((cuenta for cuenta in self.cuentas if cuenta.id == cuenta_id), None)
 
+    def list(self, offset, limit):
+        return sorted(self.cuentas, key=lambda cuenta: cuenta.id)[
+            offset : offset + limit
+        ]
+
     def add(self, cuenta):
         cuenta = replace(cuenta, id=len(self.cuentas) + 1)
         self.cuentas.append(cuenta)
