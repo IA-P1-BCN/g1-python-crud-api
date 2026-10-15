@@ -43,6 +43,13 @@ class SqlAlchemyCuentaRepository:
         self._session.refresh(record)
         return self._entity(record)
 
+    def get(self, cuenta_id: int, *, lock: bool = False) -> Cuenta | None:
+        statement = select(CuentaRecord).where(CuentaRecord.id == cuenta_id)
+        if lock:
+            statement = statement.with_for_update()
+        record = self._session.scalar(statement)
+        return self._entity(record) if record is not None else None
+
     def create_cliente(self, nombre: str, email: str) -> int:
         record = ClienteRecord(
             nombre=nombre,

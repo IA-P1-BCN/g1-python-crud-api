@@ -1,6 +1,7 @@
 """Adaptación de autenticación al contrato HTTP."""
 
 from src.application.use_cases.auth_use_cases import AuthUseCases
+from src.domain.entities.cuenta import Cuenta
 from src.interfaces.http.schemas.auth_schema import TokenResponse
 
 
@@ -10,3 +11,6 @@ class AuthController:
 
     def login(self, email: str, password: str) -> TokenResponse:
         return TokenResponse(access_token=self._use_cases.login(email, password))
+
+    def current_user(self, token: str | None) -> Cuenta:
+        return self._use_cases.current_user(token)

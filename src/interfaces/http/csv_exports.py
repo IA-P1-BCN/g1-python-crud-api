@@ -54,7 +54,9 @@ def csv_response(
 ) -> Response:
     """Respuesta descargable con nombre `<resource>.csv`."""
     headers = {"Content-Disposition": f'attachment; filename="{resource}.csv"'}
-    return Response(content=to_csv(entity_type, entities), media_type="text/csv", headers=headers)
+    return Response(
+        content=to_csv(entity_type, entities), media_type="text/csv", headers=headers
+    )
 
 
 def export_response(tablas: ExportTable, entities: list[GymEntity]) -> Response:

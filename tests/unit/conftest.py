@@ -147,6 +147,9 @@ class RegistrationRepository:
     def get_by_email(self, email):
         return next((cuenta for cuenta in self.cuentas if cuenta.email == email), None)
 
+    def get(self, cuenta_id, *, lock=False):
+        return next((cuenta for cuenta in self.cuentas if cuenta.id == cuenta_id), None)
+
     def add(self, cuenta):
         cuenta = replace(cuenta, id=len(self.cuentas) + 1)
         self.cuentas.append(cuenta)

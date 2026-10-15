@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from config.settings import get_settings
 from src.application.use_cases.auth_use_cases import AuthUseCases
 from src.application.use_cases.cuenta_use_cases import CuentaUseCases
+from src.domain.entities.cuenta import Cuenta
 from src.domain.repositories.cuenta_port import CuentaRepository
 from src.domain.repositories.gym_port import GymRepository
 from src.infrastructure.database.engine import get_session
@@ -19,6 +20,7 @@ from src.infrastructure.security.passwords import Argon2PasswordHasher
 from src.infrastructure.security.tokens import JwtAccessTokens
 from src.interfaces.http.controllers.auth_controller import AuthController
 from src.interfaces.http.controllers.cuenta_controller import CuentaController
+from src.interfaces.http.oauth import oauth2_scheme
 
 
 def get_gym_repository(
@@ -56,3 +58,10 @@ def get_auth_controller(
             repository, Argon2PasswordHasher(), get_access_tokens(), get_dummy_hash()
         )
     )
+
+
+def get_current_user(
+    token: Annotated[str | None, Depends(oauth2_scheme)],
+    controller: Annotated[AuthController, Depends(get_auth_controller)],
+) -> Cuenta:
+    return controller.current_user(token)

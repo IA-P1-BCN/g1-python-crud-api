@@ -19,3 +19,7 @@ class InvalidQueryError(Exception):
 
 class AuthenticationError(Exception):
     """No se ha acreditado una identidad válida."""
+
+
+class ForbiddenError(Exception):
+    """La identidad está acreditada pero no puede realizar la operación."""
