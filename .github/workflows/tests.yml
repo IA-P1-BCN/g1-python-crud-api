@@ -19,6 +19,8 @@ jobs:
   test:
     name: Tests (pytest + MySQL)
     runs-on: ubuntu-latest
+    env:
+      SECRET_KEY: gymflow-ci-test-only-secret-not-for-deployment-2026
     services:
       mysql:
         image: mysql:8.4

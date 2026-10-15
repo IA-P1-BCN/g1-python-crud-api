@@ -2,36 +2,11 @@
 
 from uuid import uuid4
 
-import httpx
-import pytest
-from sqlalchemy import delete, inspect, select, text
-from sqlalchemy.exc import OperationalError
+from sqlalchemy import select
 
-from src.infrastructure.database.engine import SessionLocal, engine
+from src.infrastructure.database.engine import SessionLocal
 from src.infrastructure.database.models import ClienteRecord, CuentaRecord
 from src.infrastructure.security.passwords import Argon2PasswordHasher
-
-
-@pytest.fixture
-def accounts_api(base_url):
-    try:
-        with engine.connect() as connection:
-            connection.execute(text("SELECT 1"))
-    except OperationalError:
-        pytest.skip("MySQL no disponible: ejecuta task db:up y task migrate")
-    assert inspect(engine).has_table("users"), "Aplica task migrate"
-    emails = []
-    with httpx.Client(base_url=base_url, timeout=10) as client:
-        try:
-            yield client, emails
-        finally:
-            with SessionLocal.begin() as session:
-                session.execute(
-                    delete(CuentaRecord).where(CuentaRecord.email.in_(emails))
-                )
-                session.execute(
-                    delete(ClienteRecord).where(ClienteRecord.email.in_(emails))
-                )
 
 
 def test_registro_y_perfil_atomicos(accounts_api):

@@ -235,8 +235,8 @@ def test_openapi_documenta_todos_los_endpoints(client):
     spec = client.get("/openapi.json").json()
     paths = spec["paths"]
     assert "/v1/users" not in paths
-    assert "/v1/auth/login" not in paths
-    assert not spec["components"].get("securitySchemes")
+    assert "/v1/auth/login" in paths
+    assert "OAuth2PasswordBearer" in spec["components"]["securitySchemes"]
     for resource, id_field, _, _ in CASES:
         for path, methods in [
             (f"/v1/{resource}", ["get", "post"]),
@@ -244,6 +244,7 @@ def test_openapi_documenta_todos_los_endpoints(client):
         ]:
             for method in methods:
                 operation = paths[path][method]
+                assert not operation.get("security")  # El CRUD V1 sigue público.
                 assert operation["summary"]
                 assert operation["tags"] == [resource]
                 code = {"post": "201", "delete": "204"}.get(method, "200")

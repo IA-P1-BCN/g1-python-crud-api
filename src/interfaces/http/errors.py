@@ -8,6 +8,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from src.domain.errors import (
+    AuthenticationError,
     ConflictError,
     InvalidQueryError,
     NotFoundError,
@@ -37,6 +38,15 @@ LIST_ERRORS = {
 
 
 def register_crud_error_handlers(app: FastAPI) -> None:
+    async def authentication(
+        request: Request, exc: AuthenticationError
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=401,
+            content={"detail": str(exc)},
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     async def validation(request: Request, exc: RequestValidationError) -> JSONResponse:
         if request.url.path.startswith(("/v1/auth/", "/v1/users")):
             errors = [
@@ -92,6 +102,7 @@ def register_crud_error_handlers(app: FastAPI) -> None:
         return JSONResponse(status_code=500, content={"detail": INTERNAL_ERROR_MESSAGE})
 
     app.add_exception_handler(NotFoundError, not_found)
+    app.add_exception_handler(AuthenticationError, authentication)
     app.add_exception_handler(RequestValidationError, validation)
     app.add_exception_handler(InvalidQueryError, invalid_query)
     app.add_exception_handler(ConflictError, conflict)

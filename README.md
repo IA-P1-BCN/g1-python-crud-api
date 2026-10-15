@@ -257,3 +257,14 @@ no reciben identidades inventadas. Registro y login llegan en #54/#55.
 Devuelve 201 sin credenciales. `crear_cliente=true` crea un Cliente Inactivo
 nuevo, nunca asocia uno existente por email. Email duplicado → 409; datos o
 campos no permitidos → 422.
+
+### Login OAuth2 (#55)
+
+Configura `SECRET_KEY` propia (al menos 32 caracteres) en `.env`; la API falla
+si falta. Puedes generarla con `uv run python -c "import secrets;
+print(secrets.token_hex(32))"`. No la publiques ni uses la clave de los tests.
+
+`POST /v1/auth/login` recibe formulario `username=<email>&password=<contraseña>`
+y devuelve `access_token` y `token_type=bearer`. Swagger → **Authorize** usa
+ese mismo formulario. El token caduca a los 30 minutos. Credenciales incorrectas
+o Cuenta inactiva → 401 genérico. #56 incorpora `/v1/users/me`.
