@@ -3,6 +3,7 @@
 from src.infrastructure.database.models.base import Base
 from src.infrastructure.database.models.clase import ClaseRecord
 from src.infrastructure.database.models.cliente import ClienteRecord
+from src.infrastructure.database.models.cuenta import CuentaRecord
 from src.infrastructure.database.models.entrenador import EntrenadorRecord
 from src.infrastructure.database.models.pago import PagoRecord
 from src.infrastructure.database.models.reserva import ReservaRecord
@@ -12,6 +13,7 @@ __all__ = [
     "Base",
     "ClaseRecord",
     "ClienteRecord",
+    "CuentaRecord",
     "EntrenadorRecord",
     "PagoRecord",
     "ReservaRecord",

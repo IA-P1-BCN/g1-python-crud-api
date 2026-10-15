@@ -6,6 +6,8 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from config.settings import get_settings
+from scripts.seed_accounts import seed_accounts, validate_admin_password
 from src.infrastructure.database.engine import SessionLocal
 from src.infrastructure.database.models import (
     ClaseRecord,
@@ -14,6 +16,7 @@ from src.infrastructure.database.models import (
     PagoRecord,
     ReservaRecord,
 )
+from src.infrastructure.security.passwords import Argon2PasswordHasher
 
 
 def seed_demo(session: Session) -> None:
@@ -117,11 +120,19 @@ def seed_demo(session: Session) -> None:
 
 
 def main() -> None:
+    settings = get_settings()
+    password = validate_admin_password(
+        settings.admin_password.get_secret_value() if settings.admin_password else None
+    )
     with SessionLocal.begin() as session:
         seed_demo(session)
+        counts = seed_accounts(
+            session, Argon2PasswordHasher(), settings.admin_email, password
+        )
     print(
         "Datos demo de GymFlow disponibles: clientes, entrenador, clase, pago y reserva."
     )
+    print(f"Cuentas: {counts['creadas']} creadas; {counts['omitidas']} omitidas.")
 
 
 if __name__ == "__main__":
