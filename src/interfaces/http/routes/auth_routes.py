@@ -8,10 +8,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from src.interfaces.http.controllers.auth_controller import AuthController
 from src.interfaces.http.controllers.cuenta_controller import CuentaController
 from src.interfaces.http.dependencies import get_auth_controller, get_cuenta_controller
-from src.interfaces.http.errors import CRUD_ERRORS
+from src.interfaces.http.errors import CRUD_ERRORS, LOGIN_ERRORS
 from src.interfaces.http.schemas.auth_schema import TokenResponse
 from src.interfaces.http.schemas.cuenta_schema import CuentaRegister, CuentaResponse
-from src.interfaces.http.schemas.gym_schema import ErrorResponse
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -19,6 +18,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post(
     "/register",
     summary="Registrar una Cuenta",
+    description="Registro público. Crea rol cliente; crear_cliente=true añade un Cliente Inactivo nuevo. No vincula Clientes preexistentes por email.",
     response_model=CuentaResponse,
     status_code=201,
     responses=CRUD_ERRORS,
@@ -33,11 +33,9 @@ def register(
 @router.post(
     "/login",
     summary="Iniciar sesión con email y contraseña",
+    description="OAuth2 Password Flow público: username es el email. Devuelve un JWT Bearer de 30 minutos. Usa Authorize en Swagger con las mismas credenciales.",
     response_model=TokenResponse,
-    responses={
-        **CRUD_ERRORS,
-        401: {"model": ErrorResponse, "description": "Credenciales incorrectas"},
-    },
+    responses=LOGIN_ERRORS,
 )
 def login(
     form: Annotated[OAuth2PasswordRequestForm, Depends()],

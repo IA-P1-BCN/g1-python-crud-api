@@ -110,3 +110,5 @@ La preparación de este proceso queda registrada en
 - [2026-10-14 — Filtros de Cuentas #61](ai-log/2026-10-14-filtros-cuentas-61.md)
 
 - [2026-10-14 — Errores semánticos #23](ai-log/2026-10-14-errores-semanticos-23.md)
+
+- [2026-10-14 — Swagger de Cuentas #60](ai-log/2026-10-14-swagger-cuentas-60.md)
