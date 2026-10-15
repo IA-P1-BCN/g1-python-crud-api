@@ -67,6 +67,14 @@ class SqlAlchemyCuentaRepository:
         self._session.flush()
         return record.id_cliente
 
+    def update(self, cuenta: Cuenta) -> Cuenta:
+        record = self._session.get(CuentaRecord, cuenta.id)
+        for name in ("nombre", "email", "password_hash"):
+            setattr(record, name, getattr(cuenta, name))
+        self._session.flush()
+        self._session.refresh(record)
+        return self._entity(record)
+
     @staticmethod
     def _entity(record: CuentaRecord) -> Cuenta:
         return Cuenta(**{f.name: getattr(record, f.name) for f in fields(Cuenta)})
