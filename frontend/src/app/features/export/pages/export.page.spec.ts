@@ -5,19 +5,43 @@ import { ApiError } from '../../../core/http/peticion';
 import { NetworkError } from '../../../core/auth/auth.errors';
 import { ExportApi } from '../../../services/api/recursos.api';
 import { esperarCarga } from '../../../testing/esperar';
-import { descargarArchivo } from '../../../shared/format/descargar';
 import { ExportPage } from './export.page';
 
-vi.mock('../../../shared/format/descargar', () => ({
-  descargarArchivo: vi.fn(),
-}));
+interface Descarga {
+  nombre: string;
+  blob: Blob;
+}
+
+const URL_ORIGINAL = {
+  create: URL.createObjectURL,
+  revoke: URL.revokeObjectURL,
+};
 
 describe('ExportPage', () => {
   let fixture: ComponentFixture<ExportPage>;
   let api: { exportarCsv: ReturnType<typeof vi.fn> };
+  let descargas: Descarga[];
+  let ultima: Descarga | undefined;
 
   beforeEach(async () => {
-    vi.mocked(descargarArchivo).mockClear();
+    descargas = [];
+    ultima = undefined;
+    // jsdom no implementa URL.createObjectURL: se captura el blob aquí y el
+    // nombre en el click del enlace efímero que crea descargarArchivo().
+    URL.createObjectURL = vi.fn((blob: Blob) => {
+      ultima = { nombre: '', blob };
+      descargas.push(ultima);
+      return `blob:test/${descargas.length}`;
+    });
+    URL.revokeObjectURL = vi.fn();
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      if (ultima) {
+        ultima.nombre = this.download;
+      }
+    });
+
     api = { exportarCsv: vi.fn(() => Promise.resolve('id_cliente,nombre\n1,Ana\n')) };
     await TestBed.configureTestingModule({
       imports: [ExportPage],
@@ -26,6 +50,20 @@ describe('ExportPage', () => {
 
     fixture = TestBed.createComponent(ExportPage);
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    if (URL_ORIGINAL.create) {
+      URL.createObjectURL = URL_ORIGINAL.create;
+    } else {
+      delete (URL as { createObjectURL?: unknown }).createObjectURL;
+    }
+    if (URL_ORIGINAL.revoke) {
+      URL.revokeObjectURL = URL_ORIGINAL.revoke;
+    } else {
+      delete (URL as { revokeObjectURL?: unknown }).revokeObjectURL;
+    }
   });
 
   const elemento = () => fixture.nativeElement as HTMLElement;
@@ -48,7 +86,10 @@ describe('ExportPage', () => {
     await esperarCarga(fixture);
 
     expect(api.exportarCsv).toHaveBeenCalledWith('clientes');
-    expect(descargarArchivo).toHaveBeenCalledWith('clientes.csv', 'id_cliente,nombre\n1,Ana\n', 'text/csv');
+    expect(descargas).toHaveLength(1);
+    expect(descargas[0].nombre).toBe('clientes.csv');
+    expect(await descargas[0].blob.text()).toBe('id_cliente,nombre\n1,Ana\n');
+    expect(descargas[0].blob.type).toContain('text/csv');
     expect(texto()).toContain('Descarga de clientes completada');
   });
 
@@ -57,7 +98,7 @@ describe('ExportPage', () => {
     botonTabla('Pagos').click();
     await esperarCarga(fixture);
 
-    expect(descargarArchivo).not.toHaveBeenCalled();
+    expect(descargas).toHaveLength(0);
     expect(texto()).toContain('No se pudo conectar con el servidor');
   });
 

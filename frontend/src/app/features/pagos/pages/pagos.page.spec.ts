@@ -102,13 +102,8 @@ describe('PagosPage', () => {
       metodo_pago: 'Tarjeta',
     });
     fixture.detectChanges();
-    const f = componente()['form'] as { status: string; errors: unknown; controls: Record<string, { status: string; errors: unknown }> };
-    // eslint-disable-next-line no-console
-    console.log('DEBUG status', f.status, 'errors', JSON.stringify(f.errors), JSON.stringify(Object.fromEntries(Object.entries(f.controls).map(([k, v]) => [k, `${v.status}:${JSON.stringify(v.errors)}`]))));
-    console.log('DEBUG formulario', componente()['formulario']?.());
     enviarFormulario('formulario');
     await esperarCarga(fixture);
-
     expect(pagos.crearPago).toHaveBeenCalledWith({
       id_cliente: 1,
       monto: '35.5',
