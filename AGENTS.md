@@ -69,7 +69,8 @@ src/
 - Carpetas raíz: `core/` (utilidades transversales, p. ej. logging),
   `config/` (settings), `logs/` (salida de logs), `tests/` (suite de
   tests), `migrations/` (Alembic), `docs/` (documentación, incluida
-  la del cliente en `docs/client/`).
+  la del cliente en `docs/client/`), `frontend/` (aplicación Angular 22,
+  ver abajo).
 
 ## Endpoints
 
@@ -286,6 +287,11 @@ src/
 - **Taskfile** expone las tareas: `demo`, `install`, `test`, `lint`, `fmt`,
   `dev`, `start`, `db:up`, `db:down`, `migrate`, `seed`. `task demo` monta el
   proyecto desde cero (dependencias, `.env`, MySQL, migraciones, demo y tests).
+- **npm en `frontend/`**: la aplicación Angular tiene su propio `package.json` y
+  `package-lock.json`. Se instala y ejecuta desde `frontend/` con npm (no pnpm ni
+  yarn, para no mezclar gestores). Comandos: `npm ci`, `npm start` (proxy de `/v1`
+  hacia `127.0.0.1:8000`), `npm test` y `npm run build`. Angular CLI 22 genera el
+  proyecto; no se versionan `node_modules/`, `frontend/.angular/` ni `frontend/dist/`.
 
 ## Especificación antes del código (OpenSpec, #62)
 
