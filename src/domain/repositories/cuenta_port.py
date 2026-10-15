@@ -4,6 +4,7 @@ from contextlib import AbstractContextManager
 from typing import Protocol
 
 from src.domain.entities.cuenta import Cuenta
+from src.domain.list_filters import ListFilters
 
 
 class CuentaRepository(Protocol):
@@ -13,7 +14,9 @@ class CuentaRepository(Protocol):
 
     def get(self, cuenta_id: int, *, lock: bool = False) -> Cuenta | None: ...
 
-    def list(self, offset: int, limit: int) -> list[Cuenta]: ...
+    def list(
+        self, offset: int, limit: int, filters: ListFilters | None = None
+    ) -> list[Cuenta]: ...
 
     def add(self, cuenta: Cuenta) -> Cuenta: ...
 

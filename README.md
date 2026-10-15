@@ -268,3 +268,11 @@ print(secrets.token_hex(32))"`. No la publiques ni uses la clave de los tests.
 y devuelve `access_token` y `token_type=bearer`. Swagger → **Authorize** usa
 ese mismo formulario. El token caduca a los 30 minutos. Credenciales incorrectas
 o Cuenta inactiva → 401 genérico. #56 incorpora `/v1/users/me`.
+
+### Filtros de Cuentas (#61)
+
+`GET /v1/users` requiere Bearer token. Admite `nombre`, `email`, `q`, `activo`,
+`rol`, `id_cliente`, `fecha_creacion_desde`, `fecha_creacion_hasta`, `offset` y
+`limit` (1–100). Texto literal sin distinguir mayúsculas, criterios combinados
+antes de paginar y rangos inclusivos UTC sin zona. Rango invertido → 400;
+parámetro inválido → 422. Ejemplo: `/v1/users?rol=staff&activo=true&limit=10`.

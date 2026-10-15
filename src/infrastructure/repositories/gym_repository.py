@@ -4,7 +4,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import asdict, fields
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
@@ -34,6 +34,9 @@ MODELS = {
     Reserva: ReservaRecord,
     Pago: PagoRecord,
 }
+
+
+from src.infrastructure.repositories.listing import apply_list_filters
 
 
 class SqlAlchemyGymRepository:
@@ -66,33 +69,9 @@ class SqlAlchemyGymRepository:
         filters: ListFilters | None = None,
     ) -> list[T]:
         model = MODELS[entity_type]
-        filters = filters or ListFilters()
-        statement = select(model)
-        for name, value in filters.contains:
-            statement = statement.where(
-                func.lower(getattr(model, name)).contains(
-                    value.lower(), autoescape=True
-                )
-            )
-        for name, value in filters.equals:
-            statement = statement.where(getattr(model, name) == value)
-        if filters.date_field is not None:
-            column = getattr(model, filters.date_field)
-            if filters.date_from is not None:
-                statement = statement.where(column >= filters.date_from)
-            if filters.date_to is not None:
-                statement = statement.where(column <= filters.date_to)
-        if filters.search is not None:
-            statement = statement.where(
-                or_(
-                    *(
-                        func.lower(getattr(model, name)).contains(
-                            filters.search.lower(), autoescape=True
-                        )
-                        for name in SEARCH_FIELDS[entity_type]
-                    )
-                )
-            )
+        statement = apply_list_filters(
+            select(model), model, filters, SEARCH_FIELDS.get(entity_type, ())
+        )
         statement = (
             statement.order_by(getattr(model, ID_FIELDS[entity_type]))
             .offset(offset)

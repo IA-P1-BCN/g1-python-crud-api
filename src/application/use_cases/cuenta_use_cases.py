@@ -3,7 +3,8 @@
 from dataclasses import replace
 
 from src.domain.entities.cuenta import Cuenta
-from src.domain.errors import ConflictError, NotFoundError
+from src.domain.errors import ConflictError, InvalidQueryError, NotFoundError
+from src.domain.list_filters import ListFilters
 from src.domain.repositories.cuenta_port import CuentaRepository
 from src.domain.security import PasswordHasher
 
@@ -13,9 +14,18 @@ class CuentaUseCases:
         self._repository = repository
         self._hasher = hasher
 
-    def list(self, offset: int = 0, limit: int = 100) -> list[Cuenta]:
+    def list(
+        self, offset: int = 0, limit: int = 100, filters: ListFilters | None = None
+    ) -> list[Cuenta]:
+        if (
+            filters is not None
+            and filters.date_from is not None
+            and filters.date_to is not None
+            and filters.date_from > filters.date_to
+        ):
+            raise InvalidQueryError("El inicio del intervalo no puede superar el final")
         with self._repository.transaction():
-            return self._repository.list(offset, limit)
+            return self._repository.list(offset, limit, filters)
 
     def get(self, cuenta_id: int) -> Cuenta:
         with self._repository.transaction():

@@ -7,13 +7,13 @@ from fastapi import APIRouter, Depends, Path, Query, Response
 from src.domain.entities.cuenta import Cuenta
 from src.interfaces.http.controllers.cuenta_controller import CuentaController
 from src.interfaces.http.dependencies import get_cuenta_controller, get_current_user
-from src.interfaces.http.errors import PROTECTED_ERRORS
+from src.interfaces.http.errors import LIST_ERRORS, PROTECTED_ERRORS
 from src.interfaces.http.schemas.cuenta_schema import (
     CuentaPatch,
     CuentaPut,
     CuentaResponse,
 )
-from src.interfaces.http.schemas.list_query import ListQuery
+from src.interfaces.http.schemas.list_query import CuentaQuery
 
 router = APIRouter(prefix="/users", tags=["cuentas"])
 CurrentCuenta = Annotated[Cuenta, Depends(get_current_user)]
@@ -35,10 +35,12 @@ def me(cuenta: CurrentCuenta) -> CuentaResponse:
     "",
     summary="Listar Cuentas",
     response_model=list[CuentaResponse],
-    responses=PROTECTED_ERRORS,
+    responses={**PROTECTED_ERRORS, 400: LIST_ERRORS[400]},
 )
 def list_cuentas(
-    query: Annotated[ListQuery, Query()], cuenta: CurrentCuenta, controller: Controller
+    query: Annotated[CuentaQuery, Query()],
+    cuenta: CurrentCuenta,
+    controller: Controller,
 ) -> list[CuentaResponse]:
     return controller.list(query)
 
