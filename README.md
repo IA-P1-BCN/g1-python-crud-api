@@ -82,26 +82,29 @@ La API se despliega en [Render](https://render.com) con el Blueprint
 ninguna Action de GitHub ni secretos en el repositorio. `docker-compose.yml`
 sigue siendo solo el MySQL de desarrollo local: Render no lo usa.
 
-El plan gratuito de Render no admite MySQL con disco, así que la base de datos
-es un MySQL gestionado externo (p. ej. el [plan gratuito de Aiven](https://aiven.io),
-1 GB, con TLS obligatorio). Pasos:
+Ninguno de los servicios es de pago. El plan gratuito de Render no admite
+MySQL con disco, así que la base de datos es un MySQL gestionado externo
+(p. ej. el [plan gratuito de Aiven](https://aiven.io), 1 GB, con TLS
+obligatorio). Pasos:
 
-1. Crea el servicio MySQL en Aiven y copia host, puerto, base, usuario y
-   contraseña.
+1. Crea el servicio MySQL en Aiven y copia host y puerto (Aiven asigna un
+   puerto propio, distinto de 3306), además de base, usuario y contraseña.
 2. En el Dashboard de Render: **New → Blueprint**, selecciona este repositorio
    y aplica `render.yaml`.
 3. Rellena los valores marcados como `sync: false` (`MYSQL_*` de Aiven,
    `SECRET_KEY`, `ADMIN_PASSWORD` y `ALLOWED_ORIGINS` cuando exista frontend).
    `MYSQL_SSL=true` ya viene fijado en el Blueprint.
-4. Tras el primer deploy, comprueba `GET /health` y `GET /health/db`.
-   Los datos demo se cargan una sola vez desde tu máquina:
-   `MYSQL_HOST=... MYSQL_SSL=true uv run python -m scripts.seed_gym`.
+4. Tras el primer deploy, comprueba `GET /health` y `GET /health/db`. Las
+   migraciones y el seed (datos demo y cuenta de admin) se aplican solos en
+   cada arranque del contenedor (`scripts/docker-entrypoint.sh`), igual que
+   `task demo`; no hay que ejecutar nada desde tu máquina.
 
 El servicio usa el plan gratuito: se apaga a los 15 minutos sin tráfico y
-tarda ~1 minuto en arrancar de nuevo. Las migraciones se aplican solas en el
-arranque de cada contenedor (`scripts/docker-entrypoint.sh`). Para añadir el
-frontend, crea su repositorio con un `render.yaml` de sitio estático y pon su
-URL en `ALLOWED_ORIGINS`.
+tarda ~1 minuto en arrancar de nuevo; la tarjeta de Render, si la hay, no se
+factura. Aiven también puede apagar su plan gratuito por inactividad: si el
+deploy falla conectando con MySQL, enciende el servicio en la consola de Aiven
+y vuelve a desplegar. Para añadir el frontend, crea su repositorio con un
+`render.yaml` de sitio estático y pon su URL en `ALLOWED_ORIGINS`.
 
 ## Swagger
 

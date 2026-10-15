@@ -294,13 +294,18 @@ src/
   `runtime: docker`) y el `Dockerfile` de la raíz. Cada push a `main` la
   redespliega solo (`autoDeployTrigger: commit`); no se usan Actions de GitHub
   ni secretos en el repositorio para el despliegue.
+- **Sin servicios de pago**: aunque la cuenta tenga tarjeta, solo se usan
+  planes gratuitos (API en Render + MySQL gratuito externo); MySQL en Render
+  exigiría un plan de pago, por eso vive fuera.
 - `docker-compose.yml` es solo el MySQL de desarrollo local; Render no lo lee.
 - El MySQL de producción es externo (plan gratuito de Aiven, con TLS
   obligatorio): `MYSQL_SSL=true` activa un `SSLContext` en
   `Settings.sqlalchemy_connect_args()`, usado por el engine de la aplicación y
   por `migrations/env.py`. Local se queda en `false`.
 - El entrypoint del contenedor (`scripts/docker-entrypoint.sh`) ejecuta
-  `alembic upgrade head` antes de arrancar uvicorn en `$PORT` (10000).
+  `alembic upgrade head` (con reintentos si MySQL tarda) y
+  `python -m scripts.seed_gym` antes de arrancar uvicorn en `$PORT` (10000):
+  en Render se aplican así migraciones y seed como con `task demo`.
 - Secretos del despliegue (`MYSQL_*`, `SECRET_KEY`, `ADMIN_PASSWORD`,
   `ALLOWED_ORIGINS`) se rellenan en el Dashboard de Render como `sync: false`;
   nunca en `render.yaml`. La imagen de producción excluye `.env`, tests y docs

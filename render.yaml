@@ -1,12 +1,13 @@
-# Blueprint de Render para la GymFlow API.
-# Cada push a `main` reconstruye y redespliega el servicio automáticamente
-# (autoDeployTrigger: commit). docker-compose.yml NO se usa en Render: es
-# solo para el MySQL de desarrollo local.
+# Blueprint de Render para la GymFlow API (plan gratuito, sin servicios de pago).
+# Cada push a la rama del Blueprint reconstruye y redespliega el servicio
+# automáticamente (autoDeployTrigger: commit). docker-compose.yml NO se usa
+# en Render: es solo para el MySQL de desarrollo local.
 #
-# La base de datos MySQL no vive en Render (el plan gratuito no permite
-# contenedores con disco): usa un MySQL gestionado externo, p. ej. el plan
-# gratuito de Aiven (https://aiven.io), y rellena aquí sus datos en el
-# Dashboard de Render. Nunca escribas credenciales en este fichero.
+# Solo se despliega la API: el plan gratuito de Render no admite servicios con
+# disco, así que la base de datos MySQL vive fuera, en un MySQL gestionado
+# gratuito (p. ej. el plan gratuito de Aiven, https://aiven.io), y sus datos
+# se rellenan aquí en el Dashboard de Render. Nunca escribas credenciales en
+# este fichero.
 
 services:
   - type: web
@@ -14,7 +15,6 @@ services:
     runtime: docker
     plan: free
     region: frankfurt
-    branch: main
     autoDeployTrigger: commit
     dockerfilePath: ./Dockerfile
     dockerContext: .
@@ -23,15 +23,17 @@ services:
       # Conexión MySQL externa (Aiven u otro). Rellena en el Dashboard.
       - key: MYSQL_HOST
         sync: false
+      # Aiven asigna un puerto distinto de 3306: el verás en su consola.
       - key: MYSQL_PORT
-        value: "3306"
+        sync: false
       - key: MYSQL_DATABASE
         sync: false
       - key: MYSQL_USER
         sync: false
       - key: MYSQL_PASSWORD
         sync: false
-      # Aiven exige TLS: activa mysql_ssl en config/settings.py.
+      # Aiven exige TLS con certificado real: activa mysql_ssl en
+      # config/settings.py. Si el MySQL no lo exige, cambia a "false".
       - key: MYSQL_SSL
         value: "true"
       # JWT (obligatoria, mínimo 32 caracteres) y seed. Genera la clave con:

@@ -29,3 +29,36 @@
   alembic antes de arrancar uvicorn). No se comprobó un deploy real de
   Render en esta fase (pendiente: Aiven + Dashboard, fase 2).
 - Pendiente: revisión humana; creación del frontend y su Blueprint (fase 3).
+
+### Ampliación (mismo día): tarjeta en Render sin servicios de pago
+
+- Petición de la usuaria: usar la tarjeta añadida a Render para poder desplegar,
+  pero **sin ningún servicio de pago**. Primero se había propuesto meter el
+  MySQL en `render.yaml` (pserv + disco); se descartó porque todo lo que
+  persiste en Render es de pago (pserv desde 7 $/mes + disco), y la
+  alternativa sin coste es el MySQL externo gratuito.
+- Decisión: `render.yaml` vuelve a definir solo la API gratuita; MySQL sigue
+  fuera (Aiven gratuito, TLS). `MYSQL_PORT` pasa a `sync: false` porque Aiven
+  asigna un puerto distinto de 3306, y se retira `branch: main` para poder
+  probar el Blueprint desde la rama de la PR.
+- Nuevo entrypoint: reintentos de `alembic upgrade head` (40 × 5 s) y
+  `python -m scripts.seed_gym` antes de uvicorn: cada arranque del contenedor
+  hace lo de `task demo` y luego lo de `task dev`, sin pasos manuales.
+- Corrección: se descartó el esquema de costes de Render con pserv/disco
+  (7 $/mes + 1,25 $/mes) por falta de presupuesto de pago; queda anotado en
+  README/AGENTS que la tarjeta no se factura.
+- Tests de esta ampliación: ver abajo en el resumen de validación.
+
+### Validación de la ampliación (Fase 0)
+
+- `task lint` (ruff) sin errores; `task test`: **205 tests aprobados, 0
+  saltados**, contra el MySQL local de Docker.
+- `render.yaml` validado contra el JSON Schema público de Render.
+- Imagen Docker reconstruida y probada con el entrypoint nuevo. El 3306 local
+  lo ocupaba un MySQL nativo del equipo, así que el `.env` local (no se
+  commitea) pasó a `MYSQL_PORT=3307`, la escapatoria que ya documenta
+  `.env.example`. En los logs del contenedor se ve `alembic upgrade head` →
+  seed (`Datos demo de GymFlow disponibles...`, `Cuentas: 16 creadas;
+  0 omitidas`) → uvicorn; `GET /health`, `/health/db` (versión 0.3),
+  `/docs` y `/v1/clientes` responden 200 con datos demo.
+- Pendiente de Fase 2: deploy real en Render con Aiven y su evidencia.
