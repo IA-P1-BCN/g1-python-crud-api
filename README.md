@@ -120,6 +120,62 @@ de configuración. Los tests y la CI tienen claves exclusivas de prueba.
 Las migraciones de este repositorio incorporan Cuentas sin recrear la base V1;
 no uses migraciones de otros repositorios.
 
+## Despliegue en Render
+
+La API y el frontend se despliegan en [Render](https://render.com) con el Blueprint
+[`render.yaml`](render.yaml) y [`Dockerfile`](Dockerfile). La imagen construye
+Angular y FastAPI lo sirve desde `/`, en el mismo servicio `g1-gymflow-api`.
+Cada push a `main` reconstruye y redespliega el servicio automáticamente; no hace falta
+ninguna Action de GitHub ni secretos en el repositorio. `docker-compose.yml`
+levanta MySQL, API y frontend en local: Render no lo ejecuta.
+
+Ninguno de los servicios es de pago. El plan gratuito de Render no admite
+MySQL con disco, así que la base de datos es un MySQL gestionado externo
+(p. ej. el [plan gratuito de Aiven](https://aiven.io), 1 GB, con TLS
+obligatorio). Pasos:
+
+1. Crea el servicio MySQL en Aiven y copia host y puerto (Aiven asigna un
+   puerto propio, distinto de 3306), además de base, usuario y contraseña.
+2. En el Dashboard de Render: **New → Blueprint**, selecciona este repositorio
+   y aplica `render.yaml`.
+3. Rellena los valores marcados como `sync: false` (`MYSQL_*` de Aiven,
+   `MYSQL_SSL_CA` con el contenido completo del `ca.pem` que descargas en la
+   consola de Aiven, `SECRET_KEY`, `ADMIN_PASSWORD` y `ALLOWED_ORIGINS` cuando
+    se necesite acceso directo desde otro origen).
+   `MYSQL_SSL=true` ya viene fijado en el Blueprint.
+4. Tras el primer deploy, comprueba `GET /health` y `GET /health/db`. Las
+   migraciones y el seed (datos demo y cuenta de admin) se aplican solos en
+   cada arranque del contenedor (`scripts/docker-entrypoint.sh`), igual que
+   `task demo`; no hay que ejecutar nada desde tu máquina.
+
+### Frontend en la raíz de la API
+
+Tras mergear en `main`, el auto-deploy de la API publica también Angular en
+`https://g1-gymflow-api.onrender.com/`. No hay que crear un segundo servicio.
+Se conservan `MYSQL_*`, CA, `SECRET_KEY` y `ADMIN_PASSWORD` en Render.
+
+El portal vive en `/`, sus pantallas en `/clases`, `/reservas`, `/perfil`, etc.
+Los enlaces antiguos `/portal/...` redirigen a sus equivalentes sin prefijo.
+Se pueden recargar las rutas directamente. `/v1`, `/docs`, `/redoc`,
+`/openapi.json` y `/health` conservan su función; los archivos inexistentes y
+los errores de API no se convierten en HTML.
+
+El navegador usa el mismo origen para Angular y `/v1/`, sin CORS. En desarrollo,
+`npm start` mantiene el proxy habitual. Compose conserva el frontend Nginx
+independiente en 4200; la API Docker en 8000 también sirve Angular.
+El Blueprint anterior declaraba un frontend separado: este cambio no requiere
+usarlo ni borra automáticamente servicios creados previamente en el Dashboard.
+
+Comprueba la raíz y una ruta Angular profunda, `/health` y el login
+demo desde su interfaz. `/v1/users/me` con el token comprueba el proxy autenticado.
+Verifica también `/health/db` directamente en la API. No basta un 200 HTML para
+dar por válida una respuesta JSON.
+
+El servicio Free se duerme tras 15 minutos sin tráfico. Free no
+garantiza una factura nula al superar cuotas facturables de tráfico/builds;
+revisa consumo y límites en Billing. Aiven también puede apagarse por inactividad:
+enciéndelo desde su consola si es necesario.
+
 ## Swagger
 
 - Swagger UI: http://127.0.0.1:8000/docs
