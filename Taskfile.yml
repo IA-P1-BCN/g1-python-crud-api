@@ -74,15 +74,68 @@ tasks:
     cmds:
       - uv run uvicorn main:app
 
-  db:up:
-    desc: Levanta MySQL con docker compose
+  frontend:install:
+    desc: Instala dependencias de Angular si aún no están
+    dir: frontend
+    status:
+      - test -d node_modules
     cmds:
-      - docker compose up -d --wait
+      - npm ci
+
+  frontend:
+    desc: Arranca Angular en http://127.0.0.1:4200
+    dir: frontend
+    cmds:
+      - npm start
+
+  serve:
+    desc: Arranca la API y el frontend en paralelo
+    deps: [dev, frontend]
+
+  up:
+    desc: Inicializa el entorno y arranca MySQL, API y frontend
+    cmds:
+      - task: install
+      - task: env
+      - task: frontend:install
+      - task: db:up
+      - task: migrate
+      - task: seed
+      - |-
+        echo ""
+        echo "GymFlow listo."
+        echo "  API:      http://127.0.0.1:8000/docs"
+        echo "  Frontend: http://127.0.0.1:4200"
+        echo "  Ctrl+C detiene API y frontend."
+      - task: serve
+
+  db:up:
+    desc: Levanta solo MySQL con docker compose
+    cmds:
+      - docker compose up -d --wait mysql
 
   db:down:
-    desc: Detiene MySQL
+    desc: Detiene los servicios de Compose
     cmds:
       - docker compose down
+
+  compose:
+    desc: Levanta MySQL, API y frontend en Docker
+    cmds:
+      - docker compose up -d --build --wait
+
+  docker:up:
+    desc: Inicializa .env y arranca MySQL, API, frontend y datos demo en Docker
+    cmds:
+      - task: env
+      - task: compose
+      - docker compose exec -T api python -m scripts.seed_gym
+      - |-
+        echo ""
+        echo "GymFlow en Docker."
+        echo "  API:      http://127.0.0.1:8000/docs"
+        echo "  Frontend: http://127.0.0.1:4200"
+        echo "  task db:down detiene los contenedores."
 
   migrate:
     desc: Aplica las migraciones pendientes (alembic)
