@@ -80,7 +80,7 @@ PROTECTED_ERRORS = {
     },
     403: {
         "model": ErrorResponse,
-        "description": "Identidad autenticada cuya Cuenta ha sido desactivada",
+        "description": "Cuenta desactivada o sin permisos para esta operación",
         "content": {
             "application/json": {"example": {"detail": "La Cuenta está inactiva"}}
         },

@@ -1,0 +1,4 @@
+- [x] Definir spec antes del código.
+- [x] Implementar requires_admin, contratos y documentación.
+- [x] Probar los tres roles y los cambios de rol con JWT ya emitido.
+- [x] Validar suite, lint, spec y registrar evidencia.

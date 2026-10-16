@@ -7,6 +7,7 @@ rechazó y por qué). Cada funcionalidad principal deja aquí su entrada.
 
 ## Registros detallados
 
+- [2026-10-16 — #65: administración de Cuentas](ai-log/2026-10-16-admin-65.md).
 - [2026-10-16 — #105: JWT en los recursos del gimnasio](ai-log/2026-10-16-gym-jwt-105.md).
 - [2026-10-16 — #29: portal en la raíz de la API](ai-log/2026-10-16-portal-raiz.md).
 - [2026-10-16 — #29: API y frontend Docker en Render](ai-log/2026-10-16-fullstack-render.md).

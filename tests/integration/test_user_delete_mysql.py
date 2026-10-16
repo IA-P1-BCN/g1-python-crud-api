@@ -20,6 +20,8 @@ def test_baja_fisica_conserva_cliente(accounts_api):
             "crear_cliente": True,
         },
     ).json()
+    with SessionLocal.begin() as session:
+        session.get(CuentaRecord, cuenta["id"]).rol = "admin"
     token = client.post(
         "/v1/auth/login", data={"username": email, "password": password}
     ).json()["access_token"]

@@ -44,7 +44,7 @@ convenciones debe actualizarse aquí en el mismo PR.
   en los campos MySQL `DATETIME`. `DELETE /v1/reservas/{id_reserva}` libera cupo.
 - Todos los recursos de negocio de `/v1`, incluida la exportación CSV,
   exigen Cuenta activa con JWT (#105). Registro, login, healthchecks y
-  documentación siguen públicos. La autorización granular llega con #65/#106.
+  documentación siguen públicos. Listar/borrar Cuentas requiere admin (#65); los permisos del gimnasio llegan en #106.
   `SECRET_KEY` pasa a variable obligatoria cuando se integre el JWT
   (`SecretStr`, solo en `.env`/`.env.example`).
 
@@ -116,7 +116,8 @@ src/
   FastAPI → 422, `RepositoryUnavailableError` → 503 y cualquier otra excepción
   → 500.
 - 401 incluye `WWW-Authenticate: Bearer`; 403 no pide reautenticación.
-  403 actual significa Cuenta autenticada inactiva; permisos por rol son #65.
+  403 significa Cuenta inactiva o rol insuficiente; requires_admin (#65)
+  protege GET /v1/users y DELETE /v1/users/{id} y relee el rol persistido.
 - Settings oculta valores de entrada al representar errores de configuración.
   Validación de auth/users omite input/ctx para no reflejar credenciales.
 - Todo error responde `{"detail": "mensaje"}` (los 422 llevan una lista, formato
@@ -171,7 +172,7 @@ src/
 - DELETE `/v1/users/{id}` requiere Cuenta activa autenticada, borra físicamente
   y responde 204 sin cuerpo. Inexistente → 404. Conserva Cliente e historial.
 - Los tokens de una Cuenta borrada devuelven 401 al resolver su identidad.
-- Soft delete y restricción admin-only siguen en #73 y #65 respectivamente.
+- El borrado exige admin (#65); soft delete sigue en #73.
 
 ## Edición de Cuentas (#58)
 
@@ -189,7 +190,7 @@ src/
 - GET `/v1/users` y `/v1/users/{id}` exigen Cuenta activa autenticada.
   Listado por id, offset >= 0, limit 1–100. Id inexistente → 404.
 - Respuesta CuentaResponse sin credenciales; parámetros desconocidos → 422.
-- Restricción de listado a admin sigue siendo el alcance independiente de #65.
+- El listado exige admin desde #65; el detalle conserva autenticación.
 
 ## Perfil autenticado (#56)
 
@@ -197,7 +198,7 @@ src/
   (incluida Cuenta borrada) → 401 Bearer; Cuenta inactiva tras login → 403.
 - GET `/v1/users/me` usa CuentaResponse sin credenciales. Se registra antes
   de `/{id}`. La dependencia finaliza su transacción antes del CRUD protegido.
-- La autorización granular por roles permanece en #64/#65.
+- La dependencia requires_admin compone get_current_user para listado y borrado.
 
 ## Autenticación (#55)
 
@@ -232,8 +233,8 @@ src/
 - La migración `ca6c9ed6b7e8` inserta la cuenta demo `demo@gymflow.com` (rol
   cliente, activa), vinculada a un Cliente Activo con un pago. En la base solo
   va el hash Argon2id. La contraseña conocida está documentada en el README.
-- El rol mínimo permite el admin del seed; la política completa de roles sigue
-  en #64/#65. `SECRET_KEY` es SecretStr obligatoria (mínimo 32 caracteres) desde JWT (#55).
+- El rol permite el admin del seed; #65 restringe la administración de Cuentas.
+  `SECRET_KEY` es SecretStr obligatoria (mínimo 32 caracteres) desde JWT (#55).
 
 ## Configuración y entorno
 

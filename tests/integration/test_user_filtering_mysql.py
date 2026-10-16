@@ -37,7 +37,7 @@ def test_filtros_combinados_y_literales(accounts_api):
                 tzinfo=None
             )
             record.activo = i != 1
-            record.rol = "staff" if i in {1, 2} else "cliente"
+            record.rol = "admin" if i == 0 else "staff" if i in {1, 2} else "cliente"
     rows = [client.get(f"/v1/users/{r['id']}", headers=headers).json() for r in rows]
 
     def listed(**params):

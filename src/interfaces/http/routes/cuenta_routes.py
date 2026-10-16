@@ -6,7 +6,11 @@ from fastapi import APIRouter, Depends, Path, Query, Response
 
 from src.domain.entities.cuenta import Cuenta
 from src.interfaces.http.controllers.cuenta_controller import CuentaController
-from src.interfaces.http.dependencies import get_cuenta_controller, get_current_user
+from src.interfaces.http.dependencies import (
+    get_cuenta_controller,
+    get_current_user,
+    requires_admin,
+)
 from src.interfaces.http.errors import LIST_ERRORS, PROTECTED_ERRORS
 from src.interfaces.http.schemas.cuenta_schema import (
     CuentaPatch,
@@ -17,6 +21,7 @@ from src.interfaces.http.schemas.list_query import CuentaQuery
 
 router = APIRouter(prefix="/users", tags=["cuentas"])
 CurrentCuenta = Annotated[Cuenta, Depends(get_current_user)]
+AdminCuenta = Annotated[Cuenta, Depends(requires_admin)]
 Controller = Annotated[CuentaController, Depends(get_cuenta_controller)]
 CuentaId = Annotated[int, Path(gt=0, le=2147483647)]
 
@@ -35,13 +40,13 @@ def me(cuenta: CurrentCuenta) -> CuentaResponse:
 @router.get(
     "",
     summary="Listar Cuentas",
-    description="Cuenta activa autenticada. Filtros combinados antes de paginar, orden por id y máximo 100 resultados. Rangos UTC inclusivos sin zona. En esta entrega permite acceso a cualquier Cuenta activa autenticada.",
+    description="Solo admin activo. Filtros combinados antes de paginar, orden por id y máximo 100 resultados. Rangos UTC inclusivos sin zona.",
     response_model=list[CuentaResponse],
     responses={**PROTECTED_ERRORS, 400: LIST_ERRORS[400]},
 )
 def list_cuentas(
     query: Annotated[CuentaQuery, Query()],
-    cuenta: CurrentCuenta,
+    cuenta: AdminCuenta,
     controller: Controller,
 ) -> list[CuentaResponse]:
     return controller.list(query)
@@ -88,13 +93,13 @@ def patch_cuenta(
 @router.delete(
     "/{id}",
     summary="Borrar una Cuenta",
-    description="Borrado físico: conserva Cliente e historial del gimnasio. Los tokens de la Cuenta eliminada dejan de resolver identidad.",
+    description="Solo admin activo. Borrado físico: conserva Cliente e historial del gimnasio. Los tokens de la Cuenta eliminada dejan de resolver identidad.",
     status_code=204,
     response_model=None,
     responses=PROTECTED_ERRORS,
 )
 def delete_cuenta(
-    id: CuentaId, cuenta: CurrentCuenta, controller: Controller
+    id: CuentaId, cuenta: AdminCuenta, controller: Controller
 ) -> Response:
     controller.delete(id)
     return Response(status_code=204)
