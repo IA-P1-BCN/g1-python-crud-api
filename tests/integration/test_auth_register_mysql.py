@@ -32,12 +32,13 @@ def test_registro_y_perfil_atomicos(accounts_api):
     assert client.post("/v1/auth/register", json=payload).status_code == 409
 
 
-def test_no_se_apropia_de_cliente_existente(accounts_api):
+def test_no_se_apropia_de_cliente_existente(accounts_api, gym_admin_headers):
     client, emails = accounts_api
     email = f"{uuid4().hex}@example.com"
     emails.append(email)
     response = client.post(
         "/v1/clientes",
+        headers=gym_admin_headers,
         json={"nombre": "Existente", "email": email, "estado_membresia": "Activo"},
     )
     assert response.status_code == 201

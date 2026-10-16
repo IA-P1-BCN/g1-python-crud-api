@@ -42,9 +42,9 @@ convenciones debe actualizarse aquí en el mismo PR.
   en `null` y `asistio` vuelve a `false` si se omite. La fecha de reserva se
   genera en el servidor y se conserva al actualizar. Fechas/hora: UTC sin zona
   en los campos MySQL `DATETIME`. `DELETE /v1/reservas/{id_reserva}` libera cupo.
-- Los endpoints V1 entregados son públicos por ahora; los nuevos endpoints de
-  V2 `/v1/users*` exigen token desde su primer PR. Registro y login son públicos; la
-  protección del resto de `/v1` llega con la STORY #38 (milestone #3).
+- Todos los recursos de negocio de `/v1`, incluida la exportación CSV,
+  exigen Cuenta activa con JWT (#105). Registro, login, healthchecks y
+  documentación siguen públicos. La autorización granular llega con #65/#106.
   `SECRET_KEY` pasa a variable obligatoria cuando se integre el JWT
   (`SecretStr`, solo en `.env`/`.env.example`).
 

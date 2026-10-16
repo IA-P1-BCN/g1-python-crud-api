@@ -2,6 +2,7 @@
 
 import threading
 import time
+from uuid import uuid4
 
 import httpx
 import pytest
@@ -57,3 +58,31 @@ def accounts_api(base_url):
                 session.execute(
                     delete(ClienteRecord).where(ClienteRecord.email.in_(emails))
                 )
+
+
+@pytest.fixture
+def gym_admin_headers(accounts_api):
+    """Cuenta aislada: registro/login reales, rol preparado en persistencia."""
+    client, emails = accounts_api
+    email = f"{uuid4().hex}@example.com"
+    emails.append(email)
+    response = client.post(
+        "/v1/auth/register",
+        json={"nombre": "Admin test", "email": email, "password": "clave de pruebas"},
+    )
+    assert response.status_code == 201, response.text
+    with SessionLocal.begin() as session:
+        session.get(CuentaRecord, response.json()["id"]).rol = "admin"
+    response = client.post(
+        "/v1/auth/login", data={"username": email, "password": "clave de pruebas"}
+    )
+    assert response.status_code == 200, response.text
+    return {"Authorization": f"Bearer {response.json()['access_token']}"}
+
+
+@pytest.fixture
+def admin_http(base_url, gym_admin_headers):
+    with httpx.Client(
+        base_url=base_url, headers=gym_admin_headers, timeout=10
+    ) as client:
+        yield client

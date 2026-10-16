@@ -244,7 +244,8 @@ def test_openapi_documenta_todos_los_endpoints(client):
         ]:
             for method in methods:
                 operation = paths[path][method]
-                assert not operation.get("security")  # El CRUD V1 sigue público.
+                assert operation["security"] == [{"OAuth2PasswordBearer": []}]
+                assert {"401", "403"} <= operation["responses"].keys()
                 assert operation["summary"]
                 assert operation["tags"] == [resource]
                 code = {"post": "201", "delete": "204"}.get(method, "200")

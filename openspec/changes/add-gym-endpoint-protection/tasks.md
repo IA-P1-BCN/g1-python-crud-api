@@ -1,0 +1,4 @@
+- [x] Definir spec y escenarios antes del código.
+- [x] Exigir JWT y documentar el contrato HTTP.
+- [x] Adaptar pruebas CRUD y comprobar rechazos por HTTP real.
+- [x] Validar lint, suite, spec y registrar evidencia.

@@ -4,11 +4,12 @@ import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 
 from config.settings import get_settings
 from core.logging import setup_logging
-from src.interfaces.http.errors import register_crud_error_handlers
+from src.interfaces.http.dependencies import get_current_user
+from src.interfaces.http.errors import PROTECTED_ERRORS, register_crud_error_handlers
 from src.interfaces.http.routes.auth_routes import router as auth_router
 from src.interfaces.http.routes.clase_routes import router as clase_router
 from src.interfaces.http.routes.cliente_routes import router as cliente_router
@@ -31,9 +32,9 @@ reservas y pagos bajo `/v1`. Las reservas requieren un cliente activo con
 un pago registrado y una plaza disponible en la clase.
 
 La Cuenta de acceso está separada del Cliente del gimnasio. Registro y login
-OAuth2 son públicos; `/v1/users*` exige Bearer JWT. Incluye perfil, consultas,
-edición, baja física y filtros. La política granular de roles está pendiente
-en el alcance avanzado; el CRUD V1 sigue siendo público en esta entrega.
+OAuth2 son públicos; los recursos de negocio bajo `/v1` exigen Bearer JWT.
+Incluye perfil, consultas, edición, baja física y filtros. Los healthchecks
+y la documentación son públicos. La política granular de roles llega en #65/#106.
 """
 
 
@@ -69,10 +70,18 @@ app = FastAPI(
 app.include_router(health_router)
 app.include_router(auth_router, prefix="/v1")
 app.include_router(cuenta_router, prefix="/v1")
-app.include_router(cliente_router, prefix="/v1")
-app.include_router(entrenador_router, prefix="/v1")
-app.include_router(clase_router, prefix="/v1")
-app.include_router(reserva_router, prefix="/v1")
-app.include_router(pago_router, prefix="/v1")
-app.include_router(export_router, prefix="/v1")
+for business_router in (
+    cliente_router,
+    entrenador_router,
+    clase_router,
+    reserva_router,
+    pago_router,
+    export_router,
+):
+    app.include_router(
+        business_router,
+        prefix="/v1",
+        dependencies=[Depends(get_current_user)],
+        responses=PROTECTED_ERRORS,
+    )
 register_crud_error_handlers(app)

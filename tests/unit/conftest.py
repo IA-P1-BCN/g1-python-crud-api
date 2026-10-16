@@ -10,9 +10,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 from main import app
+from src.domain.entities.cuenta import Cuenta
 from src.domain.entities.gym import ID_FIELDS, Clase, Cliente, Entrenador, Pago, Reserva
 from src.domain.list_filters import SEARCH_FIELDS
-from src.interfaces.http.dependencies import get_cuenta_repository, get_gym_repository
+from src.interfaces.http.dependencies import (
+    get_cuenta_repository,
+    get_current_user,
+    get_gym_repository,
+)
 
 
 class MemoryRepository:
@@ -129,11 +134,19 @@ def repository():
 @pytest.fixture
 def client(repository):
     app.dependency_overrides[get_gym_repository] = lambda: repository
+    app.dependency_overrides[get_current_user] = lambda: Cuenta(
+        id=1,
+        nombre="Admin",
+        email="admin@example.com",
+        password_hash="test",
+        rol="admin",
+    )
     try:
         with TestClient(app) as client:
             yield client
     finally:
         app.dependency_overrides.pop(get_gym_repository, None)
+        app.dependency_overrides.pop(get_current_user, None)
 
 
 class RegistrationRepository:

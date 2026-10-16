@@ -36,8 +36,10 @@ def mysql_ready():
 
 
 @pytest.fixture
-def api(mysql_ready, base_url):
-    with httpx.Client(base_url=base_url, timeout=10) as client:
+def api(mysql_ready, base_url, gym_admin_headers):
+    with httpx.Client(
+        base_url=base_url, headers=gym_admin_headers, timeout=10
+    ) as client:
         ids = {resource: [] for resource, _, _ in TABLES}
 
         def create(resource, data):
@@ -73,7 +75,9 @@ def test_export_clientes(api):
     response = client.get("/v1/export/csv", params={"tablas": "clientes"})
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/csv")
-    assert response.headers["content-disposition"] == 'attachment; filename="clientes.csv"'
+    assert (
+        response.headers["content-disposition"] == 'attachment; filename="clientes.csv"'
+    )
     assert response.content.startswith(b"\xef\xbb\xbf")
     lineas = response.content.decode("utf-8-sig").split("\r\n")
     assert lineas[0] == "id_cliente,nombre,estado_membresia,email,fecha_inscripcion"
@@ -118,5 +122,7 @@ def test_export_reservas(api):
     assert response.content.startswith(b"\xef\xbb\xbf")
     lineas = response.content.decode("utf-8-sig").split("\r\n")
     assert lineas[0] == "id_reserva,id_cliente,id_clase,fecha_reserva,asistio"
-    fila = next(linea for linea in lineas if linea.startswith(f"{reserva['id_reserva']},"))
+    fila = next(
+        linea for linea in lineas if linea.startswith(f"{reserva['id_reserva']},")
+    )
     assert fila.endswith(",False")
