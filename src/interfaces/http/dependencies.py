@@ -48,7 +48,10 @@ def get_dummy_hash() -> str:
 
 
 def get_access_tokens() -> JwtAccessTokens:
-    return JwtAccessTokens(get_settings().secret_key.get_secret_value())
+    settings = get_settings()
+    return JwtAccessTokens(
+        settings.secret_key.get_secret_value(), settings.access_token_expire_minutes
+    )
 
 
 def get_auth_controller(

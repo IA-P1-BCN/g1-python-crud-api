@@ -1,0 +1,4 @@
+- [x] Definir configuración y escenarios antes del código.
+- [x] Aplicar duración en el emisor y documentar el entorno.
+- [x] Probar límites, emisión y caducidad por HTTP real.
+- [x] Validar suite, lint, spec y registrar evidencia.

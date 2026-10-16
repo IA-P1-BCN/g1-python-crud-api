@@ -206,9 +206,9 @@ src/
   `password` se conserva literal. Registro y login son públicos.
 - Cuenta inexistente, contraseña incorrecta o Cuenta inactiva → mismo 401
   con `WWW-Authenticate: Bearer`. Se verifica un hash ficticio para email inexistente.
-- JWT HS256, sub=id string, iat, exp de 30 minutos, iss=gymflow y aud=gymflow-api.
-  Validación exige firma, algoritmo fijo y todas las claims; expiración configurable
-  queda en #67. SECRET_KEY obligatoria sin valor por defecto.
+- JWT HS256, sub=id string, iat, exp configurable, iss=gymflow y aud=gymflow-api.
+  ACCESS_TOKEN_EXPIRE_MINUTES (#67) acepta 1–1440 minutos, por defecto 30.
+  Validación exige firma, algoritmo fijo y todas las claims; expirado → 401. SECRET_KEY obligatoria sin valor por defecto.
 - Swagger declara OAuth2 password flow con tokenUrl `v1/auth/login`.
 - `tests/conftest.py` y CI configuran secretos exclusivos de prueba; nunca usar
   esos valores para desplegar.

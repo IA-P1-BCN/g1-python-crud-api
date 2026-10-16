@@ -278,7 +278,9 @@ la misma transacción; no se apropia de clientes existentes por email.
 El login recibe `application/x-www-form-urlencoded`, con `username=<email>`
 y `password=<contraseña>`. Devuelve `access_token` y `token_type=bearer`.
 En Swagger pulsa **Authorize**, usa el email en username y después consulta
-`/v1/users/me`. El token caduca a los 30 minutos.
+`/v1/users/me`. El token caduca a los minutos de `ACCESS_TOKEN_EXPIRE_MINUTES`
+(entero de 1 a 1440; por defecto 30). Reinicia la API al modificar `.env`.
+El cambio afecta a tokens nuevos; los existentes conservan su caducidad.
 
 PUT/PATCH solo aceptan nombre, email y password. La contraseña se conserva
 literal, se guarda con Argon2 y nunca se devuelve. Si se omite, conserva el

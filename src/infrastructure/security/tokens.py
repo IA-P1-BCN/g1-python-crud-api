@@ -8,10 +8,13 @@ from src.domain.errors import AuthenticationError
 
 
 class JwtAccessTokens:
-    def __init__(self, secret: str) -> None:
+    def __init__(self, secret: str, expire_minutes: int = 30) -> None:
         if len(secret) < 32:
             raise ValueError("SECRET_KEY requiere al menos 32 caracteres")
         self._secret = secret
+        if type(expire_minutes) is not int or not 1 <= expire_minutes <= 1440:
+            raise ValueError("La duración debe ser un entero entre 1 y 1440 minutos")
+        self._expire_minutes = expire_minutes
 
     def issue(self, cuenta_id: int) -> str:
         now = datetime.now(UTC)
@@ -19,7 +22,7 @@ class JwtAccessTokens:
             {
                 "sub": str(cuenta_id),
                 "iat": now,
-                "exp": now + timedelta(minutes=30),
+                "exp": now + timedelta(minutes=self._expire_minutes),
                 "iss": "gymflow",
                 "aud": "gymflow-api",
             },
