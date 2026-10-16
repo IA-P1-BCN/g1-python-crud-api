@@ -3,8 +3,10 @@
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from config.settings import get_settings
 from core.logging import setup_logging
@@ -19,6 +21,7 @@ from src.interfaces.http.routes.export_routes import router as export_router
 from src.interfaces.http.routes.health_routes import router as health_router
 from src.interfaces.http.routes.pago_routes import router as pago_router
 from src.interfaces.http.routes.reserva_routes import router as reserva_router
+from src.interfaces.http.spa import mount_spa
 
 settings = get_settings()
 setup_logging(settings.log_level, settings.log_file)
@@ -85,3 +88,16 @@ for business_router in (
         responses=PROTECTED_ERRORS,
     )
 register_crud_error_handlers(app)
+
+# Orígenes permitidos para el frontend (ALLOWED_ORIGINS, separados por comas).
+# Sin orígenes configurados no se permite ningún cruce de dominio.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Después de todos los routers: /v1, Swagger y health mantienen prioridad.
+mount_spa(app, Path(__file__).parent / "static")

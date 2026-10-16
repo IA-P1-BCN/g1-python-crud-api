@@ -71,7 +71,7 @@ describe('LoginComponent', () => {
 
     expect(auth.login).toHaveBeenCalledWith('cliente@gym.test', 'cliente123');
     expect(TestBed.inject(SessionService).usuario()).toEqual(USUARIO_ANA);
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/portal');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/');
   });
 
   it('muestra el error de credenciales y permanece en login', async () => {
