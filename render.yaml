@@ -1,0 +1,72 @@
+# Blueprint de Render para la GymFlow API (plan gratuito, sin servicios de pago).
+# Cada push a la rama del Blueprint reconstruye y redespliega el servicio
+# automáticamente (autoDeployTrigger: commit). docker-compose.yml NO se usa
+# en Render: levanta los tres servicios en desarrollo local.
+#
+# API y frontend Docker; el plan gratuito de Render no admite servicios con
+# disco, así que la base de datos MySQL vive fuera, en un MySQL gestionado
+# gratuito (p. ej. el plan gratuito de Aiven, https://aiven.io), y sus datos
+# se rellenan aquí en el Dashboard de Render. Nunca escribas credenciales en
+# este fichero.
+
+services:
+  - type: web
+    name: g1-gymflow-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: main
+    autoDeployTrigger: commit
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      # Conexión MySQL externa (Aiven u otro). Rellena en el Dashboard.
+      - key: MYSQL_HOST
+        sync: false
+      # Copia el puerto que muestra la consola de Aiven.
+      - key: MYSQL_PORT
+        sync: false
+      - key: MYSQL_DATABASE
+        sync: false
+      - key: MYSQL_USER
+        sync: false
+      - key: MYSQL_PASSWORD
+        sync: false
+      # Aiven exige TLS con certificado real: activa mysql_ssl en
+      # config/settings.py. Si el MySQL no lo exige, cambia a "false".
+      - key: MYSQL_SSL
+        value: "true"
+      # Certificado CA de Aiven (ca.pem de la consola): pega su contenido
+      # completo en el Dashboard. Sin él la conexión falla con
+      # "self-signed certificate in certificate chain".
+      - key: MYSQL_SSL_CA
+        sync: false
+      # JWT (obligatoria, mínimo 32 caracteres) y seed. Genera la clave con:
+      #   uv run python -c "import secrets; print(secrets.token_hex(32))"
+      - key: SECRET_KEY
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # Opcional para acceso directo desde otros orígenes; Nginx usa /v1/.
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: LOG_LEVEL
+        value: INFO
+
+  - type: web
+    name: g1-gymflow-frontend
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: main
+    autoDeployTrigger: commit
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: "10000"
+      # Origen sin ruta ni barra final. Free no recibe tráfico privado.
+      - key: API_UPSTREAM
+        value: https://g1-gymflow-api.onrender.com
