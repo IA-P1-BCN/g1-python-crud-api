@@ -175,7 +175,7 @@ src/
 
 ## Edición de Cuentas (#58)
 
-- PUT/PATCH `/v1/users/{id}` exigen Cuenta activa autenticada. Solo nombre,
+- PUT/PATCH `/v1/users/{id}` exigen admin activo desde #66. Solo nombre,
   email y password son editables; rol, activo y vínculo siguen fuera del contrato.
 - PUT exige nombre/email; password omitida conserva hash (excepción explícita
   al reemplazo de campos del CRUD V1, según #58). PATCH conserva los omitidos.
@@ -197,7 +197,8 @@ src/
   (incluida Cuenta borrada) → 401 Bearer; Cuenta inactiva tras login → 403.
 - GET `/v1/users/me` usa CuentaResponse sin credenciales. Se registra antes
   de `/{id}`. La dependencia finaliza su transacción antes del CRUD protegido.
-- La dependencia requires_admin compone get_current_user para listado y borrado.
+- La dependencia requires_admin compone get_current_user para listado, edición
+  por ID y borrado. Consultar por ID exige admin o propietario (#66).
 
 ## Autenticación (#55)
 
@@ -380,3 +381,13 @@ src/
   2026-10-14 (ver «Alcance vigente»). Las STORYs #37, #38, #40 y #42
   ampliaron sus AC con V2; el resto del plan V2 está en las STORYs nuevas de
   cada milestone.
+
+## Perfil propio (#66)
+
+- PATCH `/v1/users/me` edita nombre/email/password de la identidad del JWT.
+  Password exige current_password correcta; ambas son literales y SecretStr.
+- Validar hash bajo bloqueo de fila y confirmar todos los cambios juntos.
+  Contraseña actual incorrecta → 403; email duplicado → 409; entradas inválidas,
+  nulas o protegidas → 422 sin reflejar secretos.
+- PUT/PATCH por ID son solo admin para impedir eludir la comprobación propia;
+  GET por ID es solo admin o propietario. Rol, activo y vínculos no son editables.

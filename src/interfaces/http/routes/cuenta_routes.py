@@ -9,6 +9,7 @@ from src.interfaces.http.controllers.cuenta_controller import CuentaController
 from src.interfaces.http.dependencies import (
     get_cuenta_controller,
     get_current_user,
+    requires_account_access,
     requires_admin,
 )
 from src.interfaces.http.errors import LIST_ERRORS, PROTECTED_ERRORS
@@ -16,12 +17,14 @@ from src.interfaces.http.schemas.cuenta_schema import (
     CuentaPatch,
     CuentaPut,
     CuentaResponse,
+    CuentaSelfPatch,
 )
 from src.interfaces.http.schemas.list_query import CuentaQuery
 
 router = APIRouter(prefix="/users", tags=["cuentas"])
 CurrentCuenta = Annotated[Cuenta, Depends(get_current_user)]
 AdminCuenta = Annotated[Cuenta, Depends(requires_admin)]
+AccessibleCuenta = Annotated[Cuenta, Depends(requires_account_access)]
 Controller = Annotated[CuentaController, Depends(get_cuenta_controller)]
 CuentaId = Annotated[int, Path(gt=0, le=2147483647)]
 
@@ -35,6 +38,19 @@ CuentaId = Annotated[int, Path(gt=0, le=2147483647)]
 )
 def me(cuenta: CurrentCuenta) -> CuentaResponse:
     return CuentaController.me(cuenta)
+
+
+@router.patch(
+    "/me",
+    summary="Editar mi Cuenta",
+    description="Nombre/email propios; cambiar password exige current_password correcta (403 si no coincide). No permite rol, activo ni vínculos. Los cambios se confirman juntos.",
+    response_model=CuentaResponse,
+    responses=PROTECTED_ERRORS,
+)
+def patch_me(
+    data: CuentaSelfPatch, cuenta: CurrentCuenta, controller: Controller
+) -> CuentaResponse:
+    return controller.update_self(cuenta.id, data)
 
 
 @router.get(
@@ -59,7 +75,7 @@ def list_cuentas(
     responses=PROTECTED_ERRORS,
 )
 def get_cuenta(
-    id: CuentaId, cuenta: CurrentCuenta, controller: Controller
+    id: CuentaId, cuenta: AccessibleCuenta, controller: Controller
 ) -> CuentaResponse:
     return controller.get(id)
 
@@ -67,12 +83,12 @@ def get_cuenta(
 @router.put(
     "/{id}",
     summary="Sustituir los datos de una Cuenta",
-    description="Exige nombre y email. Password es opcional y conserva el hash si se omite; si se envía, se sustituye con hash. No permite rol, activo ni id_cliente.",
+    description="Solo admin. Exige nombre y email. Password es opcional y conserva el hash si se omite; si se envía, se sustituye con hash. No permite rol, activo ni id_cliente.",
     response_model=CuentaResponse,
     responses=PROTECTED_ERRORS,
 )
 def put_cuenta(
-    id: CuentaId, data: CuentaPut, cuenta: CurrentCuenta, controller: Controller
+    id: CuentaId, data: CuentaPut, cuenta: AdminCuenta, controller: Controller
 ) -> CuentaResponse:
     return controller.update(id, data)
 
@@ -80,12 +96,12 @@ def put_cuenta(
 @router.patch(
     "/{id}",
     summary="Editar parcialmente una Cuenta",
-    description="Solo nombre, email y password; conserva campos omitidos. Null explícito, campos protegidos o cuerpo vacío producen 422.",
+    description="Solo admin. Acepta nombre, email y password; conserva campos omitidos. Null explícito, campos protegidos o cuerpo vacío producen 422. La edición propia usa PATCH /users/me.",
     response_model=CuentaResponse,
     responses=PROTECTED_ERRORS,
 )
 def patch_cuenta(
-    id: CuentaId, data: CuentaPatch, cuenta: CurrentCuenta, controller: Controller
+    id: CuentaId, data: CuentaPatch, cuenta: AdminCuenta, controller: Controller
 ) -> CuentaResponse:
     return controller.update(id, data)
 

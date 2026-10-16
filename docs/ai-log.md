@@ -7,6 +7,7 @@ rechazó y por qué). Cada funcionalidad principal deja aquí su entrada.
 
 ## Registros detallados
 
+- [2026-10-16 — #66: perfil propio y contraseña](ai-log/2026-10-16-perfil-66.md).
 - [2026-10-16 — #65: administración de Cuentas](ai-log/2026-10-16-admin-65.md).
 - [2026-10-16 — #105: JWT en los recursos del gimnasio](ai-log/2026-10-16-gym-jwt-105.md).
 - [2026-10-14 — #79: uso de las skills de verificación y revisión](ai-log/2026-10-14-skills.md).

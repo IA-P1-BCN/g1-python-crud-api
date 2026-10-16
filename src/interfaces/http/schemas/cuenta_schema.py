@@ -91,3 +91,22 @@ class CuentaPatch(ApiSchema):
 class CuentaPut(CuentaPatch):
     nombre: str = Field(min_length=1, max_length=100)
     email: EmailStr = Field(max_length=150)
+
+
+class CuentaSelfPatch(CuentaPatch):
+    current_password: SecretStr | SkipJsonSchema[None] = Field(
+        default=None, min_length=1, max_length=128, json_schema_extra=omit_default
+    )
+
+    @field_validator("current_password", mode="before")
+    @classmethod
+    def reject_null_current_password(cls, value: object) -> object:
+        if value is None:
+            raise ValueError("current_password no puede ser null")
+        return value
+
+    @model_validator(mode="after")
+    def require_password_pair(self):
+        if (self.password is None) != (self.current_password is None):
+            raise ValueError("Envía password y current_password juntas")
+        return self

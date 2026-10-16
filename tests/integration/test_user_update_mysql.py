@@ -3,7 +3,7 @@
 from uuid import uuid4
 
 
-def test_edicion_y_login_con_nueva_password(accounts_api):
+def test_edicion_y_login_con_nueva_password(accounts_api, gym_admin_headers):
     client, emails = accounts_api
     email, changed_email = (f"{uuid4().hex}@example.com" for _ in range(2))
     emails.extend([email, changed_email])
@@ -18,7 +18,9 @@ def test_edicion_y_login_con_nueva_password(accounts_api):
     headers = {"Authorization": f"Bearer {token}"}
     url = f"/v1/users/{created['id']}"
     result = client.put(
-        url, json={"nombre": "Editada", "email": changed_email}, headers=headers
+        url,
+        json={"nombre": "Editada", "email": changed_email},
+        headers=gym_admin_headers,
     )
     assert result.status_code == 200, result.text
     assert (
@@ -27,7 +29,9 @@ def test_edicion_y_login_con_nueva_password(accounts_api):
         ).status_code
         == 200
     )
-    result = client.patch(url, json={"password": " contraseña nueva "}, headers=headers)
+    result = client.patch(
+        url, json={"password": " contraseña nueva "}, headers=gym_admin_headers
+    )
     assert result.status_code == 200 and "password" not in result.text
     assert client.get(url, headers=headers).json() == result.json()
     assert (

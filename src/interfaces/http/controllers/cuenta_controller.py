@@ -6,6 +6,7 @@ from src.interfaces.http.schemas.cuenta_schema import (
     CuentaPatch,
     CuentaRegister,
     CuentaResponse,
+    CuentaSelfPatch,
 )
 from src.interfaces.http.schemas.list_query import CuentaQuery
 
@@ -38,6 +39,19 @@ class CuentaController:
         )
         return CuentaResponse.model_validate(
             self._use_cases.update(cuenta_id, data.nombre, data.email, password)
+        )
+
+    def update_self(self, cuenta_id: int, data: CuentaSelfPatch) -> CuentaResponse:
+        return CuentaResponse.model_validate(
+            self._use_cases.update_self(
+                cuenta_id,
+                data.nombre,
+                data.email,
+                data.password.get_secret_value() if data.password is not None else None,
+                data.current_password.get_secret_value()
+                if data.current_password is not None
+                else None,
+            )
         )
 
     def register(self, data: CuentaRegister) -> CuentaResponse:

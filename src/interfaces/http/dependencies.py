@@ -74,3 +74,12 @@ def requires_admin(
     if cuenta.rol != "admin":
         raise ForbiddenError("Esta operación requiere rol admin")
     return cuenta
+
+
+def requires_account_access(
+    id: int,
+    cuenta: Annotated[Cuenta, Depends(get_current_user)],
+) -> Cuenta:
+    if cuenta.rol != "admin" and cuenta.id != id:
+        raise ForbiddenError("No puedes consultar una Cuenta ajena")
+    return cuenta

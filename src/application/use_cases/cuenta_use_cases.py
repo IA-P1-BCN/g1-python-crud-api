@@ -3,7 +3,12 @@
 from dataclasses import replace
 
 from src.domain.entities.cuenta import Cuenta
-from src.domain.errors import ConflictError, InvalidQueryError, NotFoundError
+from src.domain.errors import (
+    ConflictError,
+    ForbiddenError,
+    InvalidQueryError,
+    NotFoundError,
+)
 from src.domain.list_filters import ListFilters
 from src.domain.repositories.cuenta_port import CuentaRepository
 from src.domain.security import PasswordHasher
@@ -50,17 +55,45 @@ class CuentaUseCases:
     ) -> Cuenta:
         with self._repository.transaction():
             previous = self._require(cuenta_id, lock=True)
-            cuenta = replace(previous)
-            if nombre is not None:
-                cuenta.nombre = nombre
-            if email is not None:
-                cuenta.email = email.lower()
-                existing = self._repository.get_by_email(cuenta.email)
-                if existing is not None and existing.id != cuenta_id:
-                    raise ConflictError("Email de Cuenta ya registrado")
-            if password is not None:
-                cuenta.password_hash = self._hasher.hash(password)
-            return self._repository.update(cuenta)
+            return self._apply_update(previous, nombre, email, password)
+
+    def update_self(
+        self,
+        cuenta_id: int,
+        nombre: str | None = None,
+        email: str | None = None,
+        password: str | None = None,
+        current_password: str | None = None,
+    ) -> Cuenta:
+        with self._repository.transaction():
+            previous = self._require(cuenta_id, lock=True)
+            if not previous.activo:
+                raise ForbiddenError("La Cuenta está inactiva")
+            if password is not None and (
+                current_password is None
+                or not self._hasher.verify(current_password, previous.password_hash)
+            ):
+                raise ForbiddenError("La contraseña actual es incorrecta")
+            return self._apply_update(previous, nombre, email, password)
+
+    def _apply_update(
+        self,
+        previous: Cuenta,
+        nombre: str | None,
+        email: str | None,
+        password: str | None,
+    ) -> Cuenta:
+        cuenta = replace(previous)
+        if nombre is not None:
+            cuenta.nombre = nombre
+        if email is not None:
+            cuenta.email = email.lower()
+            existing = self._repository.get_by_email(cuenta.email)
+            if existing is not None and existing.id != cuenta.id:
+                raise ConflictError("Email de Cuenta ya registrado")
+        if password is not None:
+            cuenta.password_hash = self._hasher.hash(password)
+        return self._repository.update(cuenta)
 
     def register(
         self, nombre: str, email: str, password: str, crear_cliente: bool = False
