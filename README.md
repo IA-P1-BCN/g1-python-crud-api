@@ -123,9 +123,9 @@ no uses migraciones de otros repositorios.
 ## Despliegue en Render
 
 La API y el frontend se despliegan en [Render](https://render.com) con el Blueprint
-[`render.yaml`](render.yaml), [`Dockerfile`](Dockerfile) y
-[`frontend/Dockerfile`](frontend/Dockerfile). Cada push a
-`main` reconstruye y redespliega ambos servicios automáticamente; no hace falta
+[`render.yaml`](render.yaml) y [`Dockerfile`](Dockerfile). La imagen construye
+Angular y FastAPI lo sirve desde `/`, en el mismo servicio `g1-gymflow-api`.
+Cada push a `main` reconstruye y redespliega el servicio automáticamente; no hace falta
 ninguna Action de GitHub ni secretos en el repositorio. `docker-compose.yml`
 levanta MySQL, API y frontend en local: Render no lo ejecuta.
 
@@ -148,33 +148,30 @@ obligatorio). Pasos:
    cada arranque del contenedor (`scripts/docker-entrypoint.sh`), igual que
    `task demo`; no hay que ejecutar nada desde tu máquina.
 
-### Añadir el frontend a una API ya desplegada
+### Frontend en la raíz de la API
 
-Tras mergear la PR en `main`, sincroniza el Blueprint existente desde esa rama
-para añadir `g1-gymflow-frontend`. Revisa que reutiliza `g1-gymflow-api` y conserva
-sus valores `MYSQL_*`, CA, `SECRET_KEY` y `ADMIN_PASSWORD`. Un push redespliega
-servicios existentes, pero por sí solo no crea un servicio nuevo si no hay un
-Blueprint sincronizado. No crees una segunda API.
+Tras mergear en `main`, el auto-deploy de la API publica también Angular en
+`https://g1-gymflow-api.onrender.com/`. No hay que crear un segundo servicio.
+Se conservan `MYSQL_*`, CA, `SECRET_KEY` y `ADMIN_PASSWORD` en Render.
 
-Si la API fue creada manualmente, puedes añadir solo el frontend desde
-**New → Web Service**, mismo repositorio, rama `main`, runtime Docker,
-Dockerfile `./frontend/Dockerfile`, contexto `./frontend`, plan **Free**.
-Configura `PORT=10000`, healthcheck `/health` y
-`API_UPSTREAM=https://g1-gymflow-api.onrender.com` (sin ruta ni barra final).
-Activa auto-deploy por commit. No copies secretos de la API al frontend.
+El portal vive en `/`, sus pantallas en `/clases`, `/reservas`, `/perfil`, etc.
+Los enlaces antiguos `/portal/...` redirigen a sus equivalentes sin prefijo.
+Se pueden recargar las rutas directamente. `/v1`, `/docs`, `/redoc`,
+`/openapi.json` y `/health` conservan su función; los archivos inexistentes y
+los errores de API no se convierten en HTML.
 
-El navegador usa el dominio del frontend; Nginx sirve Angular y reenvía `/v1/`
-a la API por HTTPS con verificación de certificado y SNI. No requiere CORS para
-ese recorrido. En Compose usa `http://api:8000` por defecto y la API tiene
-`PORT=8000`. La red privada no admite conexiones entrantes a servicios Free.
+El navegador usa el mismo origen para Angular y `/v1/`, sin CORS. En desarrollo,
+`npm start` mantiene el proxy habitual. Compose conserva el frontend Nginx
+independiente en 4200; la API Docker en 8000 también sirve Angular.
+El Blueprint anterior declaraba un frontend separado: este cambio no requiere
+usarlo ni borra automáticamente servicios creados previamente en el Dashboard.
 
-Comprueba la raíz y una ruta Angular profunda, `/health` del frontend y el login
+Comprueba la raíz y una ruta Angular profunda, `/health` y el login
 demo desde su interfaz. `/v1/users/me` con el token comprueba el proxy autenticado.
 Verifica también `/health/db` directamente en la API. No basta un 200 HTML para
 dar por válida una respuesta JSON.
 
-Ambos servicios Free se duermen tras 15 minutos sin tráfico y comparten las
-750 horas gratuitas mensuales. Nginx espera hasta 180 s por la API. Free no
+El servicio Free se duerme tras 15 minutos sin tráfico. Free no
 garantiza una factura nula al superar cuotas facturables de tráfico/builds;
 revisa consumo y límites en Billing. Aiven también puede apagarse por inactividad:
 enciéndelo desde su consola si es necesario.

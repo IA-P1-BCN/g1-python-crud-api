@@ -36,7 +36,7 @@ interface ProximaClase {
         <div hlmCardHeader><h2 hlmCardTitle>Clases</h2></div>
         <div hlmCardContent class="flex flex-col items-start gap-3">
           <p class="text-sm text-muted-foreground">Consulta las plazas libres y reserva tu sitio.</p>
-          <a hlmBtn routerLink="/portal/clases">Ver clases</a>
+          <a hlmBtn routerLink="/clases">Ver clases</a>
         </div>
       </article>
     </section>

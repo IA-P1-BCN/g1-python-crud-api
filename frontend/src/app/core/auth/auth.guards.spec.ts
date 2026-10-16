@@ -39,18 +39,18 @@ describe('guardas de autenticación', () => {
   it('invitado: con sesión de socio, login y registro llevan al portal', () => {
     sesion.iniciar(USUARIO_ANA);
     const resultado = TestBed.runInInjectionContext(() => invitadoGuard(ruta, estado('/login')));
-    expect(router.serializeUrl(resultado as UrlTree)).toBe('/portal');
+    expect(router.serializeUrl(resultado as UrlTree)).toBe('/');
   });
 
   it('invitado: sin sesión puede ver login', () => {
     expect(TestBed.runInInjectionContext(() => invitadoGuard(ruta, estado('/login')))).toBe(true);
   });
 
-  it('home: el socio con ficha va directo a su portal; el visitante ve la home', () => {
+  it('home: socio y visitante permanecen en la raíz sin bucle', () => {
     expect(TestBed.runInInjectionContext(() => homeGuard(ruta, estado('/')))).toBe(true);
     sesion.iniciar(USUARIO_ANA);
     const resultado = TestBed.runInInjectionContext(() => homeGuard(ruta, estado('/')));
-    expect(router.serializeUrl(resultado as UrlTree)).toBe('/portal');
+    expect(resultado).toBe(true);
   });
 
   it('home: staff sin ficha se queda en la home', () => {
