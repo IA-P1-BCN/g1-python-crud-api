@@ -19,7 +19,15 @@ interface Aviso {
 /** Perfil propio: consulta GET /v1/users/me y edición con PATCH. */
 @Component({
   selector: 'app-perfil',
-  imports: [ReactiveFormsModule, ToastComponent, HlmBadgeImports, HlmButtonImports, HlmCardImports, HlmInputImports, HlmLabelImports],
+  imports: [
+    ReactiveFormsModule,
+    ToastComponent,
+    HlmBadgeImports,
+    HlmButtonImports,
+    HlmCardImports,
+    HlmInputImports,
+    HlmLabelImports,
+  ],
   template: `
     <h1 class="mb-4 text-3xl font-semibold">Mi perfil</h1>
 
@@ -40,7 +48,9 @@ interface Aviso {
           </div>
           <div class="flex justify-between gap-4 sm:block">
             <dt class="text-muted-foreground">Rol</dt>
-            <dd class="sm:mt-0.5"><span hlmBadge variant="secondary">{{ datos.rol }}</span></dd>
+            <dd class="sm:mt-0.5">
+              <span hlmBadge variant="secondary">{{ datos.rol }}</span>
+            </dd>
           </div>
           <div class="flex justify-between gap-4 sm:block">
             <dt class="text-muted-foreground">Estado</dt>
@@ -64,21 +74,48 @@ interface Aviso {
             <label hlmLabel for="nombre-perfil">Nombre *</label>
             <input hlmInput id="nombre-perfil" formControlName="nombre" />
             @if (mostrarError('nombre')) {
-              <p class="text-sm text-destructive">El nombre es obligatorio (máx. 100 caracteres).</p>
+              <p class="text-sm text-destructive">
+                El nombre es obligatorio (máx. 100 caracteres).
+              </p>
             }
           </div>
           <div class="flex flex-col gap-1">
             <label hlmLabel for="email-perfil">Email *</label>
             <input hlmInput id="email-perfil" type="email" formControlName="email" />
             @if (mostrarError('email')) {
-              <p class="text-sm text-destructive">El email es obligatorio y debe ser válido (máx. 150).</p>
+              <p class="text-sm text-destructive">
+                El email es obligatorio y debe ser válido (máx. 150).
+              </p>
             }
           </div>
           <div class="flex flex-col gap-1">
             <label hlmLabel for="password-perfil">Contraseña nueva (opcional)</label>
-            <input hlmInput id="password-perfil" type="password" placeholder="Déjala vacía para conservarla" formControlName="password" />
+            <input
+              hlmInput
+              id="password-perfil"
+              type="password"
+              placeholder="Déjala vacía para conservarla"
+              formControlName="password"
+            />
             @if (mostrarError('password')) {
-              <p class="text-sm text-destructive">La contraseña debe tener entre 12 y 128 caracteres.</p>
+              <p class="text-sm text-destructive">
+                La contraseña debe tener entre 12 y 128 caracteres.
+              </p>
+            }
+          </div>
+          <div class="flex flex-col gap-1">
+            <label hlmLabel for="current-password-perfil">Contraseña actual (para cambiarla)</label>
+            <input
+              hlmInput
+              id="current-password-perfil"
+              type="password"
+              autocomplete="current-password"
+              formControlName="current_password"
+            />
+            @if (mostrarError('current_password')) {
+              <p class="text-sm text-destructive">
+                Introduce tu contraseña actual (máx. 128 caracteres).
+              </p>
             }
           </div>
           <div class="flex gap-2">
@@ -110,19 +147,30 @@ export class PerfilPage {
       nonNullable: true,
       validators: [Validators.minLength(12), Validators.maxLength(128)],
     }),
+    current_password: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(128)],
+    }),
   });
 
   constructor() {
     void this.cargar();
   }
 
-  protected mostrarError(campo: 'nombre' | 'email' | 'password'): boolean {
+  protected mostrarError(campo: 'nombre' | 'email' | 'password' | 'current_password'): boolean {
     const control = this.form.controls[campo];
     return control.touched && control.invalid;
   }
 
   protected async guardar(evento: Event): Promise<void> {
     evento.preventDefault();
+    this.form.controls.current_password.updateValueAndValidity();
+    if (
+      this.form.controls.password.value !== '' &&
+      this.form.controls.current_password.value === ''
+    ) {
+      this.form.controls.current_password.setErrors({ required: true });
+    }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -131,13 +179,13 @@ export class PerfilPage {
     if (actual === null) {
       return;
     }
-    const { nombre, email, password } = this.form.getRawValue();
+    const { nombre, email, password, current_password } = this.form.getRawValue();
     this.aviso.set(null);
     try {
-      const actualizado = await this.api.parchear(actual.id, {
+      const actualizado = await this.api.actualizarYo({
         nombre: nombre.trim(),
         email: email.trim(),
-        ...(password === '' ? {} : { password }),
+        ...(password === '' ? {} : { password, current_password }),
       });
       this.aplicar(actualizado);
       this.aviso.set({ mensaje: 'Perfil actualizado', tipo: 'exito' });
@@ -149,7 +197,12 @@ export class PerfilPage {
 
   private aplicar(actualizado: Cuenta): void {
     this.cuenta.set(actualizado);
-    this.form.setValue({ nombre: actualizado.nombre, email: actualizado.email, password: '' });
+    this.form.setValue({
+      nombre: actualizado.nombre,
+      email: actualizado.email,
+      password: '',
+      current_password: '',
+    });
     const usuario = this.session.usuario();
     if (usuario !== null) {
       this.session.iniciar({ ...usuario, nombre: actualizado.nombre, email: actualizado.email });
@@ -161,7 +214,12 @@ export class PerfilPage {
     try {
       const yo = await this.api.yo();
       this.cuenta.set(yo);
-      this.form.setValue({ nombre: yo.nombre, email: yo.email, password: '' });
+      this.form.setValue({
+        nombre: yo.nombre,
+        email: yo.email,
+        password: '',
+        current_password: '',
+      });
     } catch (error) {
       this.cuenta.set(null);
       this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });

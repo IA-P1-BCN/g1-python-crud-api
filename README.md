@@ -370,10 +370,11 @@ tener una Cuenta vinculada; admin/staff no necesitan ser socios.
 | `POST /v1/auth/register` | Público; 201 con Cuenta de rol cliente |
 | `POST /v1/auth/login` | Público; formulario OAuth2, 200 con JWT |
 | `GET /v1/users/me` | Token; perfil de la Cuenta actual |
+| `PATCH /v1/users/me` | Token; perfil propio, contraseña nueva exige la actual |
 | `GET /v1/users` | Admin; listado, filtros y paginación |
-| `GET /v1/users/{id}` | Token; detalle o 404 |
-| `PUT /v1/users/{id}` | Token; nombre/email obligatorios, contraseña opcional |
-| `PATCH /v1/users/{id}` | Token; solo cambia campos enviados |
+| `GET /v1/users/{id}` | Admin o propietario; detalle o 404 |
+| `PUT /v1/users/{id}` | Admin; nombre/email obligatorios, contraseña opcional |
+| `PATCH /v1/users/{id}` | Admin; solo cambia campos enviados |
 | `DELETE /v1/users/{id}` | Admin; 204, borrado físico que conserva Cliente |
 
 El registro recibe `nombre`, `email`, `password` (12–128 caracteres) y
@@ -390,9 +391,9 @@ literal, se guarda con Argon2 y nunca se devuelve. Si se omite, conserva el
 hash anterior. No se aceptan null explícitos, PATCH vacío ni campos rol,
 activo, id_cliente o fecha_creacion. La Cuenta conserva su fecha y vínculo.
 
-Los endpoints de Cuentas exigen una Cuenta activa autenticada. El listado y
-el borrado exigen rol admin (#65); staff y cliente reciben 403. La edición
-y consulta por ID se completan con las reglas de perfil/propiedad de #66/#106.
+Los endpoints de Cuentas exigen una Cuenta activa autenticada. El listado,
+la edición por ID y el borrado exigen admin. Consultar por ID exige admin o
+propietario; staff y cliente editan su perfil mediante `/v1/users/me`.
 Los recursos del gimnasio y la exportación
 CSV también exigen JWT (#105).
 Registro, login, healthchecks y documentación siguen públicos.
@@ -421,3 +422,11 @@ Ejemplo: `/v1/users?rol=staff&activo=true&limit=10`.
 Swagger y ReDoc muestran ejemplos JSON, schemas y cabecera de autenticación
 para los errores que corresponden a cada operación. Registro/login permanecen
 públicos; no se documentan 400/403 artificiales en esas operaciones.
+
+### Editar la Cuenta propia (#66)
+
+`PATCH /v1/users/me` acepta nombre/email y, para cambiar la contraseña,
+`password` junto a `current_password`. La actual incorrecta devuelve 403 y
+ningún cambio se guarda; email duplicado devuelve 409. Omitir campos los conserva.
+Null, cuerpo vacío y campos protegidos devuelven 422 sin reflejar credenciales.
+La edición por ID queda reservada al admin; no permite saltarse este flujo.

@@ -21,14 +21,19 @@ const CUENTA: Cuenta = {
 
 describe('PerfilPage', () => {
   let fixture: ComponentFixture<PerfilPage>;
-  let api: { yo: ReturnType<typeof vi.fn>; parchear: ReturnType<typeof vi.fn> };
+  let api: { yo: ReturnType<typeof vi.fn>; actualizarYo: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     sessionStorage.clear();
     api = {
       yo: vi.fn(() => Promise.resolve(CUENTA)),
-      parchear: vi.fn((id: number, cambios: Partial<Cuenta> & { password?: string }) =>
-        Promise.resolve({ ...CUENTA, ...cambios, id }),
+      actualizarYo: vi.fn(
+        (cambios: Partial<Cuenta> & { password?: string; current_password?: string }) =>
+          Promise.resolve({
+            ...CUENTA,
+            nombre: cambios.nombre ?? CUENTA.nombre,
+            email: cambios.email ?? CUENTA.email,
+          }),
       ),
     };
     await TestBed.configureTestingModule({
@@ -59,12 +64,20 @@ describe('PerfilPage', () => {
   });
 
   it('actualiza nombre y email con PATCH y refleja el cambio en la sesión', async () => {
-    componente()['form'].setValue({ nombre: 'Ana Editada', email: 'ana.nuevo@example.com', password: '' });
+    componente()['form'].setValue({
+      nombre: 'Ana Editada',
+      email: 'ana.nuevo@example.com',
+      password: '',
+      current_password: '',
+    });
     fixture.detectChanges();
     enviar();
     await esperarCarga(fixture);
 
-    expect(api.parchear).toHaveBeenCalledWith(1, { nombre: 'Ana Editada', email: 'ana.nuevo@example.com' });
+    expect(api.actualizarYo).toHaveBeenCalledWith({
+      nombre: 'Ana Editada',
+      email: 'ana.nuevo@example.com',
+    });
     expect(texto()).toContain('Perfil actualizado');
     const sesion = TestBed.inject(SessionService).usuario();
     expect(sesion?.nombre).toBe('Ana Editada');
@@ -76,22 +89,54 @@ describe('PerfilPage', () => {
       nombre: 'Ana García',
       email: 'cliente@gym.test',
       password: 'contraseña-larga-1',
+      current_password: ' contraseña actual ',
     });
     fixture.detectChanges();
     enviar();
     await esperarCarga(fixture);
 
-    expect(api.parchear).toHaveBeenCalledWith(1, {
+    expect(api.actualizarYo).toHaveBeenCalledWith({
       nombre: 'Ana García',
       email: 'cliente@gym.test',
       password: 'contraseña-larga-1',
+      current_password: ' contraseña actual ',
     });
     expect(componente()['form'].getRawValue().password).toBe('');
+    expect(componente()['form'].getRawValue().current_password).toBe('');
+  });
+
+  it('exige la contraseña actual y permite desistir del cambio', async () => {
+    componente()['form'].patchValue({ password: 'contraseña-larga-1' });
+    enviar();
+    await esperarCarga(fixture);
+    expect(api.actualizarYo).not.toHaveBeenCalled();
+    expect(texto()).toContain('Introduce tu contraseña actual');
+    componente()['form'].patchValue({ password: '' });
+    enviar();
+    await esperarCarga(fixture);
+    expect(api.actualizarYo).toHaveBeenCalledWith({ nombre: CUENTA.nombre, email: CUENTA.email });
+  });
+
+  it('muestra la contraseña actual incorrecta sin modificar la sesión', async () => {
+    api.actualizarYo.mockRejectedValue(new ApiError(403, 'La contraseña actual es incorrecta'));
+    componente()['form'].patchValue({
+      password: 'contraseña-larga-1',
+      current_password: 'incorrecta',
+    });
+    enviar();
+    await esperarCarga(fixture);
+    expect(texto()).toContain('La contraseña actual es incorrecta');
+    expect(TestBed.inject(SessionService).usuario()?.email).toBe(CUENTA.email);
   });
 
   it('muestra el conflicto de email sin tocar la sesión', async () => {
-    api.parchear.mockRejectedValue(new ApiError(409, 'Email de Cuenta ya registrado'));
-    componente()['form'].setValue({ nombre: 'Ana García', email: 'ocupado@example.com', password: '' });
+    api.actualizarYo.mockRejectedValue(new ApiError(409, 'Email de Cuenta ya registrado'));
+    componente()['form'].setValue({
+      nombre: 'Ana García',
+      email: 'ocupado@example.com',
+      password: '',
+      current_password: '',
+    });
     fixture.detectChanges();
     enviar();
     await esperarCarga(fixture);

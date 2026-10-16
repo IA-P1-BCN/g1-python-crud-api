@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { ejecutar, RUTA_API } from '../../core/http/peticion';
 import { Clase } from '../../shared/models/clase.model';
 import { Cliente } from '../../shared/models/cliente.model';
-import { Cuenta, CuentaPut } from '../../shared/models/cuenta.model';
+import { Cuenta, CuentaPut, CuentaSelfPatch } from '../../shared/models/cuenta.model';
 import { Entrenador } from '../../shared/models/entrenador.model';
 import { Pago, PagoEntrada } from '../../shared/models/pago.model';
 import { Reserva } from '../../shared/models/reserva.model';
@@ -87,6 +87,10 @@ export class CuentasApi extends RecursoApi<Cuenta, CuentaPut> {
   /** Perfil de la Cuenta autenticada (requiere token). */
   yo(): Promise<Cuenta> {
     return ejecutar(this.http.get<Cuenta>(this.url('/me')));
+  }
+
+  actualizarYo(cambios: CuentaSelfPatch): Promise<Cuenta> {
+    return ejecutar(this.http.patch<Cuenta>(this.url('/me'), cambios));
   }
 
   parchear(id: number, cambios: Partial<CuentaPut>): Promise<Cuenta> {

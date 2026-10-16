@@ -1,0 +1,4 @@
+- [x] Definir spec y cierre de rutas alternativas antes de implementar.
+- [x] Implementar edición propia atómica y guardas de Cuenta.
+- [x] Probar validación, errores, hash y ausencia de cambios parciales.
+- [x] Validar suite/lint/spec y documentar evidencia.
