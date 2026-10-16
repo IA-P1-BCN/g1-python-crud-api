@@ -62,3 +62,11 @@
   0 omitidas`) → uvicorn; `GET /health`, `/health/db` (versión 0.3),
   `/docs` y `/v1/clientes` responden 200 con datos demo.
 - Pendiente de Fase 2: deploy real en Render con Aiven y su evidencia.
+### Corrección (2026-10-16): CA de Aiven
+- El primer deploy falló con CERTIFICATE_VERIFY_FAILED: Aiven firma con una CA
+  propia que `ssl.create_default_context()` no reconoce.
+- Decisión: nueva variable `MYSQL_SSL_CA` (contenido PEM o ruta) en
+  `config/settings.py`, con tests; se rellena en el Dashboard de Render.
+- Error posterior: la variable no existía en Render y el usuario/contraseña
+  de Aiven no coincidían; corregido en el Dashboard.
+- Verificado: `/health/db` responde ok (esquema 0.3) en Render.
