@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from config.settings import get_settings
-from scripts.seed_accounts import seed_accounts, validate_admin_password
+from scripts.seed_accounts import seed_accounts, seed_staff, validate_admin_password
 from src.infrastructure.database.engine import SessionLocal
 from src.infrastructure.database.models import (
     ClaseRecord,
@@ -129,10 +129,18 @@ def main() -> None:
         counts = seed_accounts(
             session, Argon2PasswordHasher(), settings.admin_email, password
         )
+        staff = seed_staff(session, Argon2PasswordHasher())
     print(
         "Datos demo de GymFlow disponibles: clientes, entrenador, clase, pago y reserva."
     )
     print(f"Cuentas: {counts['creadas']} creadas; {counts['omitidas']} omitidas.")
+    if staff["creadas"]:
+        print("Cuenta staff creada: staff@gymflow.com vinculada a un Entrenador.")
+    else:
+        print(
+            "Cuenta staff omitida: email ya existente o sin Entrenador libre "
+            "(staff@gymflow.com)."
+        )
 
 
 if __name__ == "__main__":

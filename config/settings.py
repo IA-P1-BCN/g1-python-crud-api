@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     # Contraseña de administración: obligatoria en el seed, opcional en la API;
     # SecretStr evita que se imprima en logs, trazas o en `repr()`.
     admin_password: SecretStr | None = None
-    admin_email: str = "admin@example.com"
+    admin_email: str = "admin@gymflow.com"
     secret_key: SecretStr = Field(min_length=32)
     access_token_expire_minutes: int = Field(default=30, ge=1, le=1440)
     log_level: str = "INFO"
