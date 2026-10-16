@@ -69,7 +69,7 @@ import { HlmCardImports } from '@spartan-ng/helm/card';
               @if (!session.autenticado()) {
                 <div hlmAlert>
                   <p hlmAlertDescription>
-                    Para reservar, <a class="font-semibold text-primary" routerLink="/login" [queryParams]="{ returnUrl: '/portal/clases' }">inicia sesión</a>.
+                    Para reservar, <a class="font-semibold text-primary" routerLink="/login" [queryParams]="{ returnUrl: '/clases' }">inicia sesión</a>.
                   </p>
                 </div>
               } @else if (session.idCliente() === null) {
@@ -77,7 +77,7 @@ import { HlmCardImports } from '@spartan-ng/helm/card';
               } @else if (item.reservadaPorMi) {
                 <div hlmAlert><p hlmAlertDescription>Ya tienes plaza reservada en esta clase.</p></div>
               } @else {
-                <div hlmAlert><p hlmAlertDescription>Puedes reservarla desde <a class="font-semibold text-primary" routerLink="/portal/clases">Clases</a> en tu portal.</p></div>
+                <div hlmAlert><p hlmAlertDescription>Puedes reservarla desde <a class="font-semibold text-primary" routerLink="/clases">Clases</a> en tu portal.</p></div>
               }
 
               <button hlmBtn variant="outline" type="button" class="self-start" (click)="seleccionada.set(null)">Cerrar</button>

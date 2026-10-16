@@ -265,8 +265,9 @@ src/
 ## Configuración y entorno
 
 - Variables en `.env` (ver `.env.example`), leídas con pydantic-settings:
-  `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`
-  y `ADMIN_PASSWORD` (#6).
+  `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`,
+  `MYSQL_SSL` (TLS para MySQL gestionados, p. ej. Aiven), `ALLOWED_ORIGINS`
+  (orígenes CORS del frontend, separados por comas) y `ADMIN_PASSWORD` (#6).
 - `ADMIN_PASSWORD` es opcional (`SecretStr | None`, sin valor por defecto en el
   código) para arrancar la API, pero **obligatoria para `task seed`**: se valida
   antes de escribir (12–128 caracteres, sin marcadores). `ADMIN_EMAIL` identifica
@@ -334,6 +335,40 @@ src/
   yarn, para no mezclar gestores). Comandos: `npm ci`, `npm start` (proxy de `/v1`
   hacia `127.0.0.1:8000`), `npm test` y `npm run build`. Angular CLI 22 genera el
   proyecto; no se versionan `node_modules/`, `frontend/.angular/` ni `frontend/dist/`.
+
+## Despliegue (Render)
+
+- La API se despliega en Render con el Blueprint `render.yaml` (plan gratuito,
+  `runtime: docker`) y el `Dockerfile` de la raíz. Cada push a `main` la
+  redespliega solo (`autoDeployTrigger: commit`); no se usan Actions de GitHub
+  ni secretos en el repositorio para el despliegue.
+- **Sin servicios de pago**: aunque la cuenta tenga tarjeta, solo se usan
+  planes gratuitos (API en Render + MySQL gratuito externo); MySQL en Render
+  exigiría un plan de pago, por eso vive fuera.
+- `docker-compose.yml` levanta MySQL, API y frontend local; Render no lo lee.
+- El MySQL de producción es externo (plan gratuito de Aiven, con TLS
+  obligatorio): `MYSQL_SSL=true` activa un `SSLContext` en
+  `Settings.sqlalchemy_connect_args()`, usado por el engine de la aplicación y
+  por `migrations/env.py`. Local se queda en `false`.
+- El entrypoint del contenedor (`scripts/docker-entrypoint.sh`) ejecuta
+  `alembic upgrade head` (con reintentos si MySQL tarda) y
+  `python -m scripts.seed_gym` antes de arrancar uvicorn en `$PORT` (10000):
+  en Render se aplican así migraciones y seed como con `task demo`.
+- Secretos del despliegue (`MYSQL_*`, `SECRET_KEY`, `ADMIN_PASSWORD`,
+  `ALLOWED_ORIGINS`) se rellenan en el Dashboard de Render como `sync: false`;
+  nunca en `render.yaml`. La imagen de producción excluye `.env`, tests y docs
+  (`.dockerignore`).
+- La imagen raíz construye Angular con Node y copia dist/browser a /app/static.
+  FastAPI sirve el portal en `/` y sus pantallas sin prefijo; `/portal/...`
+  redirige en Angular. El montaje estático se registra al final si existe build;
+  fallback solo en rutas SPA, nunca en /v1 ni archivos inexistentes.
+- Render conserva un único Web Service Docker `free`, `g1-gymflow-api`,
+  `branch: main`, auto-deploy por commit: frontend y API comparten origen.
+  No requiere crear un frontend separado. Compose mantiene Nginx en 4200;
+  la API Docker también sirve Angular en 8000. Desarrollo sin build usa npm start.
+- Compose fija PORT=8000 y MYSQL_SSL=false; Render usa su PORT=10000.
+  Los servicios Free comparten 750 horas; los excesos de cuotas de tráfico/build
+  pueden facturarse aunque las instancias sean gratuitas.
 
 ## Especificación antes del código (OpenSpec, #62)
 

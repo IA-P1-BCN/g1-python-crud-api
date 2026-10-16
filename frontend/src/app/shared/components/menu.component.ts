@@ -24,18 +24,18 @@ import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
           <div hlmDropdownMenuLabel>{{ usuario.nombre }}</div>
           <div hlmDropdownMenuSeparator></div>
           @if (session.idCliente() !== null) {
-            <a hlmDropdownMenuItem routerLink="/portal">Mi portal</a>
+            <a hlmDropdownMenuItem routerLink="/">Mi portal</a>
           }
-          <a hlmDropdownMenuItem routerLink="/portal/perfil">Mi perfil</a>
+          <a hlmDropdownMenuItem routerLink="/perfil">Mi perfil</a>
           @if (usuario.rol === 'admin' || usuario.rol === 'staff') {
             <div hlmDropdownMenuLabel>Gestión</div>
-            <a hlmDropdownMenuItem routerLink="/portal/gestion-clases">Clases</a>
+            <a hlmDropdownMenuItem routerLink="/gestion-clases">Clases</a>
             @if (usuario.rol === 'admin') {
-              <a hlmDropdownMenuItem routerLink="/portal/clientes">Clientes</a>
-              <a hlmDropdownMenuItem routerLink="/portal/entrenadores">Entrenadores</a>
-              <a hlmDropdownMenuItem routerLink="/portal/pagos">Pagos</a>
-              <a hlmDropdownMenuItem routerLink="/portal/cuentas">Cuentas</a>
-              <a hlmDropdownMenuItem routerLink="/portal/export">Exportar CSV</a>
+              <a hlmDropdownMenuItem routerLink="/clientes">Clientes</a>
+              <a hlmDropdownMenuItem routerLink="/entrenadores">Entrenadores</a>
+              <a hlmDropdownMenuItem routerLink="/pagos">Pagos</a>
+              <a hlmDropdownMenuItem routerLink="/cuentas">Cuentas</a>
+              <a hlmDropdownMenuItem routerLink="/export">Exportar CSV</a>
             }
             <div hlmDropdownMenuSeparator></div>
           }
