@@ -11,6 +11,7 @@ from config.settings import get_settings
 from src.application.use_cases.auth_use_cases import AuthUseCases
 from src.application.use_cases.cuenta_use_cases import CuentaUseCases
 from src.domain.entities.cuenta import Cuenta
+from src.domain.errors import ForbiddenError
 from src.domain.repositories.cuenta_port import CuentaRepository
 from src.domain.repositories.gym_port import GymRepository
 from src.infrastructure.database.engine import get_session
@@ -65,3 +66,11 @@ def get_current_user(
     controller: Annotated[AuthController, Depends(get_auth_controller)],
 ) -> Cuenta:
     return controller.current_user(token)
+
+
+def requires_admin(
+    cuenta: Annotated[Cuenta, Depends(get_current_user)],
+) -> Cuenta:
+    if cuenta.rol != "admin":
+        raise ForbiddenError("Esta operación requiere rol admin")
+    return cuenta

@@ -2,6 +2,9 @@
 
 from uuid import uuid4
 
+from src.infrastructure.database.engine import SessionLocal
+from src.infrastructure.database.models import CuentaRecord
+
 
 def test_listado_y_detalle_real(accounts_api):
     client, emails = accounts_api
@@ -11,6 +14,9 @@ def test_listado_y_detalle_real(accounts_api):
         "/v1/auth/register",
         json={"nombre": "Listado", "email": email, "password": "contraseña de prueba"},
     ).json()
+    with SessionLocal.begin() as session:
+        session.get(CuentaRecord, cuenta["id"]).rol = "admin"
+    cuenta["rol"] = "admin"
     token = client.post(
         "/v1/auth/login", data={"username": email, "password": "contraseña de prueba"}
     ).json()["access_token"]

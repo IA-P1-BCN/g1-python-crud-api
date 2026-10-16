@@ -209,6 +209,8 @@ def authenticated_accounts(registration_client):
         ).json()
         for i in range(3)
     ]
+    repository.cuentas[0].rol = "admin"
+    rows[0]["rol"] = "admin"
     token = client.post(
         "/v1/auth/login",
         data={"username": rows[0]["email"], "password": "contraseña de prueba"},

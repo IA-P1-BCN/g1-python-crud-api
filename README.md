@@ -264,11 +264,11 @@ tener una Cuenta vinculada; admin/staff no necesitan ser socios.
 | `POST /v1/auth/register` | Público; 201 con Cuenta de rol cliente |
 | `POST /v1/auth/login` | Público; formulario OAuth2, 200 con JWT |
 | `GET /v1/users/me` | Token; perfil de la Cuenta actual |
-| `GET /v1/users` | Token; listado, filtros y paginación |
+| `GET /v1/users` | Admin; listado, filtros y paginación |
 | `GET /v1/users/{id}` | Token; detalle o 404 |
 | `PUT /v1/users/{id}` | Token; nombre/email obligatorios, contraseña opcional |
 | `PATCH /v1/users/{id}` | Token; solo cambia campos enviados |
-| `DELETE /v1/users/{id}` | Token; 204, borrado físico que conserva Cliente |
+| `DELETE /v1/users/{id}` | Admin; 204, borrado físico que conserva Cliente |
 
 El registro recibe `nombre`, `email`, `password` (12–128 caracteres) y
 `crear_cliente=false` por defecto. Con true crea un Cliente Inactivo nuevo en
@@ -284,9 +284,10 @@ literal, se guarda con Argon2 y nunca se devuelve. Si se omite, conserva el
 hash anterior. No se aceptan null explícitos, PATCH vacío ni campos rol,
 activo, id_cliente o fecha_creacion. La Cuenta conserva su fecha y vínculo.
 
-Los endpoints de Cuentas exigen una Cuenta activa autenticada. En este nivel
-aún no restringen listado/edición/borrado por propietario o rol; la autorización
-granular está pendiente en STORY #38. Los recursos del gimnasio y la exportación
+Los endpoints de Cuentas exigen una Cuenta activa autenticada. El listado y
+el borrado exigen rol admin (#65); staff y cliente reciben 403. La edición
+y consulta por ID se completan con las reglas de perfil/propiedad de #66/#106.
+Los recursos del gimnasio y la exportación
 CSV también exigen JWT (#105).
 Registro, login, healthchecks y documentación siguen públicos.
 
@@ -304,7 +305,7 @@ Ejemplo: `/v1/users?rol=staff&activo=true&limit=10`.
 |---|---|
 | 400 | Rango de fechas invertido en el listado |
 | 401 | Login incorrecto/inactivo, token ausente/inválido/expirado o Cuenta borrada; incluye `WWW-Authenticate: Bearer` |
-| 403 | Cuenta identificada por JWT que fue desactivada; sin reto Bearer |
+| 403 | Cuenta desactivada o sin permisos; sin reto Bearer |
 | 404 | Cuenta solicitada inexistente |
 | 409 | Email o vínculo duplicado, o conflicto concurrente |
 | 422 | Datos, campos o parámetros inválidos; omite valores sensibles |
