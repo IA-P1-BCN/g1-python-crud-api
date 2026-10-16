@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     admin_password: SecretStr | None = None
     admin_email: str = "admin@example.com"
     secret_key: SecretStr = Field(min_length=32)
+    access_token_expire_minutes: int = Field(default=30, ge=1, le=1440)
     log_level: str = "INFO"
     log_file: str = "logs/app.log"
 
