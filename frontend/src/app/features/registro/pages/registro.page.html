@@ -1,0 +1,65 @@
+<header class="flex items-center justify-between bg-background px-6 py-2 shadow-sm">
+  <a class="text-xl font-bold text-primary no-underline" routerLink="/">GymFlow</a>
+  <app-menu />
+</header>
+
+<main class="mx-auto mt-12 max-w-sm px-4">
+  <h1 class="mb-4 text-3xl font-semibold">Crear cuenta</h1>
+
+  <form [formGroup]="form" (ngSubmit)="enviar()" novalidate class="flex flex-col gap-3">
+    <label hlmLabel class="flex flex-col items-start gap-1">
+      Nombre completo
+      <input hlmInput type="text" formControlName="nombre" autocomplete="name" />
+    </label>
+    @if (form.controls.nombre.touched && form.controls.nombre.hasError('required')) {
+      <p class="text-sm text-red-700">El nombre es obligatorio.</p>
+    }
+
+    <label hlmLabel class="flex flex-col items-start gap-1">
+      Correo electrónico
+      <input hlmInput type="email" formControlName="email" autocomplete="email" />
+    </label>
+    @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+      <p class="text-sm text-red-700">El correo electrónico es obligatorio.</p>
+    } @else if (form.controls.email.touched && form.controls.email.hasError('email')) {
+      <p class="text-sm text-red-700">Introduce un correo electrónico válido.</p>
+    }
+
+    <label hlmLabel class="flex flex-col items-start gap-1">
+      Contraseña
+      <span class="text-sm font-normal text-muted-foreground">Mínimo 12 caracteres</span>
+      <span class="flex w-full gap-2">
+        <input hlmInput class="flex-1" [type]="mostrarPassword() ? 'text' : 'password'" formControlName="password"
+               autocomplete="new-password" />
+        <button hlmBtn variant="outline" type="button" (click)="mostrarPassword.set(!mostrarPassword())">
+          {{ mostrarPassword() ? 'Ocultar' : 'Mostrar' }}
+        </button>
+      </span>
+    </label>
+    @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+      <p class="text-sm text-red-700">La contraseña es obligatoria.</p>
+    } @else if (form.controls.password.touched && form.controls.password.hasError('minlength')) {
+      <p class="text-sm text-red-700">La contraseña debe tener al menos 12 caracteres.</p>
+    }
+
+    <label hlmLabel class="flex-row items-center gap-2">
+      <hlm-checkbox formControlName="crearCliente" />
+      Quiero crear también mi ficha de socio
+    </label>
+    <p class="text-sm text-muted-foreground">Tu ficha quedará inactiva hasta que el gimnasio la active.</p>
+
+    @if (mensajeError(); as mensaje) {
+      <div hlmAlert variant="destructive" role="alert"><p hlmAlertDescription>{{ mensaje }}</p></div>
+    }
+
+    <button hlmBtn type="submit" class="w-full" [disabled]="enviando()">
+      @if (enviando()) {
+        Creando cuenta…
+      } @else {
+        Crear cuenta
+      }
+    </button>
+  </form>
+
+  <p class="mt-4 text-sm">¿Ya tienes cuenta? <a class="font-semibold text-primary" routerLink="/login">Inicia sesión</a></p>
+</main>
