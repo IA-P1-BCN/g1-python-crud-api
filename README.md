@@ -68,6 +68,11 @@ identifica clientes por sus emails `*.demo@example.com` y entrenador/clase por
 los nombres `Laura Demo` / `Yoga Demo`. Ejecutarlo con la demo detenida; si se
 cambian esos identificadores, se crearán de nuevo los registros ausentes.
 
+El seed también crea, si no existen, las Cuentas `admin@gymflow.com` (rol
+`admin`, con `ADMIN_PASSWORD`) y `staff@gymflow.com` (rol `staff`, contraseña
+`Demo56789012`, vinculada al primer Entrenador sin Cuenta). Si no hay
+Entrenador libre, la cuenta staff se omite y el resumen lo indica.
+
 Si el puerto HTTP 8000 está ocupado, usa
 `uv run uvicorn main:app --reload --port 8001` y abre `/docs` en ese puerto.
 
@@ -86,13 +91,20 @@ imagen. El frontend es la build de Angular servida por nginx, que reenvía
 
 `task db:down` detiene todos los servicios de Compose.
 
-## Cuenta demo
+## Cuentas demo
 
-La migración `ca6c9ed6b7e8` crea, si no existe, la cuenta
-`demo@gymflow.com` con contraseña `Demo56789012`. Es rol `cliente`, está activa
-y queda vinculada a un Cliente `Activo` con un pago, para poder iniciar sesión
-y reservar. En la base solo se guarda el hash Argon2id. El admin del seed es
-otra cuenta y sigue usando `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
+Tres cuentas permiten probar los tres roles en `/docs`, todas con datos
+ficticios y hash Argon2id en la base (nunca texto plano):
+
+| Email | Rol | Contraseña | Origen |
+|---|---|---|---|
+| `admin@gymflow.com` | admin | `ADMIN_PASSWORD` de tu `.env` | `task seed` |
+| `staff@gymflow.com` | staff | `Demo56789012` | `task seed` (vinculada a un Entrenador) |
+| `demo@gymflow.com` | cliente | `Demo56789012` | migración `ca6c9ed6b7e8` |
+
+La cuenta `demo@gymflow.com` está activa y queda vinculada a un Cliente
+`Activo` con un pago, para poder iniciar sesión y reservar. El admin del seed
+usa `ADMIN_EMAIL` / `ADMIN_PASSWORD` (por defecto `admin@gymflow.com`).
 
 ## Configuración del equipo
 
@@ -111,10 +123,12 @@ uv run python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
 `ADMIN_PASSWORD` es obligatoria para `task seed`/`task demo`: 12–128 caracteres
-y un valor propio, nunca el marcador. `ADMIN_EMAIL` identifica el admin inicial.
-El seed crea cuentas **inactivas** para clientes con email válido, con secretos
-aleatorios individuales; no inventa emails, no activa esas cuentas ni cambia
-contraseñas existentes. El admin se crea activo y sin perfil Cliente.
+y un valor propio, nunca el marcador. `ADMIN_EMAIL` identifica el admin inicial
+(por defecto `admin@gymflow.com`). El seed crea cuentas **inactivas** para
+clientes con email válido, con secretos aleatorios individuales; no inventa
+emails, no activa esas cuentas ni cambia contraseñas existentes. El admin se
+crea activo y sin perfil Cliente; la cuenta staff se crea activa y vinculada a
+un Entrenador sin Cuenta, omitiéndola si no hay ninguno libre.
 
 Los secretos se cargan como `SecretStr`; no se publican ni se incluyen en errores
 de configuración. Los tests y la CI tienen claves exclusivas de prueba.

@@ -8,7 +8,14 @@ from sqlalchemy.orm import Session
 
 from src.domain.errors import ConflictError
 from src.domain.security import PasswordHasher
-from src.infrastructure.database.models import ClienteRecord, CuentaRecord
+from src.infrastructure.database.models import (
+    ClienteRecord,
+    CuentaRecord,
+    EntrenadorRecord,
+)
+
+STAFF_EMAIL = "staff@gymflow.com"
+DEMO_PASSWORD = "Demo56789012"
 
 
 def validate_admin_password(password: str | None) -> str:
@@ -81,4 +88,46 @@ def seed_accounts(
         )
         session.flush()
         counts["creadas"] += 1
+    return counts
+
+
+def seed_staff(
+    session: Session, hasher: PasswordHasher, staff_email: str = STAFF_EMAIL
+) -> dict[str, int]:
+    """Crea la Cuenta staff demo vinculada a un Entrenador, si es posible.
+
+    El llamador controla la transacción. No restablece credenciales ni toma
+    vínculos ajenos: si el email ya existe u no hay Entrenador libre, se omite.
+    """
+    counts = {"creadas": 0, "omitidas": 0}
+    if (
+        session.scalar(select(CuentaRecord).where(CuentaRecord.email == staff_email))
+        is not None
+    ):
+        counts["omitidas"] += 1
+        return counts
+    vinculados = select(CuentaRecord.id_entrenador).where(
+        CuentaRecord.id_entrenador.is_not(None)
+    )
+    entrenador = session.scalar(
+        select(EntrenadorRecord)
+        .where(~EntrenadorRecord.id_entrenador.in_(vinculados))
+        .order_by(EntrenadorRecord.id_entrenador)
+        .limit(1)
+    )
+    if entrenador is None:
+        counts["omitidas"] += 1
+        return counts
+    session.add(
+        CuentaRecord(
+            nombre=entrenador.nombre,
+            email=staff_email,
+            password_hash=hasher.hash(DEMO_PASSWORD),
+            rol="staff",
+            activo=True,
+            id_entrenador=entrenador.id_entrenador,
+        )
+    )
+    session.flush()
+    counts["creadas"] += 1
     return counts
