@@ -228,6 +228,9 @@ src/
   Los hashes no aparecen en repr de Cuenta ni en respuestas HTTP.
 - El seed crea admin y cuentas inactivas para clientes con email válido; no inventa
   emails ni comparte contraseñas. Omite conflictos sin vincular identidades ajenas.
+- La migración `ca6c9ed6b7e8` inserta la cuenta demo `demo@gymflow.com` (rol
+  cliente, activa), vinculada a un Cliente Activo con un pago. En la base solo
+  va el hash Argon2id. La contraseña conocida está documentada en el README.
 - El rol mínimo permite el admin del seed; la política completa de roles sigue
   en #64/#65. `SECRET_KEY` es SecretStr obligatoria (mínimo 32 caracteres) desde JWT (#55).
 
@@ -284,8 +287,18 @@ src/
 - **uv** gestiona dependencias y entorno virtual (`pyproject.toml` + `uv.lock`).
   No se usa pip ni requirements.txt.
 - **Taskfile** expone las tareas: `demo`, `install`, `test`, `lint`, `fmt`,
-  `dev`, `start`, `db:up`, `db:down`, `migrate`, `seed`. `task demo` monta el
-  proyecto desde cero (dependencias, `.env`, MySQL, migraciones, demo y tests).
+  `dev`, `start`, `up`, `docker:up`, `frontend`, `compose`, `db:up`, `db:down`,
+  `migrate`, `seed`. `task demo` monta el proyecto desde cero (dependencias,
+  `.env`, MySQL, migraciones, demo y tests) sin arrancar servidores. `task up`
+  hace esa inicialización (sin tests), instala el frontend si falta
+  `node_modules` y arranca MySQL, API y Angular en el host. `task docker:up`
+  prepara `.env` y levanta el mismo arranque en Docker: imagen, migraciones al
+  iniciar la API y seed con `docker compose exec`. `task db:up` levanta solo
+  MySQL. `task compose` construye y levanta MySQL, API y frontend, sin seed.
+- **Docker Compose** publica MySQL, la API (`gym-api`, `127.0.0.1:8000`) y el
+  frontend nginx (`gym-frontend`, `127.0.0.1:4200`). La API del contenedor usa
+  `MYSQL_HOST=mysql` y el puerto interno 3306. `SECRET_KEY` llega por `.env`,
+  que no se copia a la imagen. nginx reenvía `/v1` a `api:8000`.
 
 ## Especificación antes del código (OpenSpec, #62)
 
