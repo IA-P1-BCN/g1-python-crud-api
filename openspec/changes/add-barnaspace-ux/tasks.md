@@ -1,10 +1,10 @@
 - [x] Definir la spec y el mapeo de dominio (espacio→clase, host→staff) antes del código.
 - [x] Rebajar la rama a main con las PRs #112–#119 y cerrar #122/#123 por solape.
-- [ ] Implementar rutas `/marketplace`, `/auth`, `/staff`, `/admin` con guards y redirecciones.
-- [ ] Implementar home, búsqueda, detalle con cupo y reserva desde el marketplace.
-- [ ] Implementar «Mis reservas» con cancelación.
-- [ ] Implementar el panel staff (mis clases y reservas de mis clases).
-- [ ] Implementar el dashboard admin con gráficas y reubicar la gestión bajo `/admin`.
-- [ ] Actualizar el menú por rol y los specs de Vitest afectados.
-- [ ] Validar `task spec:validate`, `task lint`, `task test`, `npm test` y `npm run build`.
-- [ ] Registrar la entrega en `docs/ai-log` y enlazar issue/spec en la PR.
+- [x] Implementar rutas `/marketplace`, `/auth`, `/staff`, `/admin` con guards y redirecciones.
+- [x] Implementar home, búsqueda, detalle con cupo y reserva desde el marketplace.
+- [x] Implementar «Mis reservas» con cancelación.
+- [x] Implementar el panel staff (mis clases y reservas de mis clases).
+- [x] Implementar el dashboard admin con gráficas y reubicar la gestión bajo `/admin`.
+- [x] Actualizar el menú por rol y los specs de Vitest afectados.
+- [x] Validar `task spec:validate`, `task lint`, `task test`, `npm test` y `npm run build`.
+- [x] Registrar la entrega en `docs/ai-log` y enlazar issue/spec en la PR.

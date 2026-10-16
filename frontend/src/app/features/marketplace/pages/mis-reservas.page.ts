@@ -43,7 +43,7 @@ interface Aviso {
     } @else if (visibles().length === 0) {
       <p class="text-sm text-muted-foreground">
         @if (pestana() === 'proximas') {
-          Aún no tienes reservas. <a class="font-semibold text-primary" routerLink="/clases">Ver clases</a>
+          Aún no tienes reservas. <a class="font-semibold text-primary" routerLink="/marketplace/resultados">Ver clases</a>
         } @else {
           No tienes clases pasadas.
         }

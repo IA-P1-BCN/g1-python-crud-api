@@ -66,15 +66,14 @@ export class LoginComponent {
     }
   }
 
-  /** Solo acepta destinos de la aplicación; por defecto vuelve a la raíz. */
+  /** Solo acepta destinos de la aplicación; por defecto va al marketplace. */
   private destino(): string {
     const returnUrl = this.ruta.snapshot.queryParamMap.get('returnUrl');
-    const destinos = ['portal', 'clases', 'reservas', 'perfil', 'clientes',
-      'entrenadores', 'gestion-clases', 'pagos', 'cuentas', 'export'];
+    const destinos = ['marketplace', 'staff', 'admin', 'perfil'];
     if (returnUrl?.startsWith('/') && destinos.includes(returnUrl.split(/[/?#]/)[1])) {
       return returnUrl;
     }
-    return '/';
+    return '/marketplace';
   }
 }
 

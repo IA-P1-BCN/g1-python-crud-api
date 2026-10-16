@@ -68,7 +68,7 @@ export class RegistroPage {
         crear_cliente: crearCliente,
       });
       // Tras registrarse se vuelve al login con el aviso de éxito.
-      await this.router.navigateByUrl('/login', { state: { mensaje: MENSAJE_EXITO_REGISTRO } });
+      await this.router.navigateByUrl('/auth/login', { state: { mensaje: MENSAJE_EXITO_REGISTRO } });
     } catch (error) {
       this.mensajeError.set(mensajeParaError(error));
     } finally {

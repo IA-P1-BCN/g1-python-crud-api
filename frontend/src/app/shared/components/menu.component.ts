@@ -4,7 +4,7 @@ import { SessionService } from '../../core/auth/session.service';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
 
-/** Botón de menú con dropdown-menu de Spartan: login o nombre y cerrar sesión. */
+/** Botón de menú con dropdown de Spartan: por rol (marketplace, staff, admin). */
 @Component({
   selector: 'app-menu',
   imports: [RouterLink, HlmButtonImports, HlmDropdownMenuImports],
@@ -23,28 +23,32 @@ import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
         @if (session.usuario(); as usuario) {
           <div hlmDropdownMenuLabel>{{ usuario.nombre }}</div>
           <div hlmDropdownMenuSeparator></div>
-          @if (session.idCliente() !== null) {
-            <a hlmDropdownMenuItem routerLink="/">Mi portal</a>
-          }
+          <a hlmDropdownMenuItem routerLink="/marketplace">Catálogo</a>
+          <a hlmDropdownMenuItem routerLink="/marketplace/mis-reservas">Mis reservas</a>
           <a hlmDropdownMenuItem routerLink="/perfil">Mi perfil</a>
-          @if (usuario.rol === 'admin' || usuario.rol === 'staff') {
-            <div hlmDropdownMenuLabel>Gestión</div>
-            <a hlmDropdownMenuItem routerLink="/gestion-clases">Clases</a>
-            @if (usuario.rol === 'admin') {
-              <a hlmDropdownMenuItem routerLink="/clientes">Clientes</a>
-              <a hlmDropdownMenuItem routerLink="/entrenadores">Entrenadores</a>
-              <a hlmDropdownMenuItem routerLink="/pagos">Pagos</a>
-              <a hlmDropdownMenuItem routerLink="/cuentas">Cuentas</a>
-              <a hlmDropdownMenuItem routerLink="/export">Exportar CSV</a>
-            }
-            <div hlmDropdownMenuSeparator></div>
+          @if (usuario.rol === 'staff' || usuario.rol === 'admin') {
+            <div hlmDropdownMenuLabel>Staff</div>
+            <a hlmDropdownMenuItem routerLink="/staff">Mi panel</a>
+            <a hlmDropdownMenuItem routerLink="/staff/clases">Mis clases</a>
+            <a hlmDropdownMenuItem routerLink="/staff/reservas">Reservas de mis clases</a>
           }
+          @if (usuario.rol === 'admin') {
+            <div hlmDropdownMenuLabel>Admin</div>
+            <a hlmDropdownMenuItem routerLink="/admin">Dashboard</a>
+            <a hlmDropdownMenuItem routerLink="/admin/clientes">Clientes</a>
+            <a hlmDropdownMenuItem routerLink="/admin/entrenadores">Entrenadores</a>
+            <a hlmDropdownMenuItem routerLink="/admin/clases">Clases</a>
+            <a hlmDropdownMenuItem routerLink="/admin/pagos">Pagos</a>
+            <a hlmDropdownMenuItem routerLink="/admin/cuentas">Cuentas</a>
+            <a hlmDropdownMenuItem routerLink="/admin/export">Exportar CSV</a>
+          }
+          <div hlmDropdownMenuSeparator></div>
           <button hlmDropdownMenuItem variant="destructive" type="button" (triggered)="cerrarSesion()">
             Cerrar sesión
           </button>
         } @else {
-          <a hlmDropdownMenuItem routerLink="/login">Iniciar sesión</a>
-          <a hlmDropdownMenuItem routerLink="/registro">Crear cuenta</a>
+          <a hlmDropdownMenuItem routerLink="/auth/login">Iniciar sesión</a>
+          <a hlmDropdownMenuItem routerLink="/auth/registro">Crear cuenta</a>
         }
       </hlm-dropdown-menu>
     </ng-template>
@@ -56,6 +60,6 @@ export class MenuComponent {
 
   protected cerrarSesion(): void {
     this.session.cerrar();
-    void this.router.navigateByUrl('/');
+    void this.router.navigateByUrl('/auth/login');
   }
 }

@@ -2,14 +2,48 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { SessionService } from './session.service';
 
-/** Portal del socio: exige sesión y ficha de socio. Sin sesión, va a login con returnUrl. */
-export const portalGuard: CanActivateFn = (_route, state) => {
+/** Ruta destino cuando no hay sesión (o la sesión ha caducado). */
+function aLogin(returnUrl: string) {
+  const router = inject(Router);
+  return router.createUrlTree(['/auth/login'], { queryParams: { returnUrl } });
+}
+
+/** Catálogo y portal: exige sesión válida (la API /v1 pide JWT). */
+export const authGuard: CanActivateFn = (_route, state) => {
   const session = inject(SessionService);
   const router = inject(Router);
   if (!session.autenticado()) {
-    return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
+    return router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } });
   }
-  return session.idCliente() === null ? router.createUrlTree(['/']) : true;
+  return true;
+};
+
+/** Panel del staff: rol staff o admin. */
+export const staffGuard: CanActivateFn = (_route, state) => {
+  const session = inject(SessionService);
+  const rol = session.usuario()?.rol;
+  if (rol === 'staff' || rol === 'admin') {
+    return true;
+  }
+  if (rol === undefined) {
+    return aLogin(state.url);
+  }
+  const router = inject(Router);
+  return router.createUrlTree(['/marketplace']);
+};
+
+/** Administración: solo rol admin. */
+export const adminGuard: CanActivateFn = (_route, state) => {
+  const session = inject(SessionService);
+  const rol = session.usuario()?.rol;
+  if (rol === 'admin') {
+    return true;
+  }
+  if (rol === undefined) {
+    return aLogin(state.url);
+  }
+  const router = inject(Router);
+  return rol === 'staff' ? router.createUrlTree(['/staff']) : router.createUrlTree(['/marketplace']);
 };
 
 /** Login y registro: con sesión activa no se muestran. */
@@ -19,10 +53,6 @@ export const invitadoGuard: CanActivateFn = () => {
   if (!session.autenticado()) {
     return true;
   }
-  return router.createUrlTree(['/']);
-};
-
-/** La raíz ya contiene el portal y no necesita una redirección. */
-export const homeGuard: CanActivateFn = () => {
-  return true;
+  const rol = session.usuario()?.rol;
+  return router.createUrlTree(rol === 'admin' ? ['/admin'] : rol === 'staff' ? ['/staff'] : ['/marketplace']);
 };

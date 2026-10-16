@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import { SessionService } from '../../core/auth/session.service';
-import { USUARIO_ANA, USUARIO_STAFF } from '../../core/auth/usuarios-prueba';
+import { USUARIO_ADMIN, USUARIO_ANA, USUARIO_STAFF } from '../../core/auth/usuarios-prueba';
 import { esperarCarga } from '../../testing/esperar';
 import { MenuComponent } from './menu.component';
 
@@ -58,29 +58,32 @@ describe('MenuComponent', () => {
     expect(overlay()).toContain('Mi perfil');
   });
 
-  it('el rol cliente no ve el grupo de gestión', async () => {
+  it('el rol cliente ve el catálogo y no el panel ni la administración', async () => {
     TestBed.inject(SessionService).iniciar(USUARIO_ANA);
     await abrir();
-    expect(overlay()).not.toContain('Gestión');
-    expect(overlay()).not.toContain('Cuentas');
+    expect(overlay()).toContain('Catálogo');
+    expect(overlay()).toContain('Mis reservas');
+    expect(overlay()).not.toContain('Mi panel');
+    expect(overlay()).not.toContain('Dashboard');
     expect(overlay()).not.toContain('Exportar CSV');
   });
 
-  it('el rol staff ve clases y no ofrece operaciones de administrador', async () => {
+  it('el rol staff ve su panel y no las operaciones de administrador', async () => {
     TestBed.inject(SessionService).iniciar(USUARIO_STAFF);
     await abrir();
-    expect(overlay()).toContain('Gestión');
-    expect(overlay()).toContain('Clases');
-    for (const enlace of ['Clientes', 'Entrenadores', 'Pagos', 'Cuentas', 'Exportar CSV']) {
+    expect(overlay()).toContain('Mi panel');
+    expect(overlay()).toContain('Mis clases');
+    expect(overlay()).toContain('Reservas de mis clases');
+    for (const enlace of ['Dashboard', 'Clientes', 'Entrenadores', 'Pagos', 'Cuentas', 'Exportar CSV']) {
       expect(overlay()).not.toContain(enlace);
     }
-    expect(overlay()).not.toContain('Mi portal');
   });
 
-  it('el rol admin conserva todas las operaciones de gestión', async () => {
-    TestBed.inject(SessionService).iniciar({ ...USUARIO_STAFF, rol: 'admin' });
+  it('el rol admin conserva catálogo, panel y todas las operaciones', async () => {
+    TestBed.inject(SessionService).iniciar(USUARIO_ADMIN);
     await abrir();
-    for (const enlace of ['Clientes', 'Entrenadores', 'Clases', 'Pagos', 'Cuentas', 'Exportar CSV']) {
+    expect(overlay()).toContain('Mi panel');
+    for (const enlace of ['Dashboard', 'Clientes', 'Entrenadores', 'Clases', 'Pagos', 'Cuentas', 'Exportar CSV']) {
       expect(overlay()).toContain(enlace);
     }
   });

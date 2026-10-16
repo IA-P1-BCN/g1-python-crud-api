@@ -125,3 +125,4 @@ La preparación de este proceso queda registrada en
 - [2026-10-16 — Contenedorización API+frontend y cuenta demo #28](ai-log/2026-10-16-docker-compose-demo-28.md)
 - [2026-10-15 — Integración frontend con la API](ai-log/2026-10-15-frontend-api.md)
 - [2026-10-16 — Seed de cuentas admin/staff #118](ai-log/2026-10-16-seed-cuentas-118.md)
+- [2026-10-16 — Rediseño del portal: marketplace (add-barnaspace-ux)](ai-log/2026-10-16-portal-marketplace.md)

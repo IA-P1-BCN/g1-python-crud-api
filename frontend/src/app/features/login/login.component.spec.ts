@@ -71,7 +71,7 @@ describe('LoginComponent', () => {
 
     expect(auth.login).toHaveBeenCalledWith('cliente@gym.test', 'cliente123');
     expect(TestBed.inject(SessionService).usuario()).toEqual(USUARIO_ANA);
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/marketplace');
   });
 
   it('muestra el error de credenciales y permanece en login', async () => {
@@ -111,8 +111,8 @@ describe('LoginComponent', () => {
     expect(boton.disabled).toBe(false);
   });
 
-  it('ofrece enlace a /registro', () => {
-    const enlace = (fixture.nativeElement as HTMLElement).querySelector('a[href="/registro"]');
+  it('ofrece enlace a /auth/registro', () => {
+    const enlace = (fixture.nativeElement as HTMLElement).querySelector('a[href="/auth/registro"]');
     expect(enlace?.textContent).toContain('Crear cuenta');
   });
 });
