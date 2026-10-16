@@ -116,3 +116,4 @@ La preparación de este proceso queda registrada en
 - [2026-10-15 — Bootstrap de .env #107](ai-log/2026-10-15-bootstrap-env-107.md)
 
 - [2026-10-16 — Contenedorización API+frontend y cuenta demo #28](ai-log/2026-10-16-docker-compose-demo-28.md)
+- [2026-10-15 — Integración frontend con la API](ai-log/2026-10-15-frontend-api.md)

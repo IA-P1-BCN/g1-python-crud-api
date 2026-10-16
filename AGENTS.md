@@ -69,7 +69,8 @@ src/
 - Carpetas raíz: `core/` (utilidades transversales, p. ej. logging),
   `config/` (settings), `logs/` (salida de logs), `tests/` (suite de
   tests), `migrations/` (Alembic), `docs/` (documentación, incluida
-  la del cliente en `docs/client/`).
+  la del cliente en `docs/client/`), `frontend/` (aplicación Angular 22,
+  ver abajo).
 
 ## Endpoints
 
@@ -299,6 +300,13 @@ src/
   frontend nginx (`gym-frontend`, `127.0.0.1:4200`). La API del contenedor usa
   `MYSQL_HOST=mysql` y el puerto interno 3306. `SECRET_KEY` llega por `.env`,
   que no se copia a la imagen. nginx reenvía `/v1` a `api:8000`.
+  `dev`, `start`, `db:up`, `db:down`, `migrate`, `seed`. `task demo` monta el
+  proyecto desde cero (dependencias, `.env`, MySQL, migraciones, demo y tests).
+- **npm en `frontend/`**: la aplicación Angular tiene su propio `package.json` y
+  `package-lock.json`. Se instala y ejecuta desde `frontend/` con npm (no pnpm ni
+  yarn, para no mezclar gestores). Comandos: `npm ci`, `npm start` (proxy de `/v1`
+  hacia `127.0.0.1:8000`), `npm test` y `npm run build`. Angular CLI 22 genera el
+  proyecto; no se versionan `node_modules/`, `frontend/.angular/` ni `frontend/dist/`.
 
 ## Especificación antes del código (OpenSpec, #62)
 
