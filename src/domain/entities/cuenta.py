@@ -16,6 +16,7 @@ class Cuenta:
     activo: bool = True
     rol: Rol = "cliente"
     id_cliente: int | None = None
+    id_entrenador: int | None = None
     fecha_creacion: datetime = field(
         default_factory=lambda: datetime.now(UTC).replace(tzinfo=None)
     )

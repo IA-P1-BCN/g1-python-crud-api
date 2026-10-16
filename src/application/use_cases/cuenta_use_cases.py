@@ -40,6 +40,19 @@ class CuentaUseCases:
         with self._repository.transaction():
             self._repository.delete(self._require(cuenta_id, lock=True))
 
+    def set_entrenador(self, cuenta_id: int, id_entrenador: int | None) -> Cuenta:
+        with self._repository.transaction():
+            cuenta = self._require(cuenta_id, lock=True)
+            if cuenta.rol != "staff":
+                raise ConflictError(
+                    "Solo una Cuenta staff puede vincularse a Entrenador"
+                )
+            if id_entrenador is not None and not self._repository.entrenador_exists(
+                id_entrenador
+            ):
+                raise NotFoundError("Entrenador no encontrado")
+            return self._repository.set_entrenador(cuenta, id_entrenador)
+
     def _require(self, cuenta_id: int, *, lock: bool = False) -> Cuenta:
         cuenta = self._repository.get(cuenta_id, lock=lock)
         if cuenta is None:

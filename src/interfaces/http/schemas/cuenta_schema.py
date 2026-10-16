@@ -44,6 +44,7 @@ class CuentaResponse(ApiSchema):
     rol: Literal["admin", "staff", "cliente"]
     fecha_creacion: datetime
     id_cliente: int | None
+    id_entrenador: int | None
 
 
 def omit_default(schema: dict) -> None:
@@ -110,3 +111,7 @@ class CuentaSelfPatch(CuentaPatch):
         if (self.password is None) != (self.current_password is None):
             raise ValueError("Envía password y current_password juntas")
         return self
+
+
+class CuentaEntrenadorInput(ApiSchema):
+    id_entrenador: int | None = Field(gt=0, le=2147483647)

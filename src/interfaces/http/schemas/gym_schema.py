@@ -48,6 +48,13 @@ class ClaseResponse(ClaseInput):
     id_clase: int
 
 
+class CupoClaseResponse(ApiSchema):
+    id_clase: int
+    capacidad_max: int
+    reservas: int
+    plazas_disponibles: int
+
+
 class ReservaInput(ApiSchema):
     id_cliente: int = Field(gt=0, le=2147483647)
     id_clase: int = Field(gt=0, le=2147483647)

@@ -33,7 +33,8 @@ _Avoid_: estado (a secas), status, activo
 
 **Entrenador**:
 Persona que imparte Clases. Si accede al sistema, lo hace con una Cuenta de
-Rol `staff`; la entidad de negocio y el Rol no son lo mismo.
+Rol `staff`, vinculada explícitamente mediante `id_entrenador`; la entidad de
+negocio y el Rol no son lo mismo. Gestiona sus Clases y sus Reservas asociadas.
 _Avoid_: staff (como entidad), monitor
 
 **Clase**:

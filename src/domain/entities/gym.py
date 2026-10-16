@@ -51,6 +51,15 @@ class Pago:
 
 type GymEntity = Cliente | Entrenador | Clase | Reserva | Pago
 
+
+@dataclass(frozen=True, kw_only=True)
+class CupoClase:
+    id_clase: int
+    capacidad_max: int
+    reservas: int
+    plazas_disponibles: int
+
+
 ID_FIELDS = {
     Cliente: "id_cliente",
     Entrenador: "id_entrenador",

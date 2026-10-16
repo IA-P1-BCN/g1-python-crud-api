@@ -34,8 +34,21 @@ class MemoryRepository:
             self.data = snapshot
             raise
 
-    def list(self, entity_type, offset, limit, filters=None):
+    def list(self, entity_type, offset, limit, filters=None, scope=None):
         rows = list(self.data[entity_type].values())
+        if scope is not None:
+            if scope.id_cliente is not None:
+                rows = [r for r in rows if r.id_cliente == scope.id_cliente]
+            if scope.id_entrenador is not None:
+                if entity_type is Reserva:
+                    rows = [
+                        r
+                        for r in rows
+                        if self.data[Clase][r.id_clase].id_entrenador
+                        == scope.id_entrenador
+                    ]
+                else:
+                    rows = [r for r in rows if r.id_entrenador == scope.id_entrenador]
         if filters:
             for name, value in filters.contains:
                 rows = [

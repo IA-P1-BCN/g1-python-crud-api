@@ -15,4 +15,8 @@ export class HttpClaseService extends ClaseService {
   listarEntrenadores() {
     return this.entrenadores.listar();
   }
+
+  cupo(idClase: number) {
+    return this.clases.cupo(idClase);
+  }
 }

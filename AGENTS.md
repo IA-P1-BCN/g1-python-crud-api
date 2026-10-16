@@ -44,9 +44,34 @@ convenciones debe actualizarse aquí en el mismo PR.
   en los campos MySQL `DATETIME`. `DELETE /v1/reservas/{id_reserva}` libera cupo.
 - Todos los recursos de negocio de `/v1`, incluida la exportación CSV,
   exigen Cuenta activa con JWT (#105). Registro, login, healthchecks y
-  documentación siguen públicos. Listar/borrar Cuentas requiere admin (#65); los permisos del gimnasio llegan en #106.
+  documentación siguen públicos. Listar/borrar Cuentas requiere admin (#65).
+  Los permisos del gimnasio se aplican por rol y propietario (#106), como
+  se detalla abajo.
   `SECRET_KEY` pasa a variable obligatoria cuando se integre el JWT
   (`SecretStr`, solo en `.env`/`.env.example`).
+
+## Permisos del gimnasio (#106)
+
+- Admin gestiona todos los recursos y es el único que exporta CSV.
+- Cliente consulta su Cliente, Pagos y Reservas; puede crear, trasladar y
+  cancelar sus Reservas. Consulta el catálogo completo de Clases y Entrenadores.
+  No cambia membresía, pagos ni asistencia; conserva `asistio` al actualizar
+  y no traslada una reserva cuya asistencia ya se haya registrado.
+- Staff consulta su Entrenador y gestiona solo sus Clases y las Reservas de
+  esas Clases. No reasigna Clases ni traslada Reservas a otro Entrenador.
+  Esta restricción fue confirmada por la usuaria el 2026-10-16.
+- `users.id_entrenador` es nullable, UNIQUE y FK RESTRICT. Migración
+  `7a0f6a730e04` sobre la cuenta demo; versión de esquema 0.4. Solo admin
+  asigna/desvincula mediante PUT `/v1/users/{id}/entrenador`, con
+  `id_entrenador: entero|null`; la Cuenta destino debe tener rol staff.
+  Nunca inferir el vínculo por nombre, email o igualdad de IDs.
+- Cuenta activa, rol y vínculo se leen de persistencia en cada petición.
+  Sin vínculo, listas propias vacías y altas propias denegadas. Recurso ajeno
+  → 404; operación no permitida para el rol → 403. El alcance se combina con
+  filtros en SQL antes de paginar y nunca viene de la entrada del usuario.
+- GET `/v1/clases/{id}/cupo` devuelve capacidad, total de reservas y plazas
+  disponibles de una Clase visible. El frontend usa ese agregado, ya que el
+  listado de Reservas del Cliente solo incluye las propias.
 
 ## Arquitectura por capas (src/)
 

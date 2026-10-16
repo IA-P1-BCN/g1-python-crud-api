@@ -6,8 +6,18 @@ from datetime import UTC, datetime
 import pytest
 
 from src.application.use_cases.gym_use_cases import GymUseCases
+from src.domain.entities.cuenta import Cuenta
 from src.domain.entities.gym import Clase, Cliente, Pago, Reserva
 from src.domain.errors import ConflictError
+
+
+ADMIN = Cuenta(
+    id=1,
+    nombre="Admin",
+    email="admin@example.com",
+    password_hash="test",
+    rol="admin",
+)
 
 
 def reserva(**changes):
@@ -27,19 +37,19 @@ def reserva(**changes):
 def test_cliente_no_activo_no_reserva(repository, estado):
     repository.update(replace(repository.get(Cliente, 1), estado_membresia=estado))
     with pytest.raises(ConflictError, match="activos"):
-        GymUseCases(repository).create(reserva())
+        GymUseCases(repository, ADMIN).create(reserva())
     assert repository.data[Reserva] == {}
 
 
 def test_cliente_sin_pagos_no_reserva(repository):
     repository.data[Pago].clear()
     with pytest.raises(ConflictError, match="pago"):
-        GymUseCases(repository).create(reserva())
+        GymUseCases(repository, ADMIN).create(reserva())
     assert repository.data[Reserva] == {}
 
 
 def test_no_admite_reserva_duplicada(repository):
-    use_cases = GymUseCases(repository)
+    use_cases = GymUseCases(repository, ADMIN)
     use_cases.create(reserva())
     with pytest.raises(ConflictError, match="ya tiene"):
         use_cases.create(reserva())
@@ -51,21 +61,21 @@ def test_no_admite_clase_llena(repository):
     # La plaza ya está ocupada por otro cliente.
     repository.add(reserva(id_cliente=2))
     with pytest.raises(ConflictError, match="plazas"):
-        GymUseCases(repository).create(reserva())
+        GymUseCases(repository, ADMIN).create(reserva())
 
 
 def test_no_reduce_aforo_por_debajo_de_reservas(repository):
     repository.add(reserva())
     repository.add(reserva(id_cliente=2))
     with pytest.raises(ConflictError, match="menor"):
-        GymUseCases(repository).update(
+        GymUseCases(repository, ADMIN).update(
             Clase, 1, replace(repository.get(Clase, 1), capacidad_max=1)
         )
     assert repository.get(Clase, 1).capacidad_max == 10
 
 
 def test_actualiza_asistencia_de_cliente_ahora_inactivo(repository):
-    use_cases = GymUseCases(repository)
+    use_cases = GymUseCases(repository, ADMIN)
     previous = use_cases.create(reserva())
     repository.update(replace(repository.get(Cliente, 1), estado_membresia="Inactivo"))
     updated = use_cases.update(Reserva, previous.id_reserva, reserva(asistio=True))
@@ -74,7 +84,7 @@ def test_actualiza_asistencia_de_cliente_ahora_inactivo(repository):
 
 
 def test_cambiar_a_clase_llena_conserva_reserva_original(repository):
-    use_cases = GymUseCases(repository)
+    use_cases = GymUseCases(repository, ADMIN)
     previous = use_cases.create(reserva())
     target = repository.add(replace(repository.get(Clase, 1), capacidad_max=1))
     repository.add(reserva(id_cliente=2, id_clase=target.id_clase))

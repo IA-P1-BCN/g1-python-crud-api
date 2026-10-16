@@ -21,6 +21,7 @@ class CuentaRecord(Base):
     __table_args__ = (
         UniqueConstraint("email", name="uq_users_email"),
         UniqueConstraint("id_cliente", name="uq_users_id_cliente"),
+        UniqueConstraint("id_entrenador", name="uq_users_id_entrenador"),
         CheckConstraint("rol IN ('admin', 'staff', 'cliente')", name="ck_users_rol"),
     )
 
@@ -35,4 +36,11 @@ class CuentaRecord(Base):
     rol: Mapped[str] = mapped_column(String(20), server_default="cliente")
     id_cliente: Mapped[int | None] = mapped_column(
         ForeignKey("clientes.id_cliente", ondelete="RESTRICT")
+    )
+    id_entrenador: Mapped[int | None] = mapped_column(
+        ForeignKey(
+            "entrenadores.id_entrenador",
+            name="fk_users_id_entrenador",
+            ondelete="RESTRICT",
+        )
     )

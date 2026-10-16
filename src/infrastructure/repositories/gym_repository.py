@@ -18,6 +18,7 @@ from src.domain.entities.gym import (
     Reserva,
 )
 from src.domain.errors import ConflictError, RepositoryUnavailableError
+from src.domain.gym_scope import GymScope
 from src.domain.list_filters import SEARCH_FIELDS, ListFilters
 from src.infrastructure.database.models import (
     ClaseRecord,
@@ -67,11 +68,25 @@ class SqlAlchemyGymRepository:
         offset: int,
         limit: int,
         filters: ListFilters | None = None,
+        scope: GymScope | None = None,
     ) -> list[T]:
         model = MODELS[entity_type]
         statement = apply_list_filters(
             select(model), model, filters, SEARCH_FIELDS.get(entity_type, ())
         )
+        if scope is not None:
+            if scope.id_cliente is not None:
+                statement = statement.where(model.id_cliente == scope.id_cliente)
+            if scope.id_entrenador is not None:
+                if entity_type is Reserva:
+                    own_classes = select(ClaseRecord.id_clase).where(
+                        ClaseRecord.id_entrenador == scope.id_entrenador
+                    )
+                    statement = statement.where(ReservaRecord.id_clase.in_(own_classes))
+                else:
+                    statement = statement.where(
+                        model.id_entrenador == scope.id_entrenador
+                    )
         statement = (
             statement.order_by(getattr(model, ID_FIELDS[entity_type]))
             .offset(offset)

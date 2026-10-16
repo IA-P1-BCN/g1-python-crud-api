@@ -5,29 +5,24 @@ from datetime import UTC, datetime
 
 from src.application.use_cases.gym_use_cases import GymUseCases
 from src.domain.entities.gym import Reserva
-from src.domain.repositories.gym_port import GymRepository
 from src.interfaces.http.schemas.gym_schema import ReservaInput, ReservaResponse
 from src.interfaces.http.schemas.list_query import ReservaQuery
 
 logger = logging.getLogger(__name__)
 
 
-def list_reservas(
-    repository: GymRepository, query: ReservaQuery
-) -> list[ReservaResponse]:
-    entities = GymUseCases(repository).list(
-        Reserva, query.offset, query.limit, query.to_filters()
-    )
+def list_reservas(use_cases: GymUseCases, query: ReservaQuery) -> list[ReservaResponse]:
+    entities = use_cases.list(Reserva, query.offset, query.limit, query.to_filters())
     return [ReservaResponse.model_validate(entity) for entity in entities]
 
 
-def get_reserva(repository: GymRepository, entity_id: int) -> ReservaResponse:
-    entity = GymUseCases(repository).get(Reserva, entity_id)
+def get_reserva(use_cases: GymUseCases, entity_id: int) -> ReservaResponse:
+    entity = use_cases.get(Reserva, entity_id)
     return ReservaResponse.model_validate(entity)
 
 
-def create_reserva(repository: GymRepository, data: ReservaInput) -> ReservaResponse:
-    entity = GymUseCases(repository).create(
+def create_reserva(use_cases: GymUseCases, data: ReservaInput) -> ReservaResponse:
+    entity = use_cases.create(
         Reserva(
             **data.model_dump(), fecha_reserva=datetime.now(UTC).replace(tzinfo=None)
         )
@@ -42,9 +37,9 @@ def create_reserva(repository: GymRepository, data: ReservaInput) -> ReservaResp
 
 
 def update_reserva(
-    repository: GymRepository, entity_id: int, data: ReservaInput
+    use_cases: GymUseCases, entity_id: int, data: ReservaInput
 ) -> ReservaResponse:
-    entity = GymUseCases(repository).update(
+    entity = use_cases.update(
         Reserva,
         entity_id,
         Reserva(
@@ -54,6 +49,6 @@ def update_reserva(
     return ReservaResponse.model_validate(entity)
 
 
-def delete_reserva(repository: GymRepository, entity_id: int) -> None:
-    GymUseCases(repository).delete(Reserva, entity_id)
+def delete_reserva(use_cases: GymUseCases, entity_id: int) -> None:
+    use_cases.delete(Reserva, entity_id)
     logger.info("Reserva eliminada: id=%s", entity_id)

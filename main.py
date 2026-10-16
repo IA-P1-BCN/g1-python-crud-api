@@ -34,7 +34,8 @@ un pago registrado y una plaza disponible en la clase.
 La Cuenta de acceso está separada del Cliente del gimnasio. Registro y login
 OAuth2 son públicos; los recursos de negocio bajo `/v1` exigen Bearer JWT.
 Incluye perfil, consultas, edición, baja física y filtros. Los healthchecks
-y la documentación son públicos. La política granular de roles llega en #65/#106.
+y la documentación son públicos. Admin gestiona todo; staff gestiona sus propias
+Clases y Reservas; cliente consulta sus datos y gestiona sus propias Reservas.
 """
 
 

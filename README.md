@@ -10,8 +10,9 @@ clases, reservas y pagos. Sigue [CLIENT_SPECS.md](docs/client/CLIENT_SPECS.md),
 el [PRD](docs/PRD.md) y el [modelo de datos](docs/DATABASE_SPEC.md).
 Incluye [V2](docs/client/CLIENT_SPECS_V2_USER_MNG.md): Cuentas separadas de
 Clientes, registro, login JWT, CRUD de Cuentas protegido y filtros. El flujo de
-desarrollo usa OpenSpec, bitácora y revisión humana. La política granular por
-roles y las funciones avanzadas de seguridad siguen en las tareas del equipo.
+desarrollo usa OpenSpec, bitácora y revisión humana. Los permisos del gimnasio
+se limitan por rol y propietario; las funciones avanzadas de seguridad siguen
+en las tareas del equipo.
 
 Requisitos: [uv](https://docs.astral.sh/uv/), [Task](https://taskfile.dev), Docker.
 
@@ -56,7 +57,7 @@ task install          # instala dependencias
 test -f .env || cp .env.example .env
 # Edita .env: SECRET_KEY propia, ADMIN_EMAIL y ADMIN_PASSWORD propia
 task db:up            # levanta MySQL (docker compose)
-task migrate          # crea tablas y registra la versión de esquema 0.3
+task migrate          # crea tablas y registra la versión de esquema 0.4
 task seed             # datos demo y Cuentas iniciales, sin sobrescribir
 task dev              # servidor con recarga en http://127.0.0.1:8000
 ```
@@ -320,6 +321,7 @@ tener una Cuenta vinculada; admin/staff no necesitan ser socios.
 | `PUT /v1/users/{id}` | Admin; nombre/email obligatorios, contraseña opcional |
 | `PATCH /v1/users/{id}` | Admin; solo cambia campos enviados |
 | `DELETE /v1/users/{id}` | Admin; 204, borrado físico que conserva Cliente |
+| `PUT /v1/users/{id}/entrenador` | Admin; asigna o elimina el vínculo de una Cuenta staff |
 
 El registro recibe `nombre`, `email`, `password` (12–128 caracteres) y
 `crear_cliente=false` por defecto. Con true crea un Cliente Inactivo nuevo en
@@ -335,7 +337,8 @@ El cambio afecta a tokens nuevos; los existentes conservan su caducidad.
 PUT/PATCH solo aceptan nombre, email y password. La contraseña se conserva
 literal, se guarda con Argon2 y nunca se devuelve. Si se omite, conserva el
 hash anterior. No se aceptan null explícitos, PATCH vacío ni campos rol,
-activo, id_cliente o fecha_creacion. La Cuenta conserva su fecha y vínculo.
+activo, id_cliente, id_entrenador o fecha_creacion. La Cuenta conserva su fecha
+y vínculos; el vínculo al Entrenador tiene una operación específica para admin.
 
 Los endpoints de Cuentas exigen una Cuenta activa autenticada. El listado,
 la edición por ID y el borrado exigen admin. Consultar por ID exige admin o
@@ -343,6 +346,36 @@ propietario; staff y cliente editan su perfil mediante `/v1/users/me`.
 Los recursos del gimnasio y la exportación
 CSV también exigen JWT (#105).
 Registro, login, healthchecks y documentación siguen públicos.
+
+### Permisos del gimnasio (#106)
+
+| Recurso | Admin | Staff | Cliente |
+|---|---|---|---|
+| Clientes | CRUD completo | Sin acceso | Consulta su Cliente vinculado |
+| Entrenadores | CRUD completo | Consulta su Entrenador vinculado | Consulta catálogo |
+| Clases | CRUD completo | CRUD de sus propias Clases | Consulta catálogo |
+| Reservas | CRUD completo | CRUD de las Reservas de sus Clases | Consulta, crea, traslada y cancela las propias |
+| Pagos | CRUD completo | Sin acceso | Consulta sus Pagos |
+| Exportación CSV | Permitida | Denegada | Denegada |
+
+Los listados aplican propietario antes de paginar y combinan ese alcance con
+los filtros. Un ID ajeno devuelve 404; una operación prohibida para el rol,
+403. Cliente no puede reservar para otro Cliente ni modificar asistencia.
+Staff no puede reasignar su Clase ni trasladar una Reserva a clases ajenas.
+Las reglas de membresía, pago, unicidad y aforo siguen vigentes.
+
+Cada Cuenta staff necesita un vínculo explícito y exclusivo con Entrenador.
+En Swagger, un admin usa `PUT /v1/users/{id}/entrenador` con
+`{"id_entrenador": 3}` (sustituye 3 por un Entrenador existente); para desvincular,
+envía `{"id_entrenador": null}`. La Cuenta destino debe ser staff; registro y
+edición de perfil no permiten cambiar roles ni vínculos. Sin vínculo, el staff
+ve listas vacías y no puede crear Clases/Reservas. El próximo uso del mismo JWT
+ya refleja cambios de rol o vínculo persistidos.
+
+`GET /v1/clases/{id_clase}/cupo` devuelve `id_clase`, `capacidad_max`, `reservas`
+y `plazas_disponibles`, sin datos personales. El catálogo del frontend usa
+este agregado para calcular disponibilidad real aunque las reservas ajenas
+no sean visibles. La reserva se valida de nuevo en su propia transacción.
 
 ### Filtros de Cuentas
 

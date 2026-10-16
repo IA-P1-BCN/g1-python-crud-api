@@ -4,15 +4,15 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Query, Response
 
-from src.domain.repositories.gym_port import GymRepository
+from src.application.use_cases.gym_use_cases import GymUseCases
 from src.interfaces.http.controllers import reserva_controller as controller
-from src.interfaces.http.dependencies import get_gym_repository
+from src.interfaces.http.dependencies import get_gym_use_cases
 from src.interfaces.http.errors import CRUD_ERRORS, LIST_ERRORS
 from src.interfaces.http.schemas.gym_schema import ReservaInput, ReservaResponse
 from src.interfaces.http.schemas.list_query import ReservaQuery
 
 router = APIRouter(prefix="/reservas", tags=["reservas"])
-Repository = Annotated[GymRepository, Depends(get_gym_repository)]
+UseCases = Annotated[GymUseCases, Depends(get_gym_use_cases)]
 EntityId = Annotated[int, Path(gt=0, le=2147483647)]
 
 
@@ -23,10 +23,10 @@ EntityId = Annotated[int, Path(gt=0, le=2147483647)]
     responses=LIST_ERRORS,
 )
 def list_reservas(
-    repository: Repository,
+    use_cases: UseCases,
     query: Annotated[ReservaQuery, Query()],
 ) -> list[ReservaResponse]:
-    return controller.list_reservas(repository, query)
+    return controller.list_reservas(use_cases, query)
 
 
 @router.get(
@@ -35,8 +35,8 @@ def list_reservas(
     summary="Consulta reserva por ID",
     responses=CRUD_ERRORS,
 )
-def get_reserva(id_reserva: EntityId, repository: Repository) -> ReservaResponse:
-    return controller.get_reserva(repository, id_reserva)
+def get_reserva(id_reserva: EntityId, use_cases: UseCases) -> ReservaResponse:
+    return controller.get_reserva(use_cases, id_reserva)
 
 
 @router.post(
@@ -46,8 +46,8 @@ def get_reserva(id_reserva: EntityId, repository: Repository) -> ReservaResponse
     summary="Crea reserva",
     responses=CRUD_ERRORS,
 )
-def create_reserva(data: ReservaInput, repository: Repository) -> ReservaResponse:
-    return controller.create_reserva(repository, data)
+def create_reserva(data: ReservaInput, use_cases: UseCases) -> ReservaResponse:
+    return controller.create_reserva(use_cases, data)
 
 
 @router.put(
@@ -57,9 +57,9 @@ def create_reserva(data: ReservaInput, repository: Repository) -> ReservaRespons
     responses=CRUD_ERRORS,
 )
 def update_reserva(
-    id_reserva: EntityId, data: ReservaInput, repository: Repository
+    id_reserva: EntityId, data: ReservaInput, use_cases: UseCases
 ) -> ReservaResponse:
-    return controller.update_reserva(repository, id_reserva, data)
+    return controller.update_reserva(use_cases, id_reserva, data)
 
 
 @router.delete(
@@ -70,6 +70,6 @@ def update_reserva(
     summary="Elimina reserva",
     responses=CRUD_ERRORS,
 )
-def delete_reserva(id_reserva: EntityId, repository: Repository) -> Response:
-    controller.delete_reserva(repository, id_reserva)
+def delete_reserva(id_reserva: EntityId, use_cases: UseCases) -> Response:
+    controller.delete_reserva(use_cases, id_reserva)
     return Response(status_code=204)

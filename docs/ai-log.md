@@ -7,6 +7,7 @@ rechazó y por qué). Cada funcionalidad principal deja aquí su entrada.
 
 ## Registros detallados
 
+- [2026-10-16 — #106: permisos por rol y propietario](ai-log/2026-10-16-permisos-gimnasio-106.md).
 - [2026-10-16 — #67: caducidad configurable](ai-log/2026-10-16-expiracion-67.md).
 - [2026-10-16 — #66: perfil propio y contraseña](ai-log/2026-10-16-perfil-66.md).
 - [2026-10-16 — #65: administración de Cuentas](ai-log/2026-10-16-admin-65.md).

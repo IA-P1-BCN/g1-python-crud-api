@@ -23,11 +23,11 @@ export async function cargarClasesConCupo(
 
   return Promise.all(
     lista.map(async (clase): Promise<ClaseConCupo> => {
-      const reservadas = (await reservas.listarPorClase(clase.id_clase)).length;
+      const cupo = await clases.cupo(clase.id_clase);
       return {
         clase,
         entrenador: entrenadores.find((e) => e.id_entrenador === clase.id_entrenador)?.nombre ?? 'Sin asignar',
-        plazasLibres: Math.max(clase.capacidad_max - reservadas, 0),
+        plazasLibres: cupo.plazas_disponibles,
         reservadaPorMi: idsMias.has(clase.id_clase),
       };
     }),
