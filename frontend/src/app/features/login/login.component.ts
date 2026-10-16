@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { AuthService, InvalidCredentialsError, NetworkError, UsuarioAutenticado } from '../../core/auth/auth.service';
+import { AuthService, InvalidCredentialsError, NetworkError } from '../../core/auth/auth.service';
 import { SessionService } from '../../core/auth/session.service';
 import { MenuComponent } from '../../shared/components/menu.component';
 import { HlmAlertImports } from '@spartan-ng/helm/alert';
@@ -58,7 +58,7 @@ export class LoginComponent {
     try {
       const usuario = await this.auth.login(email, password);
       this.session.iniciar(usuario);
-      await this.router.navigateByUrl(this.destino(usuario));
+      await this.router.navigateByUrl(this.destino());
     } catch (error) {
       this.mensajeError.set(mensajeParaError(error));
     } finally {
@@ -66,13 +66,15 @@ export class LoginComponent {
     }
   }
 
-  /** Vuelve a la ruta pedida si es del portal; si no, al portal (con ficha) o a la home. */
-  private destino(usuario: UsuarioAutenticado): string {
+  /** Solo acepta destinos de la aplicación; por defecto vuelve a la raíz. */
+  private destino(): string {
     const returnUrl = this.ruta.snapshot.queryParamMap.get('returnUrl');
-    if (returnUrl && returnUrl.startsWith('/portal')) {
+    const destinos = ['portal', 'clases', 'reservas', 'perfil', 'clientes',
+      'entrenadores', 'gestion-clases', 'pagos', 'cuentas', 'export'];
+    if (returnUrl?.startsWith('/') && destinos.includes(returnUrl.split(/[/?#]/)[1])) {
       return returnUrl;
     }
-    return usuario.id_cliente !== null ? '/portal' : '/';
+    return '/';
   }
 }
 
