@@ -392,7 +392,9 @@ activo, id_cliente o fecha_creacion. La Cuenta conserva su fecha y vínculo.
 
 Los endpoints de Cuentas exigen una Cuenta activa autenticada. En este nivel
 aún no restringen listado/edición/borrado por propietario o rol; la autorización
-granular está pendiente en STORY #38. El CRUD V1 continúa público.
+granular está pendiente en STORY #38. Los recursos del gimnasio y la exportación
+CSV también exigen JWT (#105).
+Registro, login, healthchecks y documentación siguen públicos.
 
 ### Filtros de Cuentas
 

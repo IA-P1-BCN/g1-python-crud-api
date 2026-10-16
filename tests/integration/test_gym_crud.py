@@ -79,8 +79,10 @@ class GymApi:
 
 
 @pytest.fixture
-def api(mysql_ready, base_url):
-    with httpx.Client(base_url=base_url, timeout=10) as client:
+def api(mysql_ready, base_url, gym_admin_headers):
+    with httpx.Client(
+        base_url=base_url, headers=gym_admin_headers, timeout=10
+    ) as client:
         api = GymApi(client)
         try:
             yield api
@@ -162,7 +164,11 @@ def test_crud_de_las_cinco_entidades(api, clase):
         if resource == "reservas":
             assert updated.json()["fecha_reserva"] == entity["fecha_reserva"]
         # Otra conexión HTTP lee lo confirmado, no una entidad en memoria.
-        fetched = httpx.get(str(api.client.base_url.join(detail)), timeout=10)
+        fetched = httpx.get(
+            str(api.client.base_url.join(detail)),
+            headers=api.client.headers,
+            timeout=10,
+        )
         assert fetched.json() == updated.json()
     for resource, id_field, _ in TABLES:
         entity = next(case[2] for case in cases if case[0] == resource)

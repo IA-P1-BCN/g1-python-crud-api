@@ -12,21 +12,17 @@ from src.domain.errors import (
     InvalidQueryError,
     RepositoryUnavailableError,
 )
-from src.interfaces.http.dependencies import get_current_user, get_gym_repository
+from src.interfaces.http.dependencies import get_current_user
 from src.interfaces.http.errors import INTERNAL_ERROR_MESSAGE
 
 DETALLE_INTERNO = "password=secreto-que-no-debe-salir"
 
 
 @pytest.fixture
-def client_sin_reraise(repository):
+def client_sin_reraise(client):
     """Devuelve el 500 como respuesta en lugar de relanzar la excepción."""
-    app.dependency_overrides[get_gym_repository] = lambda: repository
-    try:
-        with TestClient(app, raise_server_exceptions=False) as client:
-            yield client
-    finally:
-        app.dependency_overrides.pop(get_gym_repository, None)
+    with TestClient(app, raise_server_exceptions=False) as error_client:
+        yield error_client
 
 
 def _falla_con(monkeypatch, repository, error):
