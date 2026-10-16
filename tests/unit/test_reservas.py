@@ -10,7 +10,6 @@ from src.domain.entities.cuenta import Cuenta
 from src.domain.entities.gym import Clase, Cliente, Pago, Reserva
 from src.domain.errors import ConflictError
 
-
 ADMIN = Cuenta(
     id=1,
     nombre="Admin",

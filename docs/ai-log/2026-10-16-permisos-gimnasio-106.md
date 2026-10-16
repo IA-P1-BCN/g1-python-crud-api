@@ -32,4 +32,10 @@
   `git diff --check`. Frontend: **115 tests en 25 suites**, build aprobado.
   Persiste el aviso previo de deprecación de Starlette TestClient/httpx.
 - Integración: main recibió después #109/#116 (Render y portal en raíz);
-  se incorporan a la cadena de PRs antes de entregar para preservar esas rutas.
+  incorporados a toda la cadena de PRs, hasta `1e1efb9`. Resueltos conflictos
+  de imports/bitácora y menú preservando CORS, JWT y las rutas en raíz.
+- Validación final tras integrar main: **372 tests backend aprobados, cero
+  fallidos/saltados**, **117 tests frontend en 26 suites**, build aprobado,
+  lint aprobado y OpenSpec **22/22**. Verificación AST de dominio/aplicación
+  sin imports de infraestructura, interfaces, FastAPI, Pydantic o SQLAlchemy.
+  El último ajuste de lint solo elimina una línea vacía en imports del test.
