@@ -12,7 +12,11 @@ from sqlalchemy.orm import Session
 from src.domain.entities.cuenta import Cuenta
 from src.domain.errors import ConflictError, RepositoryUnavailableError
 from src.domain.list_filters import ListFilters
-from src.infrastructure.database.models import ClienteRecord, CuentaRecord
+from src.infrastructure.database.models import (
+    ClienteRecord,
+    CuentaRecord,
+    EntrenadorRecord,
+)
 from src.infrastructure.repositories.listing import apply_list_filters
 
 
@@ -83,6 +87,16 @@ class SqlAlchemyCuentaRepository:
     def delete(self, cuenta: Cuenta) -> None:
         self._session.delete(self._session.get(CuentaRecord, cuenta.id))
         self._session.flush()
+
+    def entrenador_exists(self, id_entrenador: int) -> bool:
+        return self._session.get(EntrenadorRecord, id_entrenador) is not None
+
+    def set_entrenador(self, cuenta: Cuenta, id_entrenador: int | None) -> Cuenta:
+        record = self._session.get(CuentaRecord, cuenta.id)
+        record.id_entrenador = id_entrenador
+        self._session.flush()
+        self._session.refresh(record)
+        return self._entity(record)
 
     @staticmethod
     def _entity(record: CuentaRecord) -> Cuenta:

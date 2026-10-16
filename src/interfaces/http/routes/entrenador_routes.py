@@ -4,15 +4,15 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Query, Response
 
-from src.domain.repositories.gym_port import GymRepository
+from src.application.use_cases.gym_use_cases import GymUseCases
 from src.interfaces.http.controllers import entrenador_controller as controller
-from src.interfaces.http.dependencies import get_gym_repository
+from src.interfaces.http.dependencies import get_gym_use_cases
 from src.interfaces.http.errors import CRUD_ERRORS, LIST_ERRORS
 from src.interfaces.http.schemas.gym_schema import EntrenadorInput, EntrenadorResponse
 from src.interfaces.http.schemas.list_query import EntrenadorQuery
 
 router = APIRouter(prefix="/entrenadores", tags=["entrenadores"])
-Repository = Annotated[GymRepository, Depends(get_gym_repository)]
+UseCases = Annotated[GymUseCases, Depends(get_gym_use_cases)]
 EntityId = Annotated[int, Path(gt=0, le=2147483647)]
 
 
@@ -23,10 +23,10 @@ EntityId = Annotated[int, Path(gt=0, le=2147483647)]
     responses=LIST_ERRORS,
 )
 def list_entrenadores(
-    repository: Repository,
+    use_cases: UseCases,
     query: Annotated[EntrenadorQuery, Query()],
 ) -> list[EntrenadorResponse]:
-    return controller.list_entrenadores(repository, query)
+    return controller.list_entrenadores(use_cases, query)
 
 
 @router.get(
@@ -35,10 +35,8 @@ def list_entrenadores(
     summary="Consulta entrenador por ID",
     responses=CRUD_ERRORS,
 )
-def get_entrenador(
-    id_entrenador: EntityId, repository: Repository
-) -> EntrenadorResponse:
-    return controller.get_entrenador(repository, id_entrenador)
+def get_entrenador(id_entrenador: EntityId, use_cases: UseCases) -> EntrenadorResponse:
+    return controller.get_entrenador(use_cases, id_entrenador)
 
 
 @router.post(
@@ -48,10 +46,8 @@ def get_entrenador(
     summary="Crea entrenador",
     responses=CRUD_ERRORS,
 )
-def create_entrenador(
-    data: EntrenadorInput, repository: Repository
-) -> EntrenadorResponse:
-    return controller.create_entrenador(repository, data)
+def create_entrenador(data: EntrenadorInput, use_cases: UseCases) -> EntrenadorResponse:
+    return controller.create_entrenador(use_cases, data)
 
 
 @router.put(
@@ -61,9 +57,9 @@ def create_entrenador(
     responses=CRUD_ERRORS,
 )
 def update_entrenador(
-    id_entrenador: EntityId, data: EntrenadorInput, repository: Repository
+    id_entrenador: EntityId, data: EntrenadorInput, use_cases: UseCases
 ) -> EntrenadorResponse:
-    return controller.update_entrenador(repository, id_entrenador, data)
+    return controller.update_entrenador(use_cases, id_entrenador, data)
 
 
 @router.delete(
@@ -74,6 +70,6 @@ def update_entrenador(
     summary="Elimina entrenador",
     responses=CRUD_ERRORS,
 )
-def delete_entrenador(id_entrenador: EntityId, repository: Repository) -> Response:
-    controller.delete_entrenador(repository, id_entrenador)
+def delete_entrenador(id_entrenador: EntityId, use_cases: UseCases) -> Response:
+    controller.delete_entrenador(use_cases, id_entrenador)
     return Response(status_code=204)

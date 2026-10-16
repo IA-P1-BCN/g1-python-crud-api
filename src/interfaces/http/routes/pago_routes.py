@@ -4,15 +4,15 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Query, Response
 
-from src.domain.repositories.gym_port import GymRepository
+from src.application.use_cases.gym_use_cases import GymUseCases
 from src.interfaces.http.controllers import pago_controller as controller
-from src.interfaces.http.dependencies import get_gym_repository
+from src.interfaces.http.dependencies import get_gym_use_cases
 from src.interfaces.http.errors import CRUD_ERRORS, LIST_ERRORS
 from src.interfaces.http.schemas.gym_schema import PagoInput, PagoResponse
 from src.interfaces.http.schemas.list_query import PagoQuery
 
 router = APIRouter(prefix="/pagos", tags=["pagos"])
-Repository = Annotated[GymRepository, Depends(get_gym_repository)]
+UseCases = Annotated[GymUseCases, Depends(get_gym_use_cases)]
 EntityId = Annotated[int, Path(gt=0, le=2147483647)]
 
 
@@ -20,10 +20,10 @@ EntityId = Annotated[int, Path(gt=0, le=2147483647)]
     "", response_model=list[PagoResponse], summary="Lista pagos", responses=LIST_ERRORS
 )
 def list_pagos(
-    repository: Repository,
+    use_cases: UseCases,
     query: Annotated[PagoQuery, Query()],
 ) -> list[PagoResponse]:
-    return controller.list_pagos(repository, query)
+    return controller.list_pagos(use_cases, query)
 
 
 @router.get(
@@ -32,8 +32,8 @@ def list_pagos(
     summary="Consulta pago por ID",
     responses=CRUD_ERRORS,
 )
-def get_pago(id_pago: EntityId, repository: Repository) -> PagoResponse:
-    return controller.get_pago(repository, id_pago)
+def get_pago(id_pago: EntityId, use_cases: UseCases) -> PagoResponse:
+    return controller.get_pago(use_cases, id_pago)
 
 
 @router.post(
@@ -43,8 +43,8 @@ def get_pago(id_pago: EntityId, repository: Repository) -> PagoResponse:
     summary="Crea pago",
     responses=CRUD_ERRORS,
 )
-def create_pago(data: PagoInput, repository: Repository) -> PagoResponse:
-    return controller.create_pago(repository, data)
+def create_pago(data: PagoInput, use_cases: UseCases) -> PagoResponse:
+    return controller.create_pago(use_cases, data)
 
 
 @router.put(
@@ -54,9 +54,9 @@ def create_pago(data: PagoInput, repository: Repository) -> PagoResponse:
     responses=CRUD_ERRORS,
 )
 def update_pago(
-    id_pago: EntityId, data: PagoInput, repository: Repository
+    id_pago: EntityId, data: PagoInput, use_cases: UseCases
 ) -> PagoResponse:
-    return controller.update_pago(repository, id_pago, data)
+    return controller.update_pago(use_cases, id_pago, data)
 
 
 @router.delete(
@@ -67,6 +67,6 @@ def update_pago(
     summary="Elimina pago",
     responses=CRUD_ERRORS,
 )
-def delete_pago(id_pago: EntityId, repository: Repository) -> Response:
-    controller.delete_pago(repository, id_pago)
+def delete_pago(id_pago: EntityId, use_cases: UseCases) -> Response:
+    controller.delete_pago(use_cases, id_pago)
     return Response(status_code=204)

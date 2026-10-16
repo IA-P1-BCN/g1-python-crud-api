@@ -2,23 +2,105 @@
 
 from dataclasses import replace
 
+from src.domain.entities.cuenta import Cuenta
 from src.domain.entities.gym import (
     ID_FIELDS,
     Clase,
     Cliente,
+    CupoClase,
     Entrenador,
     GymEntity,
     Pago,
     Reserva,
 )
-from src.domain.errors import ConflictError, InvalidQueryError, NotFoundError
+from src.domain.errors import (
+    ConflictError,
+    ForbiddenError,
+    InvalidQueryError,
+    NotFoundError,
+)
+from src.domain.gym_scope import GymScope
 from src.domain.list_filters import ListFilters
 from src.domain.repositories.gym_port import GymRepository
 
 
 class GymUseCases:
-    def __init__(self, repository: GymRepository) -> None:
+    def __init__(self, repository: GymRepository, actor: Cuenta) -> None:
         self._repository = repository
+        self._actor = actor
+
+    def _check_operation(
+        self, entity_type: type[GymEntity], *, write: bool = False
+    ) -> None:
+        if not self._actor.activo:
+            raise ForbiddenError("La Cuenta está inactiva")
+        if self._actor.rol == "admin":
+            return
+        allowed = (
+            self._actor.rol == "cliente" and (not write or entity_type is Reserva)
+        ) or (
+            self._actor.rol == "staff"
+            and entity_type
+            in ((Clase, Reserva) if write else (Clase, Reserva, Entrenador))
+        )
+        if not allowed:
+            raise ForbiddenError("No tienes permisos para esta operación")
+
+    def _scope(self, entity_type: type[GymEntity]) -> GymScope | None:
+        if self._actor.rol == "admin":
+            return None
+        if self._actor.rol == "cliente":
+            if entity_type in (Clase, Entrenador):
+                return None
+            return GymScope(id_cliente=self._actor.id_cliente or -1)
+        return GymScope(id_entrenador=self._actor.id_entrenador or -1)
+
+    def _ensure_visible(self, entity: GymEntity, *, lock: bool = False) -> None:
+        if self._actor.rol == "admin":
+            return
+        if self._actor.rol == "cliente":
+            visible = isinstance(entity, (Clase, Entrenador)) or (
+                self._actor.id_cliente is not None
+                and entity.id_cliente == self._actor.id_cliente
+            )
+        else:
+            owner = entity
+            if isinstance(entity, Reserva):
+                owner = self._repository.get(Clase, entity.id_clase, lock=lock)
+            visible = (
+                self._actor.id_entrenador is not None
+                and owner is not None
+                and owner.id_entrenador == self._actor.id_entrenador
+            )
+        if not visible:
+            entity_id = getattr(entity, ID_FIELDS[type(entity)])
+            raise NotFoundError(f"{type(entity).__name__} con id {entity_id} no existe")
+
+    def _authorize_values(
+        self, entity: GymEntity, previous: GymEntity | None = None
+    ) -> None:
+        if self._actor.rol == "admin":
+            return
+        if self._actor.rol == "staff":
+            owner = entity
+            if isinstance(entity, Reserva):
+                owner = self._require(Clase, entity.id_clase, lock=True)
+            if (
+                self._actor.id_entrenador is None
+                or owner.id_entrenador != self._actor.id_entrenador
+            ):
+                raise ForbiddenError("Solo puedes gestionar tus Clases y Reservas")
+        elif isinstance(entity, Reserva):
+            if (
+                self._actor.id_cliente is None
+                or entity.id_cliente != self._actor.id_cliente
+            ):
+                raise ForbiddenError("Solo puedes reservar para tu Cliente vinculado")
+            attended = previous.asistio if isinstance(previous, Reserva) else False
+            if entity.asistio != attended or (
+                attended and entity.id_clase != previous.id_clase
+            ):
+                raise ForbiddenError("El Cliente no puede modificar la asistencia")
 
     def list[T: GymEntity](
         self,
@@ -27,6 +109,7 @@ class GymUseCases:
         limit: int = 100,
         filters: ListFilters | None = None,
     ) -> list[T]:
+        self._check_operation(entity_type)
         if (
             filters is not None
             and filters.date_from is not None
@@ -35,33 +118,61 @@ class GymUseCases:
         ):
             raise InvalidQueryError("El inicio del intervalo no puede superar el final")
         with self._repository.transaction():
-            return self._repository.list(entity_type, offset, limit, filters)
+            return self._repository.list(
+                entity_type, offset, limit, filters, self._scope(entity_type)
+            )
 
     def list_all[T: GymEntity](self, entity_type: type[T]) -> list[T]:
+        self._check_operation(entity_type)
+        if self._actor.rol != "admin":
+            raise ForbiddenError("La exportación requiere rol admin")
         with self._repository.transaction():
             return self._repository.list_all(entity_type)
 
     def get[T: GymEntity](self, entity_type: type[T], entity_id: int) -> T:
+        self._check_operation(entity_type)
         with self._repository.transaction():
-            return self._require(entity_type, entity_id)
+            entity = self._require(entity_type, entity_id)
+            self._ensure_visible(entity)
+            return entity
+
+    def class_capacity(self, id_clase: int) -> CupoClase:
+        self._check_operation(Clase)
+        with self._repository.transaction():
+            clase = self._require(Clase, id_clase)
+            self._ensure_visible(clase)
+            count = self._repository.count_reservas(id_clase)
+            return CupoClase(
+                id_clase=id_clase,
+                capacidad_max=clase.capacidad_max,
+                reservas=count,
+                plazas_disponibles=max(0, clase.capacidad_max - count),
+            )
 
     def create[T: GymEntity](self, entity: T) -> T:
+        self._check_operation(type(entity), write=True)
         with self._repository.transaction():
+            self._authorize_values(entity)
             self._validate(entity)
             return self._repository.add(entity)
 
     def update[T: GymEntity](self, entity_type: type[T], entity_id: int, data: T) -> T:
+        self._check_operation(entity_type, write=True)
         with self._repository.transaction():
             previous = self._require(entity_type, entity_id, lock=True)
+            self._ensure_visible(previous, lock=True)
             entity = replace(data, **{ID_FIELDS[entity_type]: entity_id})
             if isinstance(entity, Reserva):
                 entity = replace(entity, fecha_reserva=previous.fecha_reserva)
+            self._authorize_values(entity, previous)
             self._validate(entity, previous)
             return self._repository.update(entity)
 
     def delete(self, entity_type: type[GymEntity], entity_id: int) -> None:
+        self._check_operation(entity_type, write=True)
         with self._repository.transaction():
             entity = self._require(entity_type, entity_id, lock=True)
+            self._ensure_visible(entity, lock=True)
             self._repository.delete(entity)
 
     def _require[T: GymEntity](

@@ -33,6 +33,13 @@ class CuentaController:
     def delete(self, cuenta_id: int) -> None:
         self._use_cases.delete(cuenta_id)
 
+    def set_entrenador(
+        self, cuenta_id: int, id_entrenador: int | None
+    ) -> CuentaResponse:
+        return CuentaResponse.model_validate(
+            self._use_cases.set_entrenador(cuenta_id, id_entrenador)
+        )
+
     def update(self, cuenta_id: int, data: CuentaPatch) -> CuentaResponse:
         password = (
             data.password.get_secret_value() if data.password is not None else None

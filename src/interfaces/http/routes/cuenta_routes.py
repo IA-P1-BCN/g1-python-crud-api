@@ -14,6 +14,7 @@ from src.interfaces.http.dependencies import (
 )
 from src.interfaces.http.errors import LIST_ERRORS, PROTECTED_ERRORS
 from src.interfaces.http.schemas.cuenta_schema import (
+    CuentaEntrenadorInput,
     CuentaPatch,
     CuentaPut,
     CuentaResponse,
@@ -119,3 +120,19 @@ def delete_cuenta(
 ) -> Response:
     controller.delete(id)
     return Response(status_code=204)
+
+
+@router.put(
+    "/{id}/entrenador",
+    summary="Vincular una Cuenta staff con su Entrenador",
+    description="Solo admin. Envía id_entrenador positivo o null para desvincular. El vínculo es único; no se deduce por nombre o email.",
+    response_model=CuentaResponse,
+    responses=PROTECTED_ERRORS,
+)
+def set_entrenador(
+    id: CuentaId,
+    data: CuentaEntrenadorInput,
+    cuenta: AdminCuenta,
+    controller: Controller,
+) -> CuentaResponse:
+    return controller.set_entrenador(id, data.id_entrenador)

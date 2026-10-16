@@ -66,13 +66,22 @@ describe('MenuComponent', () => {
     expect(overlay()).not.toContain('Exportar CSV');
   });
 
-  it('el rol staff ve el grupo de gestión completo', async () => {
+  it('el rol staff ve clases y no ofrece operaciones de administrador', async () => {
     TestBed.inject(SessionService).iniciar(USUARIO_STAFF);
     await abrir();
     expect(overlay()).toContain('Gestión');
+    expect(overlay()).toContain('Clases');
+    for (const enlace of ['Clientes', 'Entrenadores', 'Pagos', 'Cuentas', 'Exportar CSV']) {
+      expect(overlay()).not.toContain(enlace);
+    }
+    expect(overlay()).not.toContain('Mi portal');
+  });
+
+  it('el rol admin conserva todas las operaciones de gestión', async () => {
+    TestBed.inject(SessionService).iniciar({ ...USUARIO_STAFF, rol: 'admin' });
+    await abrir();
     for (const enlace of ['Clientes', 'Entrenadores', 'Clases', 'Pagos', 'Cuentas', 'Exportar CSV']) {
       expect(overlay()).toContain(enlace);
     }
-    expect(overlay()).not.toContain('Mi portal');
   });
 });

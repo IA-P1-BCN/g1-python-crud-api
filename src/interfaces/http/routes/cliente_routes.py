@@ -4,15 +4,15 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Query, Response
 
-from src.domain.repositories.gym_port import GymRepository
+from src.application.use_cases.gym_use_cases import GymUseCases
 from src.interfaces.http.controllers import cliente_controller as controller
-from src.interfaces.http.dependencies import get_gym_repository
+from src.interfaces.http.dependencies import get_gym_use_cases
 from src.interfaces.http.errors import CRUD_ERRORS, LIST_ERRORS
 from src.interfaces.http.schemas.gym_schema import ClienteInput, ClienteResponse
 from src.interfaces.http.schemas.list_query import ClienteQuery
 
 router = APIRouter(prefix="/clientes", tags=["clientes"])
-Repository = Annotated[GymRepository, Depends(get_gym_repository)]
+UseCases = Annotated[GymUseCases, Depends(get_gym_use_cases)]
 EntityId = Annotated[int, Path(gt=0, le=2147483647)]
 
 
@@ -23,10 +23,10 @@ EntityId = Annotated[int, Path(gt=0, le=2147483647)]
     responses=LIST_ERRORS,
 )
 def list_clientes(
-    repository: Repository,
+    use_cases: UseCases,
     query: Annotated[ClienteQuery, Query()],
 ) -> list[ClienteResponse]:
-    return controller.list_clientes(repository, query)
+    return controller.list_clientes(use_cases, query)
 
 
 @router.get(
@@ -35,8 +35,8 @@ def list_clientes(
     summary="Consulta cliente por ID",
     responses=CRUD_ERRORS,
 )
-def get_cliente(id_cliente: EntityId, repository: Repository) -> ClienteResponse:
-    return controller.get_cliente(repository, id_cliente)
+def get_cliente(id_cliente: EntityId, use_cases: UseCases) -> ClienteResponse:
+    return controller.get_cliente(use_cases, id_cliente)
 
 
 @router.post(
@@ -46,8 +46,8 @@ def get_cliente(id_cliente: EntityId, repository: Repository) -> ClienteResponse
     summary="Crea cliente",
     responses=CRUD_ERRORS,
 )
-def create_cliente(data: ClienteInput, repository: Repository) -> ClienteResponse:
-    return controller.create_cliente(repository, data)
+def create_cliente(data: ClienteInput, use_cases: UseCases) -> ClienteResponse:
+    return controller.create_cliente(use_cases, data)
 
 
 @router.put(
@@ -57,9 +57,9 @@ def create_cliente(data: ClienteInput, repository: Repository) -> ClienteRespons
     responses=CRUD_ERRORS,
 )
 def update_cliente(
-    id_cliente: EntityId, data: ClienteInput, repository: Repository
+    id_cliente: EntityId, data: ClienteInput, use_cases: UseCases
 ) -> ClienteResponse:
-    return controller.update_cliente(repository, id_cliente, data)
+    return controller.update_cliente(use_cases, id_cliente, data)
 
 
 @router.delete(
@@ -70,6 +70,6 @@ def update_cliente(
     summary="Elimina cliente",
     responses=CRUD_ERRORS,
 )
-def delete_cliente(id_cliente: EntityId, repository: Repository) -> Response:
-    controller.delete_cliente(repository, id_cliente)
+def delete_cliente(id_cliente: EntityId, use_cases: UseCases) -> Response:
+    controller.delete_cliente(use_cases, id_cliente)
     return Response(status_code=204)

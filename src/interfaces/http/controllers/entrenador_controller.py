@@ -4,7 +4,6 @@ import logging
 
 from src.application.use_cases.gym_use_cases import GymUseCases
 from src.domain.entities.gym import Entrenador
-from src.domain.repositories.gym_port import GymRepository
 from src.interfaces.http.schemas.gym_schema import EntrenadorInput, EntrenadorResponse
 from src.interfaces.http.schemas.list_query import EntrenadorQuery
 
@@ -12,23 +11,21 @@ logger = logging.getLogger(__name__)
 
 
 def list_entrenadores(
-    repository: GymRepository, query: EntrenadorQuery
+    use_cases: GymUseCases, query: EntrenadorQuery
 ) -> list[EntrenadorResponse]:
-    entities = GymUseCases(repository).list(
-        Entrenador, query.offset, query.limit, query.to_filters()
-    )
+    entities = use_cases.list(Entrenador, query.offset, query.limit, query.to_filters())
     return [EntrenadorResponse.model_validate(entity) for entity in entities]
 
 
-def get_entrenador(repository: GymRepository, entity_id: int) -> EntrenadorResponse:
-    entity = GymUseCases(repository).get(Entrenador, entity_id)
+def get_entrenador(use_cases: GymUseCases, entity_id: int) -> EntrenadorResponse:
+    entity = use_cases.get(Entrenador, entity_id)
     return EntrenadorResponse.model_validate(entity)
 
 
 def create_entrenador(
-    repository: GymRepository, data: EntrenadorInput
+    use_cases: GymUseCases, data: EntrenadorInput
 ) -> EntrenadorResponse:
-    entity = GymUseCases(repository).create(Entrenador(**data.model_dump()))
+    entity = use_cases.create(Entrenador(**data.model_dump()))
     logger.info(
         "Entrenador creado: id=%s nombre=%s", entity.id_entrenador, entity.nombre
     )
@@ -36,14 +33,12 @@ def create_entrenador(
 
 
 def update_entrenador(
-    repository: GymRepository, entity_id: int, data: EntrenadorInput
+    use_cases: GymUseCases, entity_id: int, data: EntrenadorInput
 ) -> EntrenadorResponse:
-    entity = GymUseCases(repository).update(
-        Entrenador, entity_id, Entrenador(**data.model_dump())
-    )
+    entity = use_cases.update(Entrenador, entity_id, Entrenador(**data.model_dump()))
     return EntrenadorResponse.model_validate(entity)
 
 
-def delete_entrenador(repository: GymRepository, entity_id: int) -> None:
-    GymUseCases(repository).delete(Entrenador, entity_id)
+def delete_entrenador(use_cases: GymUseCases, entity_id: int) -> None:
+    use_cases.delete(Entrenador, entity_id)
     logger.info("Entrenador eliminado: id=%s", entity_id)

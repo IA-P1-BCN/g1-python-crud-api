@@ -133,3 +133,12 @@ Tabla `users`, separada de `clientes`: `id` INT PK, `nombre` VARCHAR(100),
 `rol` VARCHAR(20) CHECK admin/staff/cliente y `id_cliente` INT nullable UNIQUE
 FK RESTRICT. Borrar Cuenta conserva Cliente; borrar Cliente vinculado se bloquea.
 El seed no cambia membresía ni reinicia contraseñas.
+
+Desde #106, `users.id_entrenador` es INT nullable, UNIQUE y FK RESTRICT hacia
+`entrenadores.id_entrenador`. Representa el vínculo opcional 1:1 Cuenta–Entrenador,
+independiente del vínculo Cuenta–Cliente. Solo admin asigna una Cuenta staff
+mediante la API; el rol vigente decide permisos incluso si queda un vínculo
+tras un cambio administrativo de rol. Borrar Cuenta conserva Entrenador y
+borrar un Entrenador vinculado devuelve 409. No se deduce ninguna relación por
+email/nombre. La migración `7a0f6a730e04` añade el campo sin alterar filas
+existentes e inserta la versión de esquema 0.4 en `versions`.

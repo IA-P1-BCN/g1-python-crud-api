@@ -29,12 +29,14 @@ import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
           <a hlmDropdownMenuItem routerLink="/perfil">Mi perfil</a>
           @if (usuario.rol === 'admin' || usuario.rol === 'staff') {
             <div hlmDropdownMenuLabel>Gestión</div>
-            <a hlmDropdownMenuItem routerLink="/clientes">Clientes</a>
-            <a hlmDropdownMenuItem routerLink="/entrenadores">Entrenadores</a>
             <a hlmDropdownMenuItem routerLink="/gestion-clases">Clases</a>
-            <a hlmDropdownMenuItem routerLink="/pagos">Pagos</a>
-            <a hlmDropdownMenuItem routerLink="/cuentas">Cuentas</a>
-            <a hlmDropdownMenuItem routerLink="/export">Exportar CSV</a>
+            @if (usuario.rol === 'admin') {
+              <a hlmDropdownMenuItem routerLink="/clientes">Clientes</a>
+              <a hlmDropdownMenuItem routerLink="/entrenadores">Entrenadores</a>
+              <a hlmDropdownMenuItem routerLink="/pagos">Pagos</a>
+              <a hlmDropdownMenuItem routerLink="/cuentas">Cuentas</a>
+              <a hlmDropdownMenuItem routerLink="/export">Exportar CSV</a>
+            }
             <div hlmDropdownMenuSeparator></div>
           }
           <button hlmDropdownMenuItem variant="destructive" type="button" (triggered)="cerrarSesion()">

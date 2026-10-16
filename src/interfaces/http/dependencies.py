@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from config.settings import get_settings
 from src.application.use_cases.auth_use_cases import AuthUseCases
 from src.application.use_cases.cuenta_use_cases import CuentaUseCases
+from src.application.use_cases.gym_use_cases import GymUseCases
 from src.domain.entities.cuenta import Cuenta
 from src.domain.errors import ForbiddenError
 from src.domain.repositories.cuenta_port import CuentaRepository
@@ -69,6 +70,13 @@ def get_current_user(
     controller: Annotated[AuthController, Depends(get_auth_controller)],
 ) -> Cuenta:
     return controller.current_user(token)
+
+
+def get_gym_use_cases(
+    repository: Annotated[GymRepository, Depends(get_gym_repository)],
+    cuenta: Annotated[Cuenta, Depends(get_current_user)],
+) -> GymUseCases:
+    return GymUseCases(repository, cuenta)
 
 
 def requires_admin(

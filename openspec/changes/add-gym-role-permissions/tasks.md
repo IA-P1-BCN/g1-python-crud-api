@@ -1,0 +1,6 @@
+- [x] Confirmar el alcance de staff y especificarlo antes del código.
+- [x] Migrar el vínculo staff–Entrenador y exponer asignación solo admin.
+- [x] Autorizar operaciones, listados y exportación en casos de uso.
+- [x] Mantener el catálogo y cupo del frontend sin revelar reservas ajenas.
+- [x] Probar los tres roles, suplantación, filtros, traslados, vínculos y cupo.
+- [x] Validar migración, lint, suite, frontend, OpenSpec y registrar evidencia.

@@ -8,6 +8,7 @@
 ```mermaid
 erDiagram
     CLIENTES |o--o| USERS : "accede con"
+    ENTRENADORES |o--o| USERS : "accede con rol staff"
     USERS {
         int id PK
         varchar nombre
@@ -17,6 +18,7 @@ erDiagram
         datetime fecha_creacion
         varchar rol
         int id_cliente FK,UK "opcional"
+        int id_entrenador FK,UK "opcional, asignado por admin"
     }
     CLIENTES ||--o{ PAGOS : "realiza"
     CLIENTES ||--o{ RESERVAS : "agenda"

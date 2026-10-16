@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { ejecutar, RUTA_API } from '../../core/http/peticion';
-import { Clase } from '../../shared/models/clase.model';
+import { Clase, CupoClase } from '../../shared/models/clase.model';
 import { Cliente } from '../../shared/models/cliente.model';
 import { Cuenta, CuentaPut, CuentaSelfPatch } from '../../shared/models/cuenta.model';
 import { Entrenador } from '../../shared/models/entrenador.model';
@@ -55,6 +55,10 @@ export class EntrenadoresApi extends RecursoApi<Entrenador, EntrenadorEntrada> {
 @Injectable({ providedIn: 'root' })
 export class ClasesApi extends RecursoApi<Clase, ClaseEntrada> {
   protected readonly ruta = '/clases';
+  cupo(id: number): Promise<CupoClase> {
+    return ejecutar(this.http.get<CupoClase>(this.url(`/${id}/cupo`)));
+  }
+
   crearClase(datos: ClaseEntrada): Promise<Clase> {
     return this.crear(datos);
   }
