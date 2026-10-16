@@ -17,9 +17,32 @@ Requisitos: [uv](https://docs.astral.sh/uv/), [Task](https://taskfile.dev), Dock
 
 ## Ejecutar
 
-Primero crea `.env` desde `.env.example` si no existe y configura `SECRET_KEY`,
-`ADMIN_EMAIL` y `ADMIN_PASSWORD` como se explica abajo. Después prepara
-dependencias, MySQL, tablas y datos ficticios y ejecuta los tests:
+En local, con recarga de la API y el servidor de desarrollo de Angular:
+
+```bash
+task up
+```
+
+`task up` prepara dependencias, `.env`, MySQL, migraciones y datos demo, e
+instala el frontend si falta `node_modules`. Después arranca la API
+(`http://127.0.0.1:8000/docs`) y Angular (`http://127.0.0.1:4200`). `Ctrl+C`
+detiene ambos. MySQL sigue en Docker.
+
+Para el mismo arranque, con API, frontend y datos demo dentro de Docker:
+
+```bash
+task docker:up
+```
+
+`task docker:up` prepara `.env`, construye las imágenes y levanta MySQL, la API
+y el frontend. La API aplica las migraciones al arrancar y después se ejecuta
+el seed dentro del contenedor. Queda en segundo plano: la API en
+`http://127.0.0.1:8000/docs` y el frontend en `http://127.0.0.1:4200`.
+`task db:down` detiene los contenedores. `task compose` levanta los servicios
+sin sembrar. `task db:up` sigue levantando solo MySQL, para no ocupar el puerto
+8000 durante el desarrollo ni los tests.
+
+Para solo preparar el entorno y ejecutar tests, sin servidores:
 
 ```bash
 task demo
@@ -46,6 +69,29 @@ cambian esos identificadores, se crearán de nuevo los registros ausentes.
 
 Si el puerto HTTP 8000 está ocupado, usa
 `uv run uvicorn main:app --reload --port 8001` y abre `/docs` en ese puerto.
+
+## Docker Compose
+
+`docker-compose.yml` define tres servicios: `mysql` (`gym-mysql`), `api`
+(`gym-api`) y `frontend` (`gym-frontend`). Los puertos se publican solo en
+`127.0.0.1`: MySQL en `${MYSQL_PORT:-3306}`, la API en `8000` y el frontend en
+`4200`.
+
+Dentro de la red de Compose la API usa `MYSQL_HOST=mysql` y el puerto interno
+`3306`, aunque el host publique otro. `SECRET_KEY` y el resto de variables
+llegan de `.env` (prepara uno con `task env`); el fichero no se copia a la
+imagen. El frontend es la build de Angular servida por nginx, que reenvía
+`/v1` a `api:8000`.
+
+`task db:down` detiene todos los servicios de Compose.
+
+## Cuenta demo
+
+La migración `ca6c9ed6b7e8` crea, si no existe, la cuenta
+`demo@gymflow.com` con contraseña `Demo56789012`. Es rol `cliente`, está activa
+y queda vinculada a un Cliente `Activo` con un pago, para poder iniciar sesión
+y reservar. En la base solo se guarda el hash Argon2id. El admin del seed es
+otra cuenta y sigue usando `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
 
 ## Configuración del equipo
 
@@ -76,11 +122,12 @@ no uses migraciones de otros repositorios.
 
 ## Despliegue en Render
 
-La API se despliega en [Render](https://render.com) con el Blueprint
-[`render.yaml`](render.yaml) y el [`Dockerfile`](Dockerfile). Cada push a
-`main` reconstruye y redespliega el servicio automáticamente; no hace falta
+La API y el frontend se despliegan en [Render](https://render.com) con el Blueprint
+[`render.yaml`](render.yaml), [`Dockerfile`](Dockerfile) y
+[`frontend/Dockerfile`](frontend/Dockerfile). Cada push a
+`main` reconstruye y redespliega ambos servicios automáticamente; no hace falta
 ninguna Action de GitHub ni secretos en el repositorio. `docker-compose.yml`
-sigue siendo solo el MySQL de desarrollo local: Render no lo usa.
+levanta MySQL, API y frontend en local: Render no lo ejecuta.
 
 Ninguno de los servicios es de pago. El plan gratuito de Render no admite
 MySQL con disco, así que la base de datos es un MySQL gestionado externo
@@ -94,19 +141,43 @@ obligatorio). Pasos:
 3. Rellena los valores marcados como `sync: false` (`MYSQL_*` de Aiven,
    `MYSQL_SSL_CA` con el contenido completo del `ca.pem` que descargas en la
    consola de Aiven, `SECRET_KEY`, `ADMIN_PASSWORD` y `ALLOWED_ORIGINS` cuando
-   exista frontend).
+    se necesite acceso directo desde otro origen).
    `MYSQL_SSL=true` ya viene fijado en el Blueprint.
 4. Tras el primer deploy, comprueba `GET /health` y `GET /health/db`. Las
    migraciones y el seed (datos demo y cuenta de admin) se aplican solos en
    cada arranque del contenedor (`scripts/docker-entrypoint.sh`), igual que
    `task demo`; no hay que ejecutar nada desde tu máquina.
 
-El servicio usa el plan gratuito: se apaga a los 15 minutos sin tráfico y
-tarda ~1 minuto en arrancar de nuevo; la tarjeta de Render, si la hay, no se
-factura. Aiven también puede apagar su plan gratuito por inactividad: si el
-deploy falla conectando con MySQL, enciende el servicio en la consola de Aiven
-y vuelve a desplegar. Para añadir el frontend, crea su repositorio con un
-`render.yaml` de sitio estático y pon su URL en `ALLOWED_ORIGINS`.
+### Añadir el frontend a una API ya desplegada
+
+Tras mergear la PR en `main`, sincroniza el Blueprint existente desde esa rama
+para añadir `g1-gymflow-frontend`. Revisa que reutiliza `g1-gymflow-api` y conserva
+sus valores `MYSQL_*`, CA, `SECRET_KEY` y `ADMIN_PASSWORD`. Un push redespliega
+servicios existentes, pero por sí solo no crea un servicio nuevo si no hay un
+Blueprint sincronizado. No crees una segunda API.
+
+Si la API fue creada manualmente, puedes añadir solo el frontend desde
+**New → Web Service**, mismo repositorio, rama `main`, runtime Docker,
+Dockerfile `./frontend/Dockerfile`, contexto `./frontend`, plan **Free**.
+Configura `PORT=10000`, healthcheck `/health` y
+`API_UPSTREAM=https://g1-gymflow-api.onrender.com` (sin ruta ni barra final).
+Activa auto-deploy por commit. No copies secretos de la API al frontend.
+
+El navegador usa el dominio del frontend; Nginx sirve Angular y reenvía `/v1/`
+a la API por HTTPS con verificación de certificado y SNI. No requiere CORS para
+ese recorrido. En Compose usa `http://api:8000` por defecto y la API tiene
+`PORT=8000`. La red privada no admite conexiones entrantes a servicios Free.
+
+Comprueba la raíz y una ruta Angular profunda, `/health` del frontend y el login
+demo desde su interfaz. `/v1/users/me` con el token comprueba el proxy autenticado.
+Verifica también `/health/db` directamente en la API. No basta un 200 HTML para
+dar por válida una respuesta JSON.
+
+Ambos servicios Free se duermen tras 15 minutos sin tráfico y comparten las
+750 horas gratuitas mensuales. Nginx espera hasta 180 s por la API. Free no
+garantiza una factura nula al superar cuotas facturables de tráfico/builds;
+revisa consumo y límites en Billing. Aiven también puede apagarse por inactividad:
+enciéndelo desde su consola si es necesario.
 
 ## Swagger
 
@@ -273,10 +344,14 @@ cada cambio y su entrada en [la bitácora de IA](docs/ai-log.md) acompañan a la
 | `task test` | Ejecuta la suite de tests (`pytest`) |
 | `task lint` | Comprueba PEP 8 (`ruff check`) |
 | `task fmt` | Formatea el código (`ruff format`) |
+| `task up` | Inicializa (sin tests) y arranca MySQL, API y frontend en el host |
+| `task docker:up` | Igual que `up`, con API, frontend y seed en Docker |
+| `task compose` | Levanta MySQL, API y frontend en Docker, sin seed |
 | `task dev` | Servidor con recarga (`uvicorn --reload`) |
 | `task start` | Servidor sin recarga |
-| `task db:up` | Levanta MySQL (`docker compose up -d --wait`) |
-| `task db:down` | Detiene MySQL |
+| `task frontend` | Angular en `http://127.0.0.1:4200` |
+| `task db:up` | Levanta solo MySQL (`docker compose up -d --wait mysql`) |
+| `task db:down` | Detiene los servicios de Compose |
 | `task migrate` | Aplica migraciones (`alembic upgrade head`) |
 | `task seed` | Añade datos del gimnasio y Cuentas iniciales sin sobrescribir existentes |
 

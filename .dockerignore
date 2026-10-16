@@ -24,3 +24,8 @@ tests
 
 # Artefactos locales de Docker/Compose (el despliegue usa render.yaml).
 docker-compose.yml
+frontend
+node_modules
+.opencode
+htmlcov
+dist

@@ -7,6 +7,7 @@ rechazó y por qué). Cada funcionalidad principal deja aquí su entrada.
 
 ## Registros detallados
 
+- [2026-10-16 — #29: API y frontend Docker en Render](ai-log/2026-10-16-fullstack-render.md).
 - [2026-10-14 — #79: uso de las skills de verificación y revisión](ai-log/2026-10-14-skills.md).
 
 ## Formato de entrada
@@ -114,3 +115,6 @@ La preparación de este proceso queda registrada en
 - [2026-10-14 — Swagger de Cuentas #60](ai-log/2026-10-14-swagger-cuentas-60.md)
 
 - [2026-10-15 — Bootstrap de .env #107](ai-log/2026-10-15-bootstrap-env-107.md)
+
+- [2026-10-16 — Contenedorización API+frontend y cuenta demo #28](ai-log/2026-10-16-docker-compose-demo-28.md)
+- [2026-10-15 — Integración frontend con la API](ai-log/2026-10-15-frontend-api.md)

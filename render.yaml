@@ -1,9 +1,9 @@
 # Blueprint de Render para la GymFlow API (plan gratuito, sin servicios de pago).
 # Cada push a la rama del Blueprint reconstruye y redespliega el servicio
 # automáticamente (autoDeployTrigger: commit). docker-compose.yml NO se usa
-# en Render: es solo para el MySQL de desarrollo local.
+# en Render: levanta los tres servicios en desarrollo local.
 #
-# Solo se despliega la API: el plan gratuito de Render no admite servicios con
+# API y frontend Docker; el plan gratuito de Render no admite servicios con
 # disco, así que la base de datos MySQL vive fuera, en un MySQL gestionado
 # gratuito (p. ej. el plan gratuito de Aiven, https://aiven.io), y sus datos
 # se rellenan aquí en el Dashboard de Render. Nunca escribas credenciales en
@@ -15,6 +15,7 @@ services:
     runtime: docker
     plan: free
     region: frankfurt
+    branch: main
     autoDeployTrigger: commit
     dockerfilePath: ./Dockerfile
     dockerContext: .
@@ -23,7 +24,7 @@ services:
       # Conexión MySQL externa (Aiven u otro). Rellena en el Dashboard.
       - key: MYSQL_HOST
         sync: false
-      # Aiven asigna un puerto distinto de 3306: el verás en su consola.
+      # Copia el puerto que muestra la consola de Aiven.
       - key: MYSQL_PORT
         sync: false
       - key: MYSQL_DATABASE
@@ -47,8 +48,25 @@ services:
         sync: false
       - key: ADMIN_PASSWORD
         sync: false
-      # Frontend: URL del despliegue estático, separadas por comas si hay varias.
+      # Opcional para acceso directo desde otros orígenes; Nginx usa /v1/.
       - key: ALLOWED_ORIGINS
         sync: false
       - key: LOG_LEVEL
         value: INFO
+
+  - type: web
+    name: g1-gymflow-frontend
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: main
+    autoDeployTrigger: commit
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: "10000"
+      # Origen sin ruta ni barra final. Free no recibe tráfico privado.
+      - key: API_UPSTREAM
+        value: https://g1-gymflow-api.onrender.com

@@ -69,7 +69,8 @@ src/
 - Carpetas raíz: `core/` (utilidades transversales, p. ej. logging),
   `config/` (settings), `logs/` (salida de logs), `tests/` (suite de
   tests), `migrations/` (Alembic), `docs/` (documentación, incluida
-  la del cliente en `docs/client/`).
+  la del cliente en `docs/client/`), `frontend/` (aplicación Angular 22,
+  ver abajo).
 
 ## Endpoints
 
@@ -228,6 +229,9 @@ src/
   Los hashes no aparecen en repr de Cuenta ni en respuestas HTTP.
 - El seed crea admin y cuentas inactivas para clientes con email válido; no inventa
   emails ni comparte contraseñas. Omite conflictos sin vincular identidades ajenas.
+- La migración `ca6c9ed6b7e8` inserta la cuenta demo `demo@gymflow.com` (rol
+  cliente, activa), vinculada a un Cliente Activo con un pago. En la base solo
+  va el hash Argon2id. La contraseña conocida está documentada en el README.
 - El rol mínimo permite el admin del seed; la política completa de roles sigue
   en #64/#65. `SECRET_KEY` es SecretStr obligatoria (mínimo 32 caracteres) desde JWT (#55).
 
@@ -285,8 +289,25 @@ src/
 - **uv** gestiona dependencias y entorno virtual (`pyproject.toml` + `uv.lock`).
   No se usa pip ni requirements.txt.
 - **Taskfile** expone las tareas: `demo`, `install`, `test`, `lint`, `fmt`,
+  `dev`, `start`, `up`, `docker:up`, `frontend`, `compose`, `db:up`, `db:down`,
+  `migrate`, `seed`. `task demo` monta el proyecto desde cero (dependencias,
+  `.env`, MySQL, migraciones, demo y tests) sin arrancar servidores. `task up`
+  hace esa inicialización (sin tests), instala el frontend si falta
+  `node_modules` y arranca MySQL, API y Angular en el host. `task docker:up`
+  prepara `.env` y levanta el mismo arranque en Docker: imagen, migraciones al
+  iniciar la API y seed con `docker compose exec`. `task db:up` levanta solo
+  MySQL. `task compose` construye y levanta MySQL, API y frontend, sin seed.
+- **Docker Compose** publica MySQL, la API (`gym-api`, `127.0.0.1:8000`) y el
+  frontend nginx (`gym-frontend`, `127.0.0.1:4200`). La API del contenedor usa
+  `MYSQL_HOST=mysql` y el puerto interno 3306. `SECRET_KEY` llega por `.env`,
+  que no se copia a la imagen. nginx reenvía `/v1` a `api:8000`.
   `dev`, `start`, `db:up`, `db:down`, `migrate`, `seed`. `task demo` monta el
   proyecto desde cero (dependencias, `.env`, MySQL, migraciones, demo y tests).
+- **npm en `frontend/`**: la aplicación Angular tiene su propio `package.json` y
+  `package-lock.json`. Se instala y ejecuta desde `frontend/` con npm (no pnpm ni
+  yarn, para no mezclar gestores). Comandos: `npm ci`, `npm start` (proxy de `/v1`
+  hacia `127.0.0.1:8000`), `npm test` y `npm run build`. Angular CLI 22 genera el
+  proyecto; no se versionan `node_modules/`, `frontend/.angular/` ni `frontend/dist/`.
 
 ## Despliegue (Render)
 
@@ -297,7 +318,7 @@ src/
 - **Sin servicios de pago**: aunque la cuenta tenga tarjeta, solo se usan
   planes gratuitos (API en Render + MySQL gratuito externo); MySQL en Render
   exigiría un plan de pago, por eso vive fuera.
-- `docker-compose.yml` es solo el MySQL de desarrollo local; Render no lo lee.
+- `docker-compose.yml` levanta MySQL, API y frontend local; Render no lo lee.
 - El MySQL de producción es externo (plan gratuito de Aiven, con TLS
   obligatorio): `MYSQL_SSL=true` activa un `SSLContext` en
   `Settings.sqlalchemy_connect_args()`, usado por el engine de la aplicación y
@@ -310,8 +331,18 @@ src/
   `ALLOWED_ORIGINS`) se rellenan en el Dashboard de Render como `sync: false`;
   nunca en `render.yaml`. La imagen de producción excluye `.env`, tests y docs
   (`.dockerignore`).
-- El frontend (cuando exista) se despliega como sitio estático gratuito en su
-  propio repositorio con su `render.yaml`; su URL se añade a `ALLOWED_ORIGINS`.
+- API y frontend Angular/Nginx viven en este repo y el mismo `render.yaml`,
+  como Web Services Docker `free`, `branch: main`, auto-deploy por commit.
+  Se conserva `g1-gymflow-api` y se añade `g1-gymflow-frontend` al sincronizar
+  el Blueprint; un servicio manual requiere alta inicial del frontend.
+- Nginx usa `API_UPSTREAM` (origen sin ruta/barra final): HTTP `api:8000`
+  en Compose y HTTPS público en Render, con Host/SNI y validación TLS.
+  Free no recibe tráfico privado. `/v1/` conserva URI y Authorization;
+  el navegador usa el mismo origen y no necesita CORS para ese recorrido.
+  El frontend solo recibe PORT/API_UPSTREAM, nunca secretos de la API.
+- Compose fija PORT=8000 y MYSQL_SSL=false; Render usa su PORT=10000.
+  Las dos instancias comparten 750 horas; los excesos de cuotas de tráfico/build
+  pueden facturarse aunque las instancias sean gratuitas.
 
 ## Especificación antes del código (OpenSpec, #62)
 
