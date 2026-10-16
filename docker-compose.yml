@@ -34,6 +34,8 @@ services:
     environment:
       MYSQL_HOST: mysql
       MYSQL_PORT: "3306"
+      MYSQL_SSL: "false"
+      PORT: "8000"
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:

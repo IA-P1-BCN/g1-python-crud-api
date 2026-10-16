@@ -19,12 +19,10 @@ export const invitadoGuard: CanActivateFn = () => {
   if (!session.autenticado()) {
     return true;
   }
-  return router.createUrlTree([session.idCliente() !== null ? '/portal' : '/']);
+  return router.createUrlTree(['/']);
 };
 
-/** Home pública: quien tiene ficha de socio va directo a su portal. */
+/** La raíz ya contiene el portal y no necesita una redirección. */
 export const homeGuard: CanActivateFn = () => {
-  const session = inject(SessionService);
-  const router = inject(Router);
-  return session.idCliente() !== null ? router.createUrlTree(['/portal']) : true;
+  return true;
 };
