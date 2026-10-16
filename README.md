@@ -92,7 +92,9 @@ obligatorio). Pasos:
 2. En el Dashboard de Render: **New → Blueprint**, selecciona este repositorio
    y aplica `render.yaml`.
 3. Rellena los valores marcados como `sync: false` (`MYSQL_*` de Aiven,
-   `SECRET_KEY`, `ADMIN_PASSWORD` y `ALLOWED_ORIGINS` cuando exista frontend).
+   `MYSQL_SSL_CA` con el contenido completo del `ca.pem` que descargas en la
+   consola de Aiven, `SECRET_KEY`, `ADMIN_PASSWORD` y `ALLOWED_ORIGINS` cuando
+   exista frontend).
    `MYSQL_SSL=true` ya viene fijado en el Blueprint.
 4. Tras el primer deploy, comprueba `GET /health` y `GET /health/db`. Las
    migraciones y el seed (datos demo y cuenta de admin) se aplican solos en

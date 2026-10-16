@@ -36,6 +36,11 @@ services:
       # config/settings.py. Si el MySQL no lo exige, cambia a "false".
       - key: MYSQL_SSL
         value: "true"
+      # Certificado CA de Aiven (ca.pem de la consola): pega su contenido
+      # completo en el Dashboard. Sin él la conexión falla con
+      # "self-signed certificate in certificate chain".
+      - key: MYSQL_SSL_CA
+        sync: false
       # JWT (obligatoria, mínimo 32 caracteres) y seed. Genera la clave con:
       #   uv run python -c "import secrets; print(secrets.token_hex(32))"
       - key: SECRET_KEY

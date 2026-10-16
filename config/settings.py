@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     mysql_database: str = "gym_db"
     # TLS obligatorio en MySQL gestionados que lo exigen (p. ej. Aiven).
     mysql_ssl: bool = False
+    # CA del servidor MySQL (Aiven firma con una CA propia, no pública): puede
+    # ser el contenido PEM del `ca.pem` o la ruta a ese fichero. Vacío = CA del
+    # sistema.
+    mysql_ssl_ca: str = ""
 
     # Orígenes CORS permitidos para el frontend, separados por comas.
     allowed_origins: str = ""
@@ -57,8 +61,14 @@ class Settings(BaseSettings):
         """Argumentos extra para `create_engine` (TLS de MySQL si activo)."""
         if not self.mysql_ssl:
             return {}
-        contexto = ssl.create_default_context()
-        return {"ssl": contexto}
+        ca = self.mysql_ssl_ca.strip()
+        if not ca:
+            return {"ssl": ssl.create_default_context()}
+        if "BEGIN CERTIFICATE" in ca:
+            # PEM pegado en una variable de entorno (Render): algunos paneles
+            # convierten los saltos de línea en "\\n" literales.
+            return {"ssl": ssl.create_default_context(cadata=ca.replace("\\n", "\n"))}
+        return {"ssl": ssl.create_default_context(cafile=ca)}
 
 
 @lru_cache
