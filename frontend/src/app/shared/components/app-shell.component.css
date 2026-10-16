@@ -1,0 +1,20 @@
+.enlaces a { color: var(--color-texto); text-decoration: none; padding: 0.25rem 0; }
+.activo { color: var(--color-primario) !important; font-weight: 600; border-bottom: 2px solid var(--color-primario); }
+.barra-inferior a { color: var(--color-texto); text-decoration: none; padding: 0.25rem 0; }
+.contenido { max-width: 72rem; margin: 0 auto; padding: 1.5rem 1rem 5rem; }
+.barra-inferior { display: none; }
+
+@media (max-width: 640px) {
+  .cabecera .enlaces { display: none; }
+  .contenido { padding-bottom: 5.5rem; }
+  .barra-inferior {
+    position: fixed;
+    inset: auto 0 0 0;
+    display: flex;
+    justify-content: space-around;
+    background: var(--color-superficie);
+    box-shadow: 0 -1px 3px rgb(15 23 42 / 0.08);
+    padding: 0.75rem 0;
+  }
+  .barra-inferior a { display: flex; flex-direction: column; align-items: center; font-size: var(--texto-apoyo); }
+}

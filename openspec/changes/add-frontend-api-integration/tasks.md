@@ -1,0 +1,11 @@
+## Trabajo
+- [x] Recuperar el stash de Spartan y dejar tsc, tests y build en verde.
+- [x] Capa HTTP: errores, paginación, token e interceptor Bearer.
+- [x] Implementaciones HTTP de AuthService, ClaseService y ReservaService.
+- [x] Clientes CRUD para clientes, entrenadores, clases, reservas, pagos, cuentas y export.
+- [x] Providers en app.config.ts; mocks solo en tests.
+- [x] Tests con HttpTestingController (login, registro, interceptor, errores, reservas).
+- [x] Smoke contra la API real: login, /users/me, reservas, duplicado 409, token inválido 401.
+- [x] Usuario demo creado por registro, con ficha activa y pago.
+- [ ] Pruebas manuales en navegador del flujo completo de la interfaz.
+- [ ] Revisión humana y entrada en la bitácora enlazada desde la PR.
