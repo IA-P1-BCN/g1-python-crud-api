@@ -1,27 +1,24 @@
 import { Routes } from '@angular/router';
-import { homeGuard, invitadoGuard, portalGuard } from './core/auth/auth.guards';
-import { HomePage } from './features/home/pages/home.page';
 import { LoginComponent } from './features/login/login.component';
 import { AppShellComponent } from './shared/components/app-shell.component';
 
-/**
- * "/" es la home pública. El portal del socio vive bajo "/portal" y exige sesión
- * con ficha de socio. Login y registro solo se muestran sin sesión.
- */
+/** El portal vive en la raíz; los enlaces antiguos conservan redirección. */
 export const routes: Routes = [
-  { path: '', component: HomePage }, 
-  // canActivate: [homeGuard]
-  { path: 'login', component: LoginComponent}, 
-  //canActivate: [invitadoGuard] 
+  { path: 'login', component: LoginComponent },
   {
     path: 'registro',
-    //canActivate: [invitadoGuard],
     loadChildren: () => import('./features/registro/registro.routes').then((m) => m.REGISTRO_ROUTES),
   },
   {
     path: 'portal',
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: '/' },
+      { path: '**', redirectTo: ({ url }) => '/' + url.map((segment) => segment.toString()).join('/') },
+    ],
+  },
+  {
+    path: '',
     component: AppShellComponent,
-  //  canActivate: [portalGuard],
     children: [
       {
         path: '',

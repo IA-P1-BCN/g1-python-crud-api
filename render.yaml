@@ -1,4 +1,4 @@
-# Blueprint de Render para la GymFlow API (plan gratuito, sin servicios de pago).
+# Blueprint de Render: API + Angular en un único contenedor Free.
 # Cada push a la rama del Blueprint reconstruye y redespliega el servicio
 # automáticamente (autoDeployTrigger: commit). docker-compose.yml NO se usa
 # en Render: levanta los tres servicios en desarrollo local.
@@ -53,20 +53,3 @@ services:
         sync: false
       - key: LOG_LEVEL
         value: INFO
-
-  - type: web
-    name: g1-gymflow-frontend
-    runtime: docker
-    plan: free
-    region: frankfurt
-    branch: main
-    autoDeployTrigger: commit
-    dockerfilePath: ./frontend/Dockerfile
-    dockerContext: ./frontend
-    healthCheckPath: /health
-    envVars:
-      - key: PORT
-        value: "10000"
-      # Origen sin ruta ni barra final. Free no recibe tráfico privado.
-      - key: API_UPSTREAM
-        value: https://g1-gymflow-api.onrender.com

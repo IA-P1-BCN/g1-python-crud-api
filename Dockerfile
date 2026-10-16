@@ -2,6 +2,13 @@
 # de `main` (ver render.yaml). Multi-stage con uv: el builder instala las
 # dependencias del uv.lock y la imagen final solo lleva el entorno virtual.
 
+FROM node:24-alpine AS frontend-builder
+WORKDIR /frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
 FROM ghcr.io/astral-sh/uv:python3.14-bookworm-slim AS builder
 
 ENV UV_COMPILE_BYTECODE=1 \
@@ -28,6 +35,7 @@ WORKDIR /app
 RUN useradd --create-home --uid 1000 appuser
 
 COPY --from=builder --chown=appuser:appuser /app /app
+COPY --from=frontend-builder --chown=appuser:appuser /frontend/dist/frontend/browser /app/static
 # WORKDIR crea /app como root: el proceso sin privilegios necesita escribir
 # dentro (p. ej. el directorio de logs que crea la aplicación).
 RUN chown -R appuser:appuser /app

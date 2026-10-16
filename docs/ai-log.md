@@ -7,6 +7,7 @@ rechazó y por qué). Cada funcionalidad principal deja aquí su entrada.
 
 ## Registros detallados
 
+- [2026-10-16 — #29: portal en la raíz de la API](ai-log/2026-10-16-portal-raiz.md).
 - [2026-10-16 — #29: API y frontend Docker en Render](ai-log/2026-10-16-fullstack-render.md).
 - [2026-10-14 — #79: uso de las skills de verificación y revisión](ai-log/2026-10-14-skills.md).
 

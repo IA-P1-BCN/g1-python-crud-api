@@ -331,17 +331,16 @@ src/
   `ALLOWED_ORIGINS`) se rellenan en el Dashboard de Render como `sync: false`;
   nunca en `render.yaml`. La imagen de producción excluye `.env`, tests y docs
   (`.dockerignore`).
-- API y frontend Angular/Nginx viven en este repo y el mismo `render.yaml`,
-  como Web Services Docker `free`, `branch: main`, auto-deploy por commit.
-  Se conserva `g1-gymflow-api` y se añade `g1-gymflow-frontend` al sincronizar
-  el Blueprint; un servicio manual requiere alta inicial del frontend.
-- Nginx usa `API_UPSTREAM` (origen sin ruta/barra final): HTTP `api:8000`
-  en Compose y HTTPS público en Render, con Host/SNI y validación TLS.
-  Free no recibe tráfico privado. `/v1/` conserva URI y Authorization;
-  el navegador usa el mismo origen y no necesita CORS para ese recorrido.
-  El frontend solo recibe PORT/API_UPSTREAM, nunca secretos de la API.
+- La imagen raíz construye Angular con Node y copia dist/browser a /app/static.
+  FastAPI sirve el portal en `/` y sus pantallas sin prefijo; `/portal/...`
+  redirige en Angular. El montaje estático se registra al final si existe build;
+  fallback solo en rutas SPA, nunca en /v1 ni archivos inexistentes.
+- Render conserva un único Web Service Docker `free`, `g1-gymflow-api`,
+  `branch: main`, auto-deploy por commit: frontend y API comparten origen.
+  No requiere crear un frontend separado. Compose mantiene Nginx en 4200;
+  la API Docker también sirve Angular en 8000. Desarrollo sin build usa npm start.
 - Compose fija PORT=8000 y MYSQL_SSL=false; Render usa su PORT=10000.
-  Las dos instancias comparten 750 horas; los excesos de cuotas de tráfico/build
+  Los servicios Free comparten 750 horas; los excesos de cuotas de tráfico/build
   pueden facturarse aunque las instancias sean gratuitas.
 
 ## Especificación antes del código (OpenSpec, #62)
