@@ -32,3 +32,11 @@ permitir solo admin o la propia Cuenta. Los permisos se comprueban antes de leer
 #### Scenario: Petición sin identidad
 - **WHEN** falta un JWT válido en PATCH /v1/users/me
 - **THEN** responde 401 con WWW-Authenticate Bearer
+
+### Requirement: Perfil en el frontend integrado
+La pantalla de perfil SHALL usar PATCH /v1/users/me y solicitar la contraseña
+actual cuando se introduce una nueva, sin recortar ninguna de las dos.
+
+#### Scenario: Cambio desde la interfaz
+- **WHEN** se guarda una nueva contraseña con la actual
+- **THEN** ambas llegan a /me y se vacían del formulario después del éxito

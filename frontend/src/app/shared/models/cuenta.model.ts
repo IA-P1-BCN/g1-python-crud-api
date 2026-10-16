@@ -15,3 +15,8 @@ export interface CuentaPut {
   readonly email: string;
   readonly password?: string;
 }
+
+/** Edición propia: una nueva password exige current_password. */
+export interface CuentaSelfPatch extends Partial<CuentaPut> {
+  readonly current_password?: string;
+}
