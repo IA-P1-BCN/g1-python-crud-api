@@ -24,6 +24,13 @@ En desarrollo, `npm start` reenvía `/v1` a `http://127.0.0.1:8000` mediante
 ## Arranque con datos
 
 ```bash
+task up                                    # desde la raíz: init + API + frontend
+task docker:up                             # lo mismo, con API, frontend y seed en Docker
+```
+
+O por separado:
+
+```bash
 task db:up && task migrate && task seed   # desde la raíz
 task dev                                   # API en 127.0.0.1:8000
 npm start                                  # en frontend/
@@ -31,16 +38,10 @@ npm start                                  # en frontend/
 
 ## Cuenta demo
 
-`task seed` crea clientes ficticios, pero no cuentas con contraseña conocida. Para
-probar el flujo completo, crea una cuenta demo por el registro público y actívala:
-
-1. Regístrate en `/registro` con crear ficha de socio. Correo sugerido:
-   `demo@example.com` (la API rechaza `.test`).
-2. Activa la ficha y añade un pago con la API (`PUT /v1/clientes/{id_cliente}` con
-   `estado_membresia: "Activo"` y `POST /v1/pagos`). Sin pago no se puede reservar.
-3. Inicia sesión y reserva una clase.
-
-Las credenciales no se versionan en el repositorio.
+Tras `task migrate` o al arrancar la API de Compose, existe la cuenta
+`demo@gymflow.com` / `Demo56789012`. Es rol cliente, está activa y tiene ficha
+de socio activa y un pago, así que puede iniciar sesión y reservar. En la base
+solo está el hash. El admin del seed es otra cuenta.
 
 ## Integración con la API
 
