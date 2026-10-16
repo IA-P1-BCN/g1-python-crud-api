@@ -17,9 +17,32 @@ Requisitos: [uv](https://docs.astral.sh/uv/), [Task](https://taskfile.dev), Dock
 
 ## Ejecutar
 
-Primero crea `.env` desde `.env.example` si no existe y configura `SECRET_KEY`,
-`ADMIN_EMAIL` y `ADMIN_PASSWORD` como se explica abajo. Después prepara
-dependencias, MySQL, tablas y datos ficticios y ejecuta los tests:
+En local, con recarga de la API y el servidor de desarrollo de Angular:
+
+```bash
+task up
+```
+
+`task up` prepara dependencias, `.env`, MySQL, migraciones y datos demo, e
+instala el frontend si falta `node_modules`. Después arranca la API
+(`http://127.0.0.1:8000/docs`) y Angular (`http://127.0.0.1:4200`). `Ctrl+C`
+detiene ambos. MySQL sigue en Docker.
+
+Para el mismo arranque, con API, frontend y datos demo dentro de Docker:
+
+```bash
+task docker:up
+```
+
+`task docker:up` prepara `.env`, construye las imágenes y levanta MySQL, la API
+y el frontend. La API aplica las migraciones al arrancar y después se ejecuta
+el seed dentro del contenedor. Queda en segundo plano: la API en
+`http://127.0.0.1:8000/docs` y el frontend en `http://127.0.0.1:4200`.
+`task db:down` detiene los contenedores. `task compose` levanta los servicios
+sin sembrar. `task db:up` sigue levantando solo MySQL, para no ocupar el puerto
+8000 durante el desarrollo ni los tests.
+
+Para solo preparar el entorno y ejecutar tests, sin servidores:
 
 ```bash
 task demo
@@ -46,6 +69,29 @@ cambian esos identificadores, se crearán de nuevo los registros ausentes.
 
 Si el puerto HTTP 8000 está ocupado, usa
 `uv run uvicorn main:app --reload --port 8001` y abre `/docs` en ese puerto.
+
+## Docker Compose
+
+`docker-compose.yml` define tres servicios: `mysql` (`gym-mysql`), `api`
+(`gym-api`) y `frontend` (`gym-frontend`). Los puertos se publican solo en
+`127.0.0.1`: MySQL en `${MYSQL_PORT:-3306}`, la API en `8000` y el frontend en
+`4200`.
+
+Dentro de la red de Compose la API usa `MYSQL_HOST=mysql` y el puerto interno
+`3306`, aunque el host publique otro. `SECRET_KEY` y el resto de variables
+llegan de `.env` (prepara uno con `task env`); el fichero no se copia a la
+imagen. El frontend es la build de Angular servida por nginx, que reenvía
+`/v1` a `api:8000`.
+
+`task db:down` detiene todos los servicios de Compose.
+
+## Cuenta demo
+
+La migración `ca6c9ed6b7e8` crea, si no existe, la cuenta
+`demo@gymflow.com` con contraseña `Demo56789012`. Es rol `cliente`, está activa
+y queda vinculada a un Cliente `Activo` con un pago, para poder iniciar sesión
+y reservar. En la base solo se guarda el hash Argon2id. El admin del seed es
+otra cuenta y sigue usando `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
 
 ## Configuración del equipo
 
@@ -239,10 +285,14 @@ cada cambio y su entrada en [la bitácora de IA](docs/ai-log.md) acompañan a la
 | `task test` | Ejecuta la suite de tests (`pytest`) |
 | `task lint` | Comprueba PEP 8 (`ruff check`) |
 | `task fmt` | Formatea el código (`ruff format`) |
+| `task up` | Inicializa (sin tests) y arranca MySQL, API y frontend en el host |
+| `task docker:up` | Igual que `up`, con API, frontend y seed en Docker |
+| `task compose` | Levanta MySQL, API y frontend en Docker, sin seed |
 | `task dev` | Servidor con recarga (`uvicorn --reload`) |
 | `task start` | Servidor sin recarga |
-| `task db:up` | Levanta MySQL (`docker compose up -d --wait`) |
-| `task db:down` | Detiene MySQL |
+| `task frontend` | Angular en `http://127.0.0.1:4200` |
+| `task db:up` | Levanta solo MySQL (`docker compose up -d --wait mysql`) |
+| `task db:down` | Detiene los servicios de Compose |
 | `task migrate` | Aplica migraciones (`alembic upgrade head`) |
 | `task seed` | Añade datos del gimnasio y Cuentas iniciales sin sobrescribir existentes |
 
