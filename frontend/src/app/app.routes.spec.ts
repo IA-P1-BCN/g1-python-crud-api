@@ -4,9 +4,10 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from './app.routes';
 import { AuthService, UsuarioAutenticado } from './core/auth/auth.service';
 import { SessionService } from './core/auth/session.service';
-import { USUARIO_ANA } from './core/auth/usuarios-prueba';
+import { USUARIO_ANA, USUARIO_STAFF } from './core/auth/usuarios-prueba';
 import { ClaseService } from './services/clase.service';
 import { ReservaService } from './services/reserva.service';
+import { ReservasApi } from './services/api/recursos.api';
 
 describe('rutas del portal rediseñado', () => {
   beforeEach(() => {
@@ -28,6 +29,7 @@ describe('rutas del portal rediseñado', () => {
           },
         },
         { provide: ReservaService, useValue: { listarDeCliente: async () => [], crear: async () => ({}) } },
+        { provide: ReservasApi, useValue: { listar: async () => [], reemplazar: async () => ({}), eliminar: async () => undefined } },
       ],
     });
   });
@@ -55,5 +57,13 @@ describe('rutas del portal rediseñado', () => {
     await harness.navigateByUrl('/clientes');
     expect(router.url).toContain('/auth/login');
     expect(router.url).toContain('returnUrl');
+  });
+
+  it('con sesión de staff, la raíz y el marketplace redirigen a su panel', async () => {
+    TestBed.inject(SessionService).iniciar(USUARIO_STAFF);
+    const harness = await RouterTestingHarness.create('/marketplace');
+    const router = TestBed.inject(Router);
+    expect(router.url).toBe('/staff');
+    expect(harness.routeNativeElement?.textContent).toContain('Mis clases');
   });
 });

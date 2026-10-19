@@ -18,6 +18,18 @@ export const authGuard: CanActivateFn = (_route, state) => {
   return true;
 };
 
+/**
+ * Marketplace (catálogo y mis reservas): cliente o admin. El staff opera
+ * solo como entrenador, así que se redirige a su panel aunque entre por URL.
+ */
+export const marketplaceGuard: CanActivateFn = (route, state) => {
+  const session = inject(SessionService);
+  if (session.usuario()?.rol === 'staff') {
+    return inject(Router).createUrlTree(['/staff']);
+  }
+  return authGuard(route, state);
+};
+
 /** Panel del staff: rol staff o admin. */
 export const staffGuard: CanActivateFn = (_route, state) => {
   const session = inject(SessionService);

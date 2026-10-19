@@ -76,3 +76,15 @@
   (compartido por home y resultados). Solo presentación; sin cambios de
   lógica ni backend. `npm test` 125 passed, `npm run build` ok,
   `task spec:validate` 24/24, frontend reconstruido en Docker y smoke.
+- **Ampliación 2026-10-19 (6)**: «el rol staff no debe tener Catálogo ni
+  Mis reservas; opera solo como entrenador» (petición de la usuaria, con
+  redirección por URL confirmada). En `menu.component.ts` la rama del menú
+  se separa: cliente ve Catálogo + Mis reservas + Mi perfil; staff ve solo
+  Mi perfil + bloque Staff. Nuevo `marketplaceGuard` en `auth.guards.ts`
+  (staff → `/staff`, resto → `authGuard`), aplicado a `/marketplace` en
+  `app.routes.ts`; el logo del shell (`app-shell.component.ts`) es
+  role-aware (staff → `/staff`). Sin cambios de backend (el alcance de
+  servidor ya limitaba los datos del staff). Specs: menú sin catálogo para
+  staff, 3 tests del guard, logo del shell y redirección de staff en rutas.
+  `npm test` 130 passed (+5), `npm run build` ok, `task spec:validate`
+  24/24, frontend reconstruido en Docker y smoke.

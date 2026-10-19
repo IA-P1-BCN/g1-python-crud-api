@@ -68,13 +68,14 @@ describe('MenuComponent', () => {
     expect(overlay()).not.toContain('Exportar CSV');
   });
 
-  it('el rol staff ve su panel y no las operaciones de administrador', async () => {
+  it('el rol staff ve su panel, no el marketplace ni las operaciones de administrador', async () => {
     TestBed.inject(SessionService).iniciar(USUARIO_STAFF);
     await abrir();
     expect(overlay()).toContain('Mi panel');
     expect(overlay()).toContain('Mis clases');
     expect(overlay()).toContain('Reservas de mis clases');
-    for (const enlace of ['Dashboard', 'Clientes', 'Entrenadores', 'Pagos', 'Cuentas', 'Exportar CSV']) {
+    expect(overlay()).toContain('Mi perfil');
+    for (const enlace of ['Catálogo', 'Mis reservas', 'Dashboard', 'Clientes', 'Entrenadores', 'Pagos', 'Cuentas', 'Exportar CSV']) {
       expect(overlay()).not.toContain(enlace);
     }
   });

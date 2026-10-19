@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { adminGuard, authGuard, invitadoGuard, staffGuard } from './core/auth/auth.guards';
+import { adminGuard, authGuard, invitadoGuard, marketplaceGuard, staffGuard } from './core/auth/auth.guards';
 import { AppShellComponent } from './shared/components/app-shell.component';
 
 /**
@@ -22,7 +22,7 @@ export const routes: Routes = [
       { path: '', pathMatch: 'full', redirectTo: 'marketplace' },
       {
         path: 'marketplace',
-        canActivate: [authGuard],
+        canActivate: [marketplaceGuard],
         loadChildren: () =>
           import('./features/marketplace/marketplace.routes').then((m) => m.MARKETPLACE_ROUTES),
       },

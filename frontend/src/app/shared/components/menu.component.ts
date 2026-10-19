@@ -50,7 +50,7 @@ import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
             <a hlmDropdownMenuItem routerLink="/admin/export" class="gap-2">
               <ng-icon name="lucideDownload" class="text-[length:--spacing(4)]" />Exportar CSV
             </a>
-          } @else {
+          } @else if (usuario.rol === 'cliente') {
             <a hlmDropdownMenuItem routerLink="/marketplace" class="gap-2">
               <ng-icon name="lucideSearch" class="text-[length:--spacing(4)]" />Catálogo
             </a>
@@ -60,18 +60,20 @@ import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
             <a hlmDropdownMenuItem routerLink="/perfil" class="gap-2">
               <ng-icon name="lucideUser" class="text-[length:--spacing(4)]" />Mi perfil
             </a>
-            @if (usuario.rol === 'staff') {
-              <div hlmDropdownMenuLabel>Staff</div>
-              <a hlmDropdownMenuItem routerLink="/staff" class="gap-2">
-                <ng-icon name="lucideLayoutDashboard" class="text-[length:--spacing(4)]" />Mi panel
-              </a>
-              <a hlmDropdownMenuItem routerLink="/staff/clases" class="gap-2">
-                <ng-icon name="lucideCalendar" class="text-[length:--spacing(4)]" />Mis clases
-              </a>
-              <a hlmDropdownMenuItem routerLink="/staff/reservas" class="gap-2">
-                <ng-icon name="lucideClipboardList" class="text-[length:--spacing(4)]" />Reservas de mis clases
-              </a>
-            }
+          } @else {
+            <a hlmDropdownMenuItem routerLink="/perfil" class="gap-2">
+              <ng-icon name="lucideUser" class="text-[length:--spacing(4)]" />Mi perfil
+            </a>
+            <div hlmDropdownMenuLabel>Staff</div>
+            <a hlmDropdownMenuItem routerLink="/staff" class="gap-2">
+              <ng-icon name="lucideLayoutDashboard" class="text-[length:--spacing(4)]" />Mi panel
+            </a>
+            <a hlmDropdownMenuItem routerLink="/staff/clases" class="gap-2">
+              <ng-icon name="lucideCalendar" class="text-[length:--spacing(4)]" />Mis clases
+            </a>
+            <a hlmDropdownMenuItem routerLink="/staff/reservas" class="gap-2">
+              <ng-icon name="lucideClipboardList" class="text-[length:--spacing(4)]" />Reservas de mis clases
+            </a>
           }
           <div hlmDropdownMenuSeparator></div>
           <button hlmDropdownMenuItem variant="destructive" type="button" (triggered)="cerrarSesion()" class="gap-2">

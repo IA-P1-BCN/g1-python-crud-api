@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
 import { SessionService } from '../../core/auth/session.service';
@@ -14,7 +14,7 @@ import { MenuComponent } from './menu.component';
   imports: [RouterOutlet, RouterLink, RouterLinkActive, MenuComponent, NgIcon],
   template: `
     <header class="cabecera flex items-center gap-6 bg-background px-6 py-2 shadow-sm">
-      <a class="logo text-xl font-bold text-primary no-underline" routerLink="/marketplace">GymFlow</a>
+      <a class="logo text-xl font-bold text-primary no-underline" [routerLink]="rutaInicio()">GymFlow</a>
       <nav class="enlaces flex flex-1 gap-4" aria-label="Principal">
         @switch (session.usuario()?.rol) {
           @case ('admin') {
@@ -95,4 +95,8 @@ import { MenuComponent } from './menu.component';
 })
 export class AppShellComponent {
   protected readonly session = inject(SessionService);
+  /** El staff opera solo como entrenador: el logo le lleva a su panel. */
+  protected readonly rutaInicio = computed(() =>
+    this.session.usuario()?.rol === 'staff' ? '/staff' : '/marketplace',
+  );
 }

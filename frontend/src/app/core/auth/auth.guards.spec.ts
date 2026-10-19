@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
 import { SessionService } from './session.service';
-import { adminGuard, authGuard, invitadoGuard, staffGuard } from './auth.guards';
+import { adminGuard, authGuard, invitadoGuard, marketplaceGuard, staffGuard } from './auth.guards';
 import { USUARIO_ADMIN, USUARIO_ANA, USUARIO_STAFF } from './usuarios-prueba';
 
 describe('guardas del portal', () => {
@@ -28,6 +28,27 @@ describe('guardas del portal', () => {
   it('auth: con sesión permite el marketplace', () => {
     sesion.iniciar(USUARIO_ANA);
     expect(TestBed.runInInjectionContext(() => authGuard(ruta, estado('/marketplace')))).toBe(true);
+  });
+
+  it('marketplace: el staff se redirige a /staff', () => {
+    sesion.iniciar(USUARIO_STAFF);
+    const resultado = TestBed.runInInjectionContext(() => marketplaceGuard(ruta, estado('/marketplace')));
+    expect(router.serializeUrl(resultado as UrlTree)).toBe('/staff');
+  });
+
+  it('marketplace: el cliente y el admin sí entran', () => {
+    sesion.iniciar(USUARIO_ANA);
+    expect(TestBed.runInInjectionContext(() => marketplaceGuard(ruta, estado('/marketplace')))).toBe(true);
+    sesion.cerrar();
+    sesion.iniciar(USUARIO_ADMIN);
+    expect(TestBed.runInInjectionContext(() => marketplaceGuard(ruta, estado('/marketplace')))).toBe(true);
+  });
+
+  it('marketplace: sin sesión va a login con returnUrl', () => {
+    const resultado = TestBed.runInInjectionContext(() => marketplaceGuard(ruta, estado('/marketplace')));
+    const url = router.serializeUrl(resultado as UrlTree);
+    expect(url).toContain('/auth/login');
+    expect(url).toContain('returnUrl');
   });
 
   it('staff: el cliente no entra y va al marketplace', () => {

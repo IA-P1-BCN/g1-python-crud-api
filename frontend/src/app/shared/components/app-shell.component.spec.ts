@@ -68,4 +68,15 @@ describe('AppShellComponent', () => {
     expect(barraMovil()).toContain('Clientes');
     expect(barraMovil()).not.toContain('Catálogo');
   });
+
+  it('el logo lleva al staff a su panel y al cliente al marketplace', () => {
+    const logo = () => (fixture.nativeElement as HTMLElement).querySelector('a.logo') as HTMLAnchorElement;
+    TestBed.inject(SessionService).iniciar(USUARIO_STAFF);
+    fixture.detectChanges();
+    expect(logo().getAttribute('href')).toContain('/staff');
+    TestBed.inject(SessionService).cerrar();
+    TestBed.inject(SessionService).iniciar(USUARIO_ANA);
+    fixture.detectChanges();
+    expect(logo().getAttribute('href')).toContain('/marketplace');
+  });
 });
