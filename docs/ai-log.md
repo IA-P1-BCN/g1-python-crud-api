@@ -125,3 +125,42 @@ La preparación de este proceso queda registrada en
 - [2026-10-16 — Contenedorización API+frontend y cuenta demo #28](ai-log/2026-10-16-docker-compose-demo-28.md)
 - [2026-10-15 — Integración frontend con la API](ai-log/2026-10-15-frontend-api.md)
 - [2026-10-16 — Seed de cuentas admin/staff #118](ai-log/2026-10-16-seed-cuentas-118.md)
+
+### 2026-10-19 — #127 — Presentación del 20 de octubre
+
+- **Issue/spec:** [#127](https://github.com/IA-P1-BCN/g1-python-crud-api/issues/127).
+  Material de presentación, sin cambios funcionales ni nueva spec OpenSpec.
+- **Herramienta/modelo:** Codex, GPT-6; python-pptx para el PowerPoint,
+  ReportLab para los PDF, PyMuPDF para las previsualizaciones y Playwright
+  para las capturas de la aplicación local.
+- **Qué se pidió y prompts clave:** presentación profesional en castellano,
+  «antes faça um pull» y «sobe para o git». Se repartieron los 20 minutos entre
+  Miguel (producto), Juan Carlos (Scrum), Fabiana (backend), Brian (frontend)
+  y David (DevOps), cuatro minutos por persona, con demo y código real.
+- **Qué salió bien:** 20 diapositivas principales y cuatro anexos ocultos en
+  PowerPoint, con notas para los cinco presentadores. Se incluyen copias PDF
+  de las diapositivas y del guion en
+  [`entregables/presentacion-20-octubre/`](../entregables/presentacion-20-octubre/).
+  Las fuentes del contenido apuntan al commit
+  `2beb0b405d5a8fed009a33ad476d74dd941b217b`, obtenido con `git pull --ff-only`.
+- **Errores y corrección:** la apertura automatizada con Keynote falló con
+  «La aplicación no está abierta» (-600). Se revisaron las previsualizaciones
+  PDF y la estructura del PPTX; no se afirma haber comprobado su renderizado
+  en PowerPoint o Keynote. Git interpretaba un PDF como texto; se declararon
+  PDF y PPTX como binarios en el `.gitattributes` de la carpeta de entrega.
+- **Decisiones:** usar texto y diagramas editables, capturas locales y enlaces
+  a código y documentación. Distinguir lo implementado del backlog. El anexo
+  de ensayo documenta que el 19 de octubre `/health/db` devolvió esquema 0.4
+  en local y 0.3 en Render; se recomienda preparar la demo local.
+- **Validación de los archivos:** ZIP íntegro y XML válido; 24 diapositivas,
+  24 notas y cuatro anexos ocultos; 1.200 segundos en total, 240 por persona.
+  Ambos PDF tienen 24 páginas. Previsualizaciones revisadas visualmente.
+- **Validación del repositorio:** `task lint` aprobado y `task spec:validate`:
+  23 elementos aprobados. `task test`: 375 aprobados, un fallo por
+  `httpx.ReadTimeout` en la petición duplicada del test de registro y cero
+  saltados, con MySQL disponible y migrado. La repetición aislada con
+  `uv run pytest tests/integration/test_auth_register_mysql.py::test_registro_y_perfil_atomicos -q`
+  pasó (un test en 2,10 s), sin modificar código ni timeouts. Frontend, durante
+  la preparación: `npm test -- --watch=false`, 117 aprobados en 26 suites.
+  `git diff --cached --check` aprobado tras declarar los archivos binarios.
+- **Pendiente:** ensayo del equipo y revisión humana de la PR antes del merge.
