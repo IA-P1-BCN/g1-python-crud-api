@@ -79,12 +79,15 @@ describe('MenuComponent', () => {
     }
   });
 
-  it('el rol admin conserva catálogo, panel y todas las operaciones', async () => {
+  it('el rol admin ve un menú exclusivo de administración', async () => {
     TestBed.inject(SessionService).iniciar(USUARIO_ADMIN);
     await abrir();
-    expect(overlay()).toContain('Mi panel');
+    expect(overlay()).toContain('Mi perfil');
     for (const enlace of ['Dashboard', 'Clientes', 'Entrenadores', 'Clases', 'Pagos', 'Cuentas', 'Exportar CSV']) {
       expect(overlay()).toContain(enlace);
+    }
+    for (const enlace of ['Catálogo', 'Mis reservas', 'Mi panel', 'Mis clases', 'Reservas de mis clases']) {
+      expect(overlay()).not.toContain(enlace);
     }
   });
 });

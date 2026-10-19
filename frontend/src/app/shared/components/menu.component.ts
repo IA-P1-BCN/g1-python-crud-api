@@ -23,16 +23,8 @@ import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
         @if (session.usuario(); as usuario) {
           <div hlmDropdownMenuLabel>{{ usuario.nombre }}</div>
           <div hlmDropdownMenuSeparator></div>
-          <a hlmDropdownMenuItem routerLink="/marketplace">Catálogo</a>
-          <a hlmDropdownMenuItem routerLink="/marketplace/mis-reservas">Mis reservas</a>
-          <a hlmDropdownMenuItem routerLink="/perfil">Mi perfil</a>
-          @if (usuario.rol === 'staff' || usuario.rol === 'admin') {
-            <div hlmDropdownMenuLabel>Staff</div>
-            <a hlmDropdownMenuItem routerLink="/staff">Mi panel</a>
-            <a hlmDropdownMenuItem routerLink="/staff/clases">Mis clases</a>
-            <a hlmDropdownMenuItem routerLink="/staff/reservas">Reservas de mis clases</a>
-          }
           @if (usuario.rol === 'admin') {
+            <a hlmDropdownMenuItem routerLink="/perfil">Mi perfil</a>
             <div hlmDropdownMenuLabel>Admin</div>
             <a hlmDropdownMenuItem routerLink="/admin">Dashboard</a>
             <a hlmDropdownMenuItem routerLink="/admin/clientes">Clientes</a>
@@ -41,6 +33,16 @@ import { HlmDropdownMenuImports } from '@spartan-ng/helm/dropdown-menu';
             <a hlmDropdownMenuItem routerLink="/admin/pagos">Pagos</a>
             <a hlmDropdownMenuItem routerLink="/admin/cuentas">Cuentas</a>
             <a hlmDropdownMenuItem routerLink="/admin/export">Exportar CSV</a>
+          } @else {
+            <a hlmDropdownMenuItem routerLink="/marketplace">Catálogo</a>
+            <a hlmDropdownMenuItem routerLink="/marketplace/mis-reservas">Mis reservas</a>
+            <a hlmDropdownMenuItem routerLink="/perfil">Mi perfil</a>
+            @if (usuario.rol === 'staff') {
+              <div hlmDropdownMenuLabel>Staff</div>
+              <a hlmDropdownMenuItem routerLink="/staff">Mi panel</a>
+              <a hlmDropdownMenuItem routerLink="/staff/clases">Mis clases</a>
+              <a hlmDropdownMenuItem routerLink="/staff/reservas">Reservas de mis clases</a>
+            }
           }
           <div hlmDropdownMenuSeparator></div>
           <button hlmDropdownMenuItem variant="destructive" type="button" (triggered)="cerrarSesion()">

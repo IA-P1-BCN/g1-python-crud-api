@@ -29,3 +29,9 @@
 - **No comprobado en navegador manual**: smoke visual de las páginas nuevas
   con la API real; se deja para la revisión humana previa al merge.
 - Issue enlazada desde la PR del cambio.
+- **Ampliación posterior (2026-10-19)**, petición de la usuaria en revisión:
+  el menú del admin pasa a ser exclusivo de administración (solo «Mi perfil»,
+  bloque Admin y «Cerrar sesión», sin catálogo, mis reservas ni bloque staff)
+  y el login de admin sin `returnUrl` aterriza en `/admin` (dashboard).
+  Specs del cambio y tests de menú/login actualizados; `npm test` 119 passed,
+  `task spec:validate` 24/24 y frontend reconstruido en Docker.

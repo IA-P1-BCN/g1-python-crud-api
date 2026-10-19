@@ -106,8 +106,11 @@ se limitan a 100 registros por página.
 
 ### Requirement: Menú por rol
 El menú de sesión SHALL mostrar para `cliente` el catálogo, «Mis reservas» y
-«Mi perfil»; para `staff` además «Mi panel»; para `admin` además «Admin» y
-«Exportar CSV». Sin sesión solo ofrece login y registro.
+«Mi perfil»; para `staff` además «Mi panel» y sus pantallas; para `admin`
+exclusivamente «Mi perfil» y el bloque «Admin» (dashboard, clientes,
+entrenadores, clases, pagos, cuentas y export). El menú del admin no incluye
+catálogo, mis reservas ni el bloque staff. Sin sesión solo ofrece login y
+registro.
 
 #### Scenario: Rol cliente
 - **WHEN** la sesión tiene rol `cliente`
@@ -115,4 +118,22 @@ El menú de sesión SHALL mostrar para `cliente` el catálogo, «Mis reservas» 
 
 #### Scenario: Rol admin
 - **WHEN** la sesión tiene rol `admin`
-- **THEN** aparecen catálogo, panel, admin, export y perfil
+- **THEN** el menú muestra «Mi perfil» y el bloque Admin y no muestra catálogo, mis reservas ni el bloque staff
+
+### Requirement: Destino tras el login
+Tras un login válido, la aplicación SHALL redirigir al admin a `/admin`
+(dashboard) cuando no hay `returnUrl`; cliente y staff irán a `/marketplace`.
+Una `returnUrl` válida (secciones marketplace, staff, admin o perfil) se
+respeta para cualquier rol.
+
+#### Scenario: Admin sin returnUrl
+- **WHEN** un usuario con rol `admin` inicia sesión sin returnUrl
+- **THEN** se navega a `/admin`
+
+#### Scenario: Cliente sin returnUrl
+- **WHEN** un usuario con rol `cliente` inicia sesión sin returnUrl
+- **THEN** se navega a `/marketplace`
+
+#### Scenario: returnUrl válida se respeta
+- **WHEN** el login incluye `returnUrl=/perfil`
+- **THEN** se navega a la returnUrl para cualquier rol
