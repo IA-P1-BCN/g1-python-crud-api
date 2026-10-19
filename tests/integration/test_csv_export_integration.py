@@ -1,6 +1,5 @@
 """Exportación CSV contra MySQL real (mismo aislamiento por test que el CRUD)."""
 
-from uuid import uuid4
 
 import httpx
 import pytest
@@ -60,18 +59,12 @@ def api(mysql_ready, base_url, gym_admin_headers):
                     )
 
 
-def test_export_clientes(api):
+def test_export_clientes_solo_perfil(api):
     client, create = api
-    for nombre in ["Ana García", "Àngels Pérez"]:
-        create(
-            "clientes",
-            {
-                "nombre": nombre,
-                "email": f"{uuid4().hex}@example.com",
-                "estado_membresia": "Activo",
-                "fecha_inscripcion": "2026-10-01",
-            },
-        )
+    create(
+        "clientes",
+        {"estado_membresia": "Activo", "fecha_inscripcion": "2026-10-01"},
+    )
     response = client.get("/v1/export/csv", params={"tablas": "clientes"})
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/csv")
@@ -80,7 +73,18 @@ def test_export_clientes(api):
     )
     assert response.content.startswith(b"\xef\xbb\xbf")
     lineas = response.content.decode("utf-8-sig").split("\r\n")
-    assert lineas[0] == "id_cliente,nombre,estado_membresia,email,fecha_inscripcion"
+    assert lineas[0] == "id_cliente,estado_membresia,fecha_inscripcion"
+    assert any("Activo,2026-10-01" in linea for linea in lineas)
+
+
+def test_export_entrenadores_con_tildes(api):
+    client, create = api
+    for nombre in ["Ana García", "Àngels Pérez"]:
+        create("entrenadores", {"nombre": nombre, "especialidad": "Yoga"})
+    response = client.get("/v1/export/csv", params={"tablas": "entrenadores"})
+    assert response.status_code == 200
+    lineas = response.content.decode("utf-8-sig").split("\r\n")
+    assert lineas[0] == "id_entrenador,nombre,especialidad,telefono"
     assert [linea for linea in lineas if "Àngels Pérez" in linea]
 
 
@@ -89,8 +93,6 @@ def test_export_reservas(api):
     cliente = create(
         "clientes",
         {
-            "nombre": "Cliente de prueba",
-            "email": f"{uuid4().hex}@example.com",
             "estado_membresia": "Activo",
         },
     )

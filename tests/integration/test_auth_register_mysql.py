@@ -28,20 +28,23 @@ def test_registro_y_perfil_atomicos(accounts_api):
         assert Argon2PasswordHasher().verify(password, cuenta.password_hash)
         assert not Argon2PasswordHasher().verify(password.strip(), cuenta.password_hash)
         cliente = session.get(ClienteRecord, cuenta.id_cliente)
-        assert cliente.email == email and cliente.estado_membresia == "Inactivo"
+        assert cliente.estado_membresia == "Inactivo"
+        assert cuenta.email == email
     assert client.post("/v1/auth/register", json=payload).status_code == 409
 
 
-def test_no_se_apropia_de_cliente_existente(accounts_api, gym_admin_headers):
+def test_registro_nunca_vincula_cliente_existente(accounts_api, gym_admin_headers):
+    """Con la identidad en users (ADR 0002), el registro crea su propio Cliente."""
     client, emails = accounts_api
     email = f"{uuid4().hex}@example.com"
     emails.append(email)
     response = client.post(
         "/v1/clientes",
         headers=gym_admin_headers,
-        json={"nombre": "Existente", "email": email, "estado_membresia": "Activo"},
+        json={"estado_membresia": "Activo"},
     )
     assert response.status_code == 201
+    previo = response.json()["id_cliente"]
     response = client.post(
         "/v1/auth/register",
         json={
@@ -51,15 +54,12 @@ def test_no_se_apropia_de_cliente_existente(accounts_api, gym_admin_headers):
             "crear_cliente": True,
         },
     )
-    assert response.status_code == 409
+    assert response.status_code == 201, response.text
     with SessionLocal() as session:
-        assert (
-            session.scalar(select(CuentaRecord).where(CuentaRecord.email == email))
-            is None
+        cuenta = session.scalar(
+            select(CuentaRecord).where(CuentaRecord.email == email)
         )
-        assert (
-            session.scalar(
-                select(ClienteRecord).where(ClienteRecord.email == email)
-            ).nombre
-            == "Existente"
-        )
+        assert cuenta is not None and cuenta.id_cliente is not None
+        assert cuenta.id_cliente != previo
+        previo_record = session.get(ClienteRecord, previo)
+        assert previo_record is not None and previo_record.estado_membresia == "Activo"

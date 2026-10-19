@@ -26,6 +26,9 @@ function reservasDeOtros(idClase: number, cantidad: number, inicio: number): Res
     id_clase: idClase,
     asistio: false,
     fecha_reserva: '2026-10-01T10:00:00',
+    id_user: null,
+    nombre: null,
+    email: null,
   }));
 }
 
@@ -36,8 +39,8 @@ export function reservasIniciales(): Reserva[] {
     ...reservasDeOtros(3, 10, 401),
     ...reservasDeOtros(5, 5, 501),
     // Ana: próxima en Yoga y pasada en Pilates del 10/10.
-    { id_reserva: 0, id_cliente: ID_ANA, id_clase: 1, asistio: false, fecha_reserva: '2026-10-01T10:00:00' },
-    { id_reserva: 0, id_cliente: ID_ANA, id_clase: 5, asistio: true, fecha_reserva: '2026-10-01T10:00:00' },
+    { id_reserva: 0, id_cliente: ID_ANA, id_clase: 1, asistio: false, fecha_reserva: '2026-10-01T10:00:00', id_user: null, nombre: null, email: null },
+    { id_reserva: 0, id_cliente: ID_ANA, id_clase: 5, asistio: true, fecha_reserva: '2026-10-01T10:00:00', id_user: null, nombre: null, email: null },
   ];
   return todas.map((r, i) => ({ ...r, id_reserva: i + 1 }));
 }

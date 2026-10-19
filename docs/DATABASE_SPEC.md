@@ -20,13 +20,17 @@
 
 ## Diccionario de datos
 
-### CLIENTES (entidad fuerte)
+### CLIENTES (perfil del socio)
+
+> **Esquema 0.5 (ADR 0002, migración `2bf39c12ed06`):** `nombre` y
+> `email` dejaron de almacenarse aquí; la identidad vive solo en
+> `users` y las respuestas de la API la resuelven desde la Cuenta
+> vinculada. La migración trasladó los valores existentes a `users`
+> (creando cuentas inactivas e inaccesibles donde no había).
 
 | Campo | Tipo / Restricción | Rol | Descripción |
 |---|---|---|---|
 | `id_cliente` | `INT AUTO_INCREMENT` | PK | Identificador único de cada miembro. |
-| `nombre` | `VARCHAR(100) NOT NULL` | — | Nombre completo del cliente. |
-| `email` | `VARCHAR(150) UNIQUE` | — | Correo electrónico para login y notificaciones. |
 | `fecha_inscripcion` | `DATE` *solo PRD* | — | Fecha de alta en el gimnasio. |
 | `estado_membresia` | `VARCHAR(20)` | — | Estado del plan: `'Activo'`, `'Inactivo'`, `'Suspendido'` *('Suspendido' solo aparece en el PRD)*. |
 
@@ -142,3 +146,14 @@ tras un cambio administrativo de rol. Borrar Cuenta conserva Entrenador y
 borrar un Entrenador vinculado devuelve 409. No se deduce ninguna relación por
 email/nombre. La migración `7a0f6a730e04` añade el campo sin alterar filas
 existentes e inserta la versión de esquema 0.4 en `versions`.
+
+## Identidad única en `users` (esquema 0.5, #132)
+
+La migración `2bf39c12ed06` elimina `clientes.nombre` y `clientes.email`
+(con su UNIQUE) tras trasladar la identidad a la Cuenta vinculada: cada
+cliente sin `users` recibe una Cuenta `cliente` inactiva con su nombre y su
+email (o uno sintético `cliente-{id}@demo.local` si era nulo o colisionaba)
+y un hash de un secreto aleatorio descartado, imposible de verificar. La
+versión de esquema pasa a `0.5`. `/v1/clientes` y `/v1/reservas` resuelven
+`id_user`/`nombre`/`email` en lectura; buscar personas se hace en
+`/v1/users`. Los entrenadores inician sesión con la Cuenta staff vinculada.

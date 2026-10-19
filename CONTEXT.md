@@ -9,8 +9,8 @@ usuarios (V2), toda persona que accede al sistema lo hace con una Cuenta.
 ### Acceso e identidad
 
 **Cuenta**:
-Identidad de acceso al sistema: email único y contraseña, con un Rol y un
-indicador de `activo` (puede iniciar sesión).
+Identidad de acceso y **única** fuente de nombre y email del sistema, con un
+Rol y un indicador de `activo` (puede iniciar sesión).
 _Avoid_: User, usuario, login, perfil
 
 **Rol**:

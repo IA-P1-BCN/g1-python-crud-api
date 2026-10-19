@@ -59,10 +59,7 @@ def test_openapi_documenta_filtros_y_errores(client):
     paths = client.get("/openapi.json").json()["paths"]
     expected = {
         "clientes": {
-            "nombre",
-            "email",
             "estado_membresia",
-            "q",
             "fecha_inscripcion_desde",
             "fecha_inscripcion_hasta",
         },

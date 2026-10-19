@@ -11,7 +11,6 @@ from config.settings import get_settings
 from scripts.seed_accounts import (
     ADMIN_DEMO_PASSWORD,
     DEMO_PASSWORD,
-    STAFF_EMAIL,
     seed_accounts,
     seed_admin_demo,
     seed_staff,
@@ -69,19 +68,18 @@ def test_seed_staff_crea_vinculo_y_es_idempotente(seed_session):
             )
         )
         session.flush()
+    entrenador = _entrenador_libre(session)
     email = f"staff-{uuid4().hex}@example.com"
-    primera = seed_staff(session, hasher, staff_email=email)
+    cuenta_cuenta = ((email, entrenador.nombre, "Yoga"),)
+    primera = seed_staff(session, hasher, accounts=cuenta_cuenta)
     assert primera == {"creadas": 1, "omitidas": 0}
     cuenta = session.scalar(select(CuentaRecord).where(CuentaRecord.email == email))
     assert cuenta.rol == "staff" and cuenta.activo
     assert cuenta.id_cliente is None
-    assert cuenta.id_entrenador is not None
+    assert cuenta.id_entrenador == entrenador.id_entrenador
     assert hasher.verify(DEMO_PASSWORD, cuenta.password_hash)
-    entrenador = session.get(EntrenadorRecord, cuenta.id_entrenador)
-    assert entrenador is not None
-    assert entrenador.nombre
     antes = _hashes(session)
-    segunda = seed_staff(session, hasher, staff_email=email)
+    segunda = seed_staff(session, hasher, accounts=cuenta_cuenta)
     assert segunda == {"creadas": 0, "omitidas": 1}
     assert _hashes(session) == antes
     assert (
@@ -110,39 +108,31 @@ def test_admin_demo_argon2_y_repeticion_conserva_ediciones(seed_session):
     assert _hashes(session) == previous
 
 
-@pytest.mark.parametrize("tipo", ["cuenta", "cliente"])
-def test_admin_demo_no_se_apropia_de_email(seed_session, tipo):
+def test_admin_demo_no_se_apropia_de_email(seed_session):
     session = seed_session
     hasher = Argon2PasswordHasher()
     email = f"ocupado-{uuid4().hex}@example.com"
-    cliente = ClienteRecord(nombre="Titular", email=email, estado_membresia="Inactivo")
+    cliente = ClienteRecord(estado_membresia="Inactivo")
     session.add(cliente)
     session.flush()
-    if tipo == "cuenta":
-        cuenta = CuentaRecord(
-            nombre="Titular",
-            email=email,
-            rol="cliente",
-            activo=False,
-            id_cliente=cliente.id_cliente,
-            password_hash=hasher.hash("otra contraseña de prueba"),
-        )
-        session.add(cuenta)
-        session.flush()
+    cuenta = CuentaRecord(
+        nombre="Titular",
+        email=email,
+        rol="cliente",
+        activo=False,
+        id_cliente=cliente.id_cliente,
+        password_hash=hasher.hash("otra contraseña de prueba"),
+    )
+    session.add(cuenta)
+    session.flush()
     previous = _hashes(session)
     assert seed_admin_demo(session, hasher, email) == {"creadas": 0, "omitidas": 1}
     assert _hashes(session) == previous
+    session.refresh(cuenta)
+    assert cuenta.rol == "cliente" and not cuenta.activo
+    assert cuenta.id_cliente == cliente.id_cliente
     session.refresh(cliente)
     assert cliente.estado_membresia == "Inactivo"
-    if tipo == "cuenta":
-        session.refresh(cuenta)
-        assert cuenta.rol == "cliente" and not cuenta.activo
-        assert cuenta.id_cliente == cliente.id_cliente
-    else:
-        assert (
-            session.scalar(select(CuentaRecord).where(CuentaRecord.email == email))
-            is None
-        )
 
 
 def test_admin_demo_login_y_listado_admin(seed_session, base_url):
@@ -184,44 +174,36 @@ def test_seed_staff_email_ocupado_no_modifica(seed_session):
     )
     session.add(propia)
     session.flush()
-    resultado = seed_staff(session, hasher, staff_email=email)
+    resultado = seed_staff(session, hasher, accounts=((email, "Laura Demo", "Yoga"),))
     assert resultado == {"creadas": 0, "omitidas": 1}
     intacta = session.scalar(select(CuentaRecord).where(CuentaRecord.email == email))
     assert intacta.rol == "cliente" and intacta.id_entrenador is None
     assert hasher.verify("otra contraseña segura", intacta.password_hash)
 
 
-def test_seed_staff_sin_entrenador_libre_se_omite(seed_session):
+def test_seed_staff_entrenador_ya_vinculado_se_omite(seed_session):
+    """Auto-suficiente: crea su propio entrenador ya vinculado por otra cuenta."""
     session = seed_session
     hasher = Argon2PasswordHasher()
-    if _entrenador_libre(session) is None:
-        session.add(
-            EntrenadorRecord(
-                nombre=f"Entrenador {uuid4().hex[:8]}", especialidad="Yoga"
-            )
-        )
-        session.flush()
-    for entrenador in session.scalars(select(EntrenadorRecord)):
-        vinculado = session.scalar(
-            select(CuentaRecord).where(
-                CuentaRecord.id_entrenador == entrenador.id_entrenador
-            )
-        )
-        if vinculado is None:
-            session.add(
-                CuentaRecord(
-                    nombre=entrenador.nombre,
-                    email=f"vinculo-{uuid4().hex}@example.com",
-                    password_hash=hasher.hash("otra contraseña segura"),
-                    rol="staff",
-                    activo=True,
-                    id_entrenador=entrenador.id_entrenador,
-                )
-            )
+    nombre = f"Entrenador {uuid4().hex[:8]}"
+    session.add(EntrenadorRecord(nombre=nombre, especialidad="Yoga"))
     session.flush()
-    assert _entrenador_libre(session) is None
+    entrenador = session.scalar(
+        select(EntrenadorRecord).where(EntrenadorRecord.nombre == nombre)
+    )
+    session.add(
+        CuentaRecord(
+            nombre=nombre,
+            email=f"vinculo-{uuid4().hex}@example.com",
+            password_hash=hasher.hash("otra contraseña segura"),
+            rol="staff",
+            activo=True,
+            id_entrenador=entrenador.id_entrenador,
+        )
+    )
+    session.flush()
     email = f"staff-{uuid4().hex}@example.com"
-    resultado = seed_staff(session, hasher, staff_email=email)
+    resultado = seed_staff(session, hasher, accounts=((email, nombre, "Yoga"),))
     assert resultado == {"creadas": 0, "omitidas": 1}
     assert (
         session.scalar(select(CuentaRecord).where(CuentaRecord.email == email)) is None
@@ -261,21 +243,31 @@ def test_login_cuentas_demo(base_url):
                 pytest.skip("Falta la cuenta demo: aplica task migrate")
             if (
                 session.scalar(
-                    select(CuentaRecord).where(CuentaRecord.email == STAFF_EMAIL)
+                    select(CuentaRecord).where(
+                        CuentaRecord.email == "staff@gymflow.com"
+                    )
                 )
                 is None
             ):
-                if _entrenador_libre(session) is None:
-                    session.add(
-                        EntrenadorRecord(
-                            nombre=f"Entrenador {uuid4().hex[:8]}",
-                            especialidad="Yoga",
-                        )
+                laura = session.scalar(
+                    select(EntrenadorRecord).where(
+                        EntrenadorRecord.nombre == "Laura Demo"
                     )
+                )
+                if laura is None:
+                    laura = EntrenadorRecord(nombre="Laura Demo", especialidad="Yoga")
+                    session.add(laura)
                     session.flush()
                     entrenador_propio = True
-                assert seed_staff(session, hasher)["creadas"] == 1
-                creadas.append(STAFF_EMAIL)
+                assert (
+                    seed_staff(
+                        session,
+                        hasher,
+                        accounts=(("staff@gymflow.com", "Laura Demo", "Yoga"),),
+                    )["creadas"]
+                    == 1
+                )
+                creadas.append("staff@gymflow.com")
             if (
                 session.scalar(
                     select(CuentaRecord).where(CuentaRecord.email == admin_email)
@@ -287,7 +279,7 @@ def test_login_cuentas_demo(base_url):
         with httpx.Client(base_url=base_url, timeout=10) as client:
             for email, password in (
                 (admin_email, password_admin),
-                (STAFF_EMAIL, DEMO_PASSWORD),
+                ("staff@gymflow.com", DEMO_PASSWORD),
                 ("demo@gymflow.com", DEMO_PASSWORD),
             ):
                 respuesta = client.post(

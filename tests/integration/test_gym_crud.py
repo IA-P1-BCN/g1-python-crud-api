@@ -14,10 +14,12 @@ from src.infrastructure.database.engine import SessionLocal, engine
 from src.infrastructure.database.models import (
     ClaseRecord,
     ClienteRecord,
+    CuentaRecord,
     EntrenadorRecord,
     PagoRecord,
     ReservaRecord,
 )
+from src.infrastructure.security.passwords import Argon2PasswordHasher
 
 TABLES = [
     ("reservas", "id_reserva", ReservaRecord),
@@ -59,8 +61,6 @@ class GymApi:
         cliente = self.create(
             "clientes",
             {
-                "nombre": "Cliente de prueba",
-                "email": f"{uuid4().hex}@example.com",
                 "estado_membresia": estado,
                 "fecha_inscripcion": "2026-10-01",
             },
@@ -112,11 +112,11 @@ def clase(api):
 
 
 def editable(entity, id_field):
-    return {
-        key: value
-        for key, value in entity.items()
-        if key not in {id_field, "fecha_reserva"}
-    }
+    """PUT sustituye editables; la identidad resuelta (id_user) no se envía."""
+    excluidos = {"fecha_reserva", id_field}
+    if "id_user" in entity:
+        excluidos |= {"id_user", "nombre", "email"}
+    return {key: value for key, value in entity.items() if key not in excluidos}
 
 
 def test_crud_de_las_cinco_entidades(api, clase):
@@ -136,7 +136,6 @@ def test_crud_de_las_cinco_entidades(api, clase):
             "id_cliente",
             cliente,
             {
-                "nombre": "Nombre actualizado",
                 "estado_membresia": "Suspendido",
                 "fecha_inscripcion": None,
             },
@@ -179,22 +178,20 @@ def test_crud_de_las_cinco_entidades(api, clase):
         assert api.client.get(detail).status_code == 404
 
 
-def test_email_unico_y_rollback(api):
+def test_rollback_tras_error_de_cliente(api):
     cliente = api.member(paid=False)
-    duplicate = api.post("clientes", editable(cliente, "id_cliente"))
-    assert duplicate.status_code == 409
-    assert set(duplicate.json()) == {"detail"}
-    assert "INSERT" not in duplicate.text
-    otro = api.member(paid=False)
-    updated = api.client.put(
-        f"/v1/clientes/{otro['id_cliente']}",
-        json={
-            **editable(otro, "id_cliente"),
-            "email": cliente["email"],
-        },
+    estado_original = api.client.get(
+        f"/v1/clientes/{cliente['id_cliente']}"
+    ).json()
+    invalido = api.client.put(
+        f"/v1/clientes/{cliente['id_cliente']}",
+        json={"estado_membresia": "Otro"},
     )
-    assert updated.status_code == 409
-    assert api.client.get(f"/v1/clientes/{otro['id_cliente']}").json() == otro
+    assert invalido.status_code == 422
+    assert (
+        api.client.get(f"/v1/clientes/{cliente['id_cliente']}").json()
+        == estado_original
+    )
 
 
 @pytest.mark.parametrize(
@@ -290,50 +287,42 @@ def test_seed_repetido_no_duplica_ni_sobrescribe(mysql_ready):
 
     with SessionLocal() as session:
         try:
-            seed_demo(session)
+            hasher = Argon2PasswordHasher()
+            seed_demo(session, hasher)
             counts = [
                 session.scalar(select(func.count()).select_from(model))
                 for _, _, model in TABLES
             ]
-            ana = session.scalar(
-                select(ClienteRecord).where(
-                    ClienteRecord.email == "ana.demo@example.com"
+            cuenta_ana = session.scalar(
+                select(CuentaRecord).where(
+                    CuentaRecord.email == "ana.demo@example.com"
                 )
             )
-            ana.nombre = "Nombre editado por el equipo"
+            ana = session.get(ClienteRecord, cuenta_ana.id_cliente)
             ana.estado_membresia = "Suspendido"
-            seed_demo(session)
+            seed_demo(session, hasher)
             assert [
                 session.scalar(select(func.count()).select_from(model))
                 for _, _, model in TABLES
             ] == counts
             session.refresh(ana)
-            assert ana.nombre == "Nombre editado por el equipo"
             assert ana.estado_membresia == "Suspendido"
         finally:
             session.rollback()
 
 
-def test_filtros_clientes_busqueda_y_paginacion(api):
-    token = uuid4().hex
+def test_filtros_clientes_por_perfil(api):
     rows = [
         api.create(
             "clientes",
-            {
-                "nombre": f"{token} Ana {i}",
-                "email": f"{token}.{i}@example.com",
-                "estado_membresia": state,
-                "fecha_inscripcion": day,
-            },
+            {"estado_membresia": state, "fecha_inscripcion": day},
         )
-        for i, (state, day) in enumerate(
-            [
-                ("Inactivo", "2026-10-01"),
-                ("Activo", "2026-10-01"),
-                ("Activo", "2026-10-02"),
-                ("Suspendido", None),
-            ]
-        )
+        for state, day in [
+            ("Inactivo", "2026-10-01"),
+            ("Activo", "2026-10-01"),
+            ("Activo", "2026-10-02"),
+            ("Suspendido", None),
+        ]
     ]
 
     def listed(**params):
@@ -341,19 +330,26 @@ def test_filtros_clientes_busqueda_y_paginacion(api):
         assert response.status_code == 200, response.text
         return response.json()
 
-    assert listed(nombre=token.upper(), estado_membresia="Activo") == rows[1:3]
-    assert listed(q=token, estado_membresia="Activo", offset=1, limit=1) == [rows[2]]
-    assert listed(email=f"{token}.1@EXAMPLE") == [rows[1]]
-    assert listed(q=f"{token}.2@") == [rows[2]]
-    assert listed(
-        q=token,
+    # El listado comparte BD con el seed: se comprueba pertenencia, no igualdad.
+    activos = listed(estado_membresia="Activo")
+    assert rows[1] in activos and rows[2] in activos
+    assert rows[0] not in activos and rows[3] not in activos
+    assert all(fila["estado_membresia"] == "Activo" for fila in activos)
+    rango = listed(
+        estado_membresia="Activo",
         fecha_inscripcion_desde="2026-10-02",
         fecha_inscripcion_hasta="2026-10-02",
-    ) == [rows[2]]
-    assert listed(q=token, fecha_inscripcion_hasta="2026-10-01") == rows[:2]
-    assert listed(q=token, nombre="no-coincide") == []
-    assert listed(q=token, estado_membresia="Suspendido") == [rows[3]]
-    assert listed(q="' OR 1=1 --") == []
+    )
+    assert rows[2] in rango and rows[1] not in rango
+    hasta = listed(estado_membresia="Inactivo", fecha_inscripcion_hasta="2026-10-01")
+    assert rows[0] in hasta and rows[1] not in hasta
+    suspendidos = listed(estado_membresia="Suspendido")
+    assert rows[3] in suspendidos
+    # La identidad se busca en /v1/users, no en clientes (ADR 0002).
+    assert api.client.get(
+        "/v1/clientes", params={"nombre": "Ana"}
+    ).status_code == 422
+    assert api.client.get("/v1/clientes", params={"q": "Ana"}).status_code == 422
 
 
 def test_filtros_entrenadores_y_comodines_literales(api):

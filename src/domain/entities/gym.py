@@ -7,11 +7,19 @@ from decimal import Decimal
 
 @dataclass(frozen=True, kw_only=True)
 class Cliente:
-    nombre: str
     estado_membresia: str
-    email: str | None = None
     fecha_inscripcion: date | None = None
     id_cliente: int | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
+class IdentidadCliente:
+    """Identidad de un cliente, resuelta de la Cuenta vinculada en `users`."""
+
+    id_cliente: int
+    id_user: int | None = None
+    nombre: str | None = None
+    email: str | None = None
 
 
 @dataclass(frozen=True, kw_only=True)

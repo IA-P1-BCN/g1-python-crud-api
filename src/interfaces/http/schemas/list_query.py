@@ -64,13 +64,12 @@ class CuentaQuery(TextQuery):
     )
 
 
-class ClienteQuery(TextQuery):
-    text_fields = ("nombre", "email")
+class ClienteQuery(ListQuery):
+    """La identidad se busca en /v1/users; aquí solo perfil de negocio."""
+
     exact_fields = ("estado_membresia",)
     range_field = "fecha_inscripcion"
 
-    nombre: TextFilter | None = None
-    email: TextFilter | None = None
     estado_membresia: Literal["Activo", "Inactivo", "Suspendido"] | None = None
     fecha_inscripcion_desde: date | None = Field(default=None, description="Inclusiva")
     fecha_inscripcion_hasta: date | None = Field(default=None, description="Inclusiva")

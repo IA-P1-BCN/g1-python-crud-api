@@ -35,6 +35,9 @@ export class MockReservaService extends ReservaService {
       id_clase: idClase,
       asistio: false,
       fecha_reserva: new Date().toISOString().slice(0, 19),
+      id_user: null,
+      nombre: null,
+      email: null,
     };
     this.reservas = [...this.reservas, nueva];
     return { ...nueva };

@@ -14,6 +14,7 @@ from src.domain.entities.gym import (
     Cliente,
     Entrenador,
     GymEntity,
+    IdentidadCliente,
     Pago,
     Reserva,
 )
@@ -23,6 +24,7 @@ from src.domain.list_filters import SEARCH_FIELDS, ListFilters
 from src.infrastructure.database.models import (
     ClaseRecord,
     ClienteRecord,
+    CuentaRecord,
     EntrenadorRecord,
     PagoRecord,
     ReservaRecord,
@@ -139,6 +141,27 @@ class SqlAlchemyGymRepository:
         )
         self._session.delete(record)
         self._session.flush()
+
+    def identities_for_clientes(
+        self, id_clientes: list[int]
+    ) -> dict[int, IdentidadCliente]:
+        if not id_clientes:
+            return {}
+        statement = select(
+            CuentaRecord.id,
+            CuentaRecord.nombre,
+            CuentaRecord.email,
+            CuentaRecord.id_cliente,
+        ).where(CuentaRecord.id_cliente.in_(id_clientes))
+        return {
+            row.id_cliente: IdentidadCliente(
+                id_cliente=row.id_cliente,
+                id_user=row.id,
+                nombre=row.nombre,
+                email=row.email,
+            )
+            for row in self._session.execute(statement)
+        }
 
     def count_reservas(self, id_clase: int, exclude_id: int | None = None) -> int:
         statement = (

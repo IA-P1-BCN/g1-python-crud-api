@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from fastapi import Response
 
-from src.domain.entities.gym import Cliente, Pago, Reserva
+from src.domain.entities.gym import Cliente, Entrenador, Pago, Reserva
 from src.interfaces.http.csv_exports import csv_response, to_csv
 
 BOM = b"\xef\xbb\xbf"
@@ -18,13 +18,15 @@ def _body(entity_type, entities) -> str:
 def test_cabecera_con_id_primero_y_bom():
     csv_bytes = to_csv(Cliente, [])
     assert csv_bytes.startswith(BOM)
-    assert _body(Cliente, []) == "id_cliente,nombre,estado_membresia,email,fecha_inscripcion\r\n"
+    assert _body(Cliente, []) == "id_cliente,estado_membresia,fecha_inscripcion\r\n"
 
 
 def test_escapado_de_comas_y_comillas():
-    cliente = Cliente(nombre='García, "Ana"', estado_membresia="Activo", id_cliente=1)
-    lineas = _body(Cliente, [cliente]).split("\r\n")
-    assert lineas[1] == '1,"García, ""Ana""",Activo,,'
+    entrenador = Entrenador(
+        nombre='García, "Ana"', especialidad="Yoga, restaurativo", id_entrenador=1
+    )
+    lineas = _body(Entrenador, [entrenador]).split("\r\n")
+    assert lineas[1] == '1,"García, ""Ana""","Yoga, restaurativo",'
 
 
 def test_formato_de_reserva():
@@ -54,7 +56,7 @@ def test_formato_de_pago():
 
 
 def test_respuesta_descargable():
-    clientes = [Cliente(nombre="Ana", estado_membresia="Activo", id_cliente=1)]
+    clientes = [Cliente(estado_membresia="Activo", id_cliente=1)]
     response = csv_response("clientes", Cliente, clientes)
     assert isinstance(response, Response)
     assert response.media_type == "text/csv"
@@ -68,7 +70,7 @@ def test_endpoint_exporta_tabla(client):
     assert response.headers["content-type"].startswith("text/csv")
     assert response.headers["content-disposition"] == 'attachment; filename="clientes.csv"'
     assert response.content.startswith(BOM)
-    assert "Ana" in response.content.decode("utf-8-sig")
+    assert "Activo" in response.content.decode("utf-8-sig")
 
 
 def test_endpoint_tabla_inexistente_devuelve_422(client):

@@ -9,14 +9,10 @@ CASES = [
         "clientes",
         "id_cliente",
         {
-            "nombre": "Lucía",
-            "email": "lucia@example.com",
             "estado_membresia": "Activo",
             "fecha_inscripcion": "2026-10-01",
         },
         {
-            "nombre": "Lucía García",
-            "email": None,
             "estado_membresia": "Suspendido",
             "fecha_inscripcion": "2026-10-02",
         },
@@ -119,19 +115,17 @@ def test_valida_cuerpo_y_parametros(client, resource, id_field, payload, changes
 @pytest.mark.parametrize(
     "resource,payload",
     [
-        ("clientes", {"nombre": "  ", "estado_membresia": "Activo"}),
-        ("clientes", {"nombre": "Ana", "estado_membresia": "Otro"}),
+        ("clientes", {"estado_membresia": "Otro"}),
+        ("clientes", {"nombre": "Ana", "estado_membresia": "Activo"}),
         (
             "clientes",
-            {"nombre": "Ana", "estado_membresia": "Activo", "email": "sin-email"},
+            {"estado_membresia": "Activo", "email": "ana@example.com"},
         ),
-        ("clientes", {"nombre": "a" * 101, "estado_membresia": "Activo"}),
         ("entrenadores", {"nombre": "Ana", "especialidad": "a" * 101}),
         ("entrenadores", {"nombre": "Ana", "telefono": "1" * 21}),
         (
             "clientes",
             {
-                "nombre": "Ana",
                 "estado_membresia": "Activo",
                 "fecha_inscripcion": "ayer",
             },
@@ -207,11 +201,11 @@ def test_referencia_inexistente(client, resource, payload):
 
 
 def test_paginacion_estable(client):
-    for name in ["B", "C"]:
-        client.post("/v1/clientes", json={"nombre": name, "estado_membresia": "Activo"})
+    for _ in ["B", "C"]:
+        client.post("/v1/clientes", json={"estado_membresia": "Activo"})
     response = client.get("/v1/clientes", params={"offset": 1, "limit": 1})
     assert response.status_code == 200
-    assert [row["nombre"] for row in response.json()] == ["B"]
+    assert [row["id_cliente"] for row in response.json()] == [2]
 
 
 @pytest.mark.parametrize(

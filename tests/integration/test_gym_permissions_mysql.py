@@ -57,7 +57,7 @@ def role_gym(accounts_api, gym_admin_headers):
             response = http.put(
                 f"/v1/clientes/{member_data['id_cliente']}",
                 headers=admin,
-                json={"nombre": "Socio", "estado_membresia": "Activo"},
+                json={"estado_membresia": "Activo"},
             )
             assert response.status_code == 200, response.text
             post(

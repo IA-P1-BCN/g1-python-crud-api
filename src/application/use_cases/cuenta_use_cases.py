@@ -120,7 +120,5 @@ class CuentaUseCases:
             if self._repository.get_by_email(cuenta.email) is not None:
                 raise ConflictError("Email de Cuenta ya registrado")
             if crear_cliente:
-                cuenta.id_cliente = self._repository.create_cliente(
-                    nombre, cuenta.email
-                )
+                cuenta.id_cliente = self._repository.create_cliente()
             return self._repository.add(cuenta)

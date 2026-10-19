@@ -38,8 +38,6 @@ def test_log_crear_cliente(base_url, admin_http):
 
     # Crear cliente (acción crítica)
     payload = {
-        "nombre": "Test Log Cliente",
-        "email": "test.log.cliente@example.com",
         "estado_membresia": "Activo",
         "fecha_inscripcion": "2026-10-01",
     }
@@ -63,8 +61,6 @@ def test_log_eliminar_cliente(base_url, admin_http):
 
     # Crear cliente primero
     payload = {
-        "nombre": "Test Log Delete",
-        "email": "test.log.delete@example.com",
         "estado_membresia": "Activo",
         "fecha_inscripcion": "2026-10-01",
     }
@@ -105,8 +101,6 @@ def test_log_error_409_duplicado(base_url, admin_http):
 
     # Crear cliente
     payload = {
-        "nombre": "Test Log 409",
-        "email": "test.log.409@example.com",
         "estado_membresia": "Activo",
         "fecha_inscripcion": "2026-10-01",
     }
@@ -114,16 +108,51 @@ def test_log_error_409_duplicado(base_url, admin_http):
     assert response.status_code == 201
     cliente_id = response.json()["id_cliente"]
 
-    # Intentar crear duplicado (mismo email)
-    response = admin_http.post(f"{base_url}/v1/clientes", json=payload, timeout=10)
+    # Intentar crear duplicado (misma reserva del mismo cliente en la clase)
+    entrenador = admin_http.post(
+        f"{base_url}/v1/entrenadores",
+        json={"nombre": "Test Log 409", "especialidad": "Yoga"},
+        timeout=10,
+    ).json()
+    clase = admin_http.post(
+        f"{base_url}/v1/clases",
+        json={
+            "nombre_clase": "Yoga Log 409",
+            "horario": "2026-11-01T10:00:00",
+            "capacidad_max": 5,
+            "id_entrenador": entrenador["id_entrenador"],
+        },
+        timeout=10,
+    ).json()
+    admin_http.post(
+        f"{base_url}/v1/pagos",
+        json={
+            "id_cliente": cliente_id,
+            "monto": "25.00",
+            "fecha_pago": "2026-10-06",
+            "metodo_pago": "Efectivo",
+        },
+        timeout=10,
+    )
+    reserva = {
+        "id_cliente": cliente_id,
+        "id_clase": clase["id_clase"],
+        "asistio": False,
+    }
+    assert (
+        admin_http.post(f"{base_url}/v1/reservas", json=reserva, timeout=10).status_code
+        == 201
+    )
+    response = admin_http.post(f"{base_url}/v1/reservas", json=reserva, timeout=10)
     assert response.status_code == 409
 
     # Verificar log de warning
     assert _esperar_log("Conflicto de datos"), "No se encontró log de warning para 409"
-    assert _esperar_log("POST /v1/clientes"), "No se encontró path en log de 409"
+    assert _esperar_log("POST /v1/reservas"), "No se encontró path en log de 409"
 
     # Cleanup
     admin_http.delete(f"{base_url}/v1/clientes/{cliente_id}", timeout=10)
+    admin_http.delete(f"{base_url}/v1/entrenadores/{entrenador['id_entrenador']}", timeout=10)
 
 
 def test_log_crear_y_eliminar_entrenador(base_url, admin_http):
@@ -192,8 +221,6 @@ def test_log_crear_y_eliminar_pago(base_url, admin_http):
     cliente = admin_http.post(
         f"{base_url}/v1/clientes",
         json={
-            "nombre": "Test Log Pago",
-            "email": "test.log.pago@example.com",
             "estado_membresia": "Activo",
             "fecha_inscripcion": "2026-10-01",
         },
@@ -236,8 +263,6 @@ def test_log_crear_y_eliminar_reserva(base_url, admin_http):
     cliente = admin_http.post(
         f"{base_url}/v1/clientes",
         json={
-            "nombre": f"Test Log Reserva {unique}",
-            "email": f"test.log.reserva.{unique}@example.com",
             "estado_membresia": "Activo",
             "fecha_inscripcion": "2026-10-01",
         },
