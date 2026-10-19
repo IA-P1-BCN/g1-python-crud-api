@@ -64,3 +64,15 @@
   smoke (`/`, `/health`). **No comprobado en navegador manual**: smoke
   visual de skeleton/empty/toast con la API real; se deja a la revisión
   humana. `barras-chart` y dark mode quedan fuera de este alcance.
+- **Ampliación 2026-10-19 (5)**: «iconos en las vistas» para identificar
+  más rápido (petición de la usuaria). Juego de iconos lucide registrado
+  **una sola vez** en `app.config.ts` con `provideIcons` global (sin
+  repetirlo en cada vista). Iconos añadidos en: navegación del shell
+  (cabecera + barra móvil, por rol), menú desplegable (cada opción),
+  `estado-badge` (Activo/Inactivo/Suspendido), las 14 cabeceras `h1` y los
+  botones de acción (Nuevo→Plus, Editar→Pencil, Borrar→Trash2,
+  Cancelar→×, Marcar asistencia/Reservar/Guardar→ CircleCheck/CalendarCheck).
+  El botón «Reservar» se editó una vez en `clase-card.component.ts`
+  (compartido por home y resultados). Solo presentación; sin cambios de
+  lógica ni backend. `npm test` 125 passed, `npm run build` ok,
+  `task spec:validate` 24/24, frontend reconstruido en Docker y smoke.

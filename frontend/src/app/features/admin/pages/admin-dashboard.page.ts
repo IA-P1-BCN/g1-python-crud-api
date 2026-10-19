@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { NgIcon } from '@ng-icons/core';
 import { toast } from '@spartan-ng/brain/sonner';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
@@ -21,10 +22,10 @@ const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'o
  */
 @Component({
   selector: 'app-admin-dashboard',
-  imports: [RouterLink, BarrasChartComponent, HlmButtonImports, HlmCardImports, HlmSkeletonImports],
+  imports: [RouterLink, NgIcon, BarrasChartComponent, HlmButtonImports, HlmCardImports, HlmSkeletonImports],
   template: `
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-3xl font-semibold">Dashboard</h1>
+      <h1 class="inline-flex items-center gap-2 text-3xl font-semibold"><ng-icon name="lucideLayoutDashboard" class="text-[length:--spacing(6)]" />Dashboard</h1>
       <a hlmBtn variant="outline" routerLink="/admin/cuentas">Gestionar cuentas</a>
     </div>
 

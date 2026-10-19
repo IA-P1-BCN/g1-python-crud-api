@@ -36,7 +36,7 @@ import { ClaseConCupo } from '../../../shared/models/clase.model';
   providers: [provideIcons({ lucideInbox })],
   template: `
     <section class="mb-8 rounded-xl bg-primary/10 p-8">
-      <h1 class="mb-2 text-3xl font-semibold">Reserva tu plaza en GymFlow</h1>
+      <h1 class="mb-2 inline-flex items-center gap-2 text-3xl font-semibold"><ng-icon name="lucideDumbbell" class="text-[length:--spacing(6)]" />Reserva tu plaza en GymFlow</h1>
       <p class="mb-4 text-muted-foreground">
         Consulta las clases del gimnasio, mira las plazas libres y reserva en un clic.
       </p>

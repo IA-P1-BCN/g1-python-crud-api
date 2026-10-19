@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { NgIcon } from '@ng-icons/core';
 import { toast } from '@spartan-ng/brain/sonner';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
@@ -16,7 +17,7 @@ import { Clase, CupoClase } from '../../../shared/models/clase.model';
 /** Detalle de una clase con plazas disponibles y reserva (como space-detail de la referencia). */
 @Component({
   selector: 'app-clase-detalle',
-  imports: [RouterLink, ConfirmDialogComponent, CupoBarComponent, HlmButtonImports, HlmCardImports, HlmSkeletonImports],
+  imports: [RouterLink, ConfirmDialogComponent, CupoBarComponent, NgIcon, HlmButtonImports, HlmCardImports, HlmSkeletonImports],
   template: `
     <a class="mb-4 inline-block text-sm text-primary" routerLink="/marketplace/resultados">← Volver al catálogo</a>
 
@@ -35,7 +36,7 @@ import { Clase, CupoClase } from '../../../shared/models/clase.model';
     } @else {
       <article hlmCard class="max-w-2xl gap-3 p-6">
         <div hlmCardHeader>
-          <h1 class="text-3xl font-semibold">{{ clase()!.nombre_clase }}</h1>
+          <h1 class="inline-flex items-center gap-2 text-3xl font-semibold"><ng-icon name="lucideCalendar" class="text-[length:--spacing(6)]" />{{ clase()!.nombre_clase }}</h1>
         </div>
         <div hlmCardContent class="flex flex-col gap-3">
           <p class="text-muted-foreground">Horario (UTC): {{ fecha }}</p>
@@ -51,7 +52,7 @@ import { Clase, CupoClase } from '../../../shared/models/clase.model';
             } @else if ((cupo()?.plazas_disponibles ?? 1) === 0) {
               <p class="font-semibold text-muted-foreground">Clase completa</p>
             } @else {
-              <button hlmBtn type="button" (click)="confirmar.set(true)">Reservar plaza</button>
+              <button hlmBtn class="gap-1.5" type="button" (click)="confirmar.set(true)"><ng-icon name="lucideCalendarCheck" class="text-[length:--spacing(4)]" />Reservar plaza</button>
             }
           </div>
         </div>

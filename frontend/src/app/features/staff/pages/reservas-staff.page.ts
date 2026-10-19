@@ -38,7 +38,7 @@ interface Fila {
   providers: [provideIcons({ lucideInbox })],
   template: `
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-3xl font-semibold">Reservas de mis clases</h1>
+      <h1 class="inline-flex items-center gap-2 text-3xl font-semibold"><ng-icon name="lucideClipboardList" class="text-[length:--spacing(6)]" />Reservas de mis clases</h1>
       <a hlmBtn variant="outline" routerLink="/staff">Volver al panel</a>
     </div>
 
@@ -98,11 +98,11 @@ interface Fila {
                 <td hlmTd>
                   <div class="flex gap-2">
                     @if (!fila.reserva.asistio) {
-                      <button hlmBtn type="button" size="sm" variant="secondary"
-                              (click)="marcarAsistencia(fila)">Marcar asistencia</button>
+                      <button hlmBtn class="gap-1.5" type="button" size="sm" variant="secondary"
+                              (click)="marcarAsistencia(fila)"><ng-icon name="lucideCircleCheck" class="text-[length:--spacing(4)]" />Marcar asistencia</button>
                     }
-                    <button hlmBtn type="button" size="sm" variant="destructive"
-                            (click)="pendiente.set(fila)">Cancelar</button>
+                    <button hlmBtn class="gap-1.5" type="button" size="sm" variant="destructive"
+                            (click)="pendiente.set(fila)"><ng-icon name="lucideX" class="text-[length:--spacing(4)]" />Cancelar</button>
                   </div>
                 </td>
               </tr>

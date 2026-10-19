@@ -36,7 +36,7 @@ interface FilaReserva {
   ],
   providers: [provideIcons({ lucideInbox })],
   template: `
-    <h1 class="mb-4 text-3xl font-semibold">Mis reservas</h1>
+    <h1 class="mb-4 inline-flex items-center gap-2 text-3xl font-semibold"><ng-icon name="lucideCalendarCheck" class="text-[length:--spacing(6)]" />Mis reservas</h1>
 
     <hlm-tabs class="mb-4 block" [tab]="pestana()" (tabActivated)="pestana.set($any($event))">
       <hlm-tabs-list aria-label="Reservas">
@@ -80,7 +80,7 @@ interface FilaReserva {
               <p class="text-sm text-muted-foreground">{{ fila.fecha }}</p>
             </div>
             @if (pestana() === 'proximas') {
-              <button hlmBtn variant="destructive" size="sm" type="button" (click)="pendiente.set(fila)">Cancelar reserva</button>
+              <button hlmBtn class="gap-1.5" variant="destructive" size="sm" type="button" (click)="pendiente.set(fila)"><ng-icon name="lucideX" class="text-[length:--spacing(4)]" />Cancelar reserva</button>
             }
           </li>
         }

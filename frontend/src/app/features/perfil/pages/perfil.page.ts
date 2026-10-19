@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NgIcon } from '@ng-icons/core';
 import { toast } from '@spartan-ng/brain/sonner';
 import { HlmBadgeImports } from '@spartan-ng/helm/badge';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
@@ -18,6 +19,7 @@ import { Cuenta } from '../../../shared/models/cuenta.model';
   selector: 'app-perfil',
   imports: [
     ReactiveFormsModule,
+    NgIcon,
     HlmBadgeImports,
     HlmButtonImports,
     HlmCardImports,
@@ -27,7 +29,7 @@ import { Cuenta } from '../../../shared/models/cuenta.model';
     HlmSkeletonImports,
   ],
   template: `
-    <h1 class="mb-4 text-3xl font-semibold">Mi perfil</h1>
+    <h1 class="mb-4 inline-flex items-center gap-2 text-3xl font-semibold"><ng-icon name="lucideUser" class="text-[length:--spacing(6)]" />Mi perfil</h1>
 
     @if (cargando()) {
       <section hlmCard class="mb-6 max-w-2xl gap-3 p-4">
@@ -116,7 +118,7 @@ import { Cuenta } from '../../../shared/models/cuenta.model';
             }
           </div>
           <div class="flex gap-2">
-            <button hlmBtn type="submit">Guardar cambios</button>
+            <button hlmBtn class="gap-1.5" type="submit"><ng-icon name="lucideCircleCheck" class="text-[length:--spacing(4)]" />Guardar cambios</button>
           </div>
         </form>
       </section>

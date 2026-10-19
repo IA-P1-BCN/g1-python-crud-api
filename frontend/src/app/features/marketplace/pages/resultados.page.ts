@@ -35,7 +35,7 @@ import { mensajeDeReserva } from './home-marketplace.page';
   providers: [provideIcons({ lucideInbox })],
   template: `
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-3xl font-semibold">Clases disponibles</h1>
+      <h1 class="inline-flex items-center gap-2 text-3xl font-semibold"><ng-icon name="lucideCalendar" class="text-[length:--spacing(6)]" />Clases disponibles</h1>
       <a hlmBtn variant="outline" routerLink="/marketplace">Volver al inicio</a>
     </div>
 

@@ -35,8 +35,8 @@ import { Entrenador } from '../../../shared/models/entrenador.model';
   providers: [provideIcons({ lucideInbox })],
   template: `
     <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
-      <h1 class="text-3xl font-semibold">Entrenadores</h1>
-      <button hlmBtn type="button" (click)="nuevo()">Nuevo entrenador</button>
+      <h1 class="inline-flex items-center gap-2 text-3xl font-semibold"><ng-icon name="lucideDumbbell" class="text-[length:--spacing(6)]" />Entrenadores</h1>
+      <button hlmBtn class="gap-1.5" type="button" (click)="nuevo()"><ng-icon name="lucidePlus" class="text-[length:--spacing(4)]" />Nuevo entrenador</button>
     </div>
 
     <form id="filtros" class="mb-4 flex flex-wrap items-end gap-3" (submit)="buscar($event)">
@@ -74,8 +74,15 @@ import { Entrenador } from '../../../shared/models/entrenador.model';
             }
           </div>
           <div class="flex gap-2 sm:col-span-2">
-            <button hlmBtn type="submit">{{ modo === 'crear' ? 'Crear' : 'Guardar' }}</button>
-            <button hlmBtn type="button" variant="ghost" (click)="cerrarFormulario()">Cancelar</button>
+            <button hlmBtn class="gap-1.5" type="submit">
+              @if (modo === 'crear') {
+                <ng-icon name="lucidePlus" class="text-[length:--spacing(4)]" />
+              } @else {
+                <ng-icon name="lucideCircleCheck" class="text-[length:--spacing(4)]" />
+              }
+              {{ modo === 'crear' ? 'Crear' : 'Guardar' }}
+            </button>
+            <button hlmBtn class="gap-1.5" type="button" variant="ghost" (click)="cerrarFormulario()"><ng-icon name="lucideX" class="text-[length:--spacing(4)]" />Cancelar</button>
           </div>
         </form>
       </section>
@@ -133,8 +140,9 @@ import { Entrenador } from '../../../shared/models/entrenador.model';
                 <td hlmTd>{{ fila.telefono ?? '—' }}</td>
                 <td hlmTd>
                   <div class="flex gap-2">
-                    <button hlmBtn type="button" size="sm" variant="secondary" (click)="editar(fila)">Editar</button>
-                    <button hlmBtn type="button" size="sm" variant="destructive" (click)="pendiente.set(fila)">
+                    <button hlmBtn class="gap-1.5" type="button" size="sm" variant="secondary" (click)="editar(fila)"><ng-icon name="lucidePencil" class="text-[length:--spacing(4)]" />Editar</button>
+                    <button hlmBtn class="gap-1.5" type="button" size="sm" variant="destructive" (click)="pendiente.set(fila)">
+                      <ng-icon name="lucideTrash2" class="text-[length:--spacing(4)]" />
                       Borrar
                     </button>
                   </div>

@@ -18,7 +18,7 @@ import { Clase } from '../../../shared/models/clase.model';
   imports: [RouterLink, NgIcon, HlmButtonImports, HlmCardImports, HlmEmptyImports, HlmSkeletonImports],
   providers: [provideIcons({ lucideInbox })],
   template: `
-    <h1 class="mb-4 text-3xl font-semibold">Panel del staff</h1>
+    <h1 class="mb-4 inline-flex items-center gap-2 text-3xl font-semibold"><ng-icon name="lucideLayoutDashboard" class="text-[length:--spacing(6)]" />Panel del staff</h1>
 
     <section class="mb-6 grid gap-4 sm:grid-cols-2">
       <article hlmCard class="gap-3 p-4">

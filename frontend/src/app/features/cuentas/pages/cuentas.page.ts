@@ -39,7 +39,7 @@ const ROLES: readonly Cuenta['rol'][] = ['admin', 'staff', 'cliente'];
   providers: [provideIcons({ lucideInbox })],
   template: `
     <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
-      <h1 class="text-3xl font-semibold">Cuentas</h1>
+      <h1 class="inline-flex items-center gap-2 text-3xl font-semibold"><ng-icon name="lucideUserCog" class="text-[length:--spacing(6)]" />Cuentas</h1>
     </div>
 
     <form id="filtros" class="mb-4 flex flex-wrap items-end gap-3" (submit)="buscar($event)">
@@ -97,8 +97,8 @@ const ROLES: readonly Cuenta['rol'][] = ['admin', 'staff', 'cliente'];
             Rol, estado y vínculo con cliente no se editan aquí.
           </p>
           <div class="flex gap-2 sm:col-span-2">
-            <button hlmBtn type="submit">Guardar</button>
-            <button hlmBtn type="button" variant="ghost" (click)="cerrarFormulario()">Cancelar</button>
+            <button hlmBtn class="gap-1.5" type="submit"><ng-icon name="lucideCircleCheck" class="text-[length:--spacing(4)]" />Guardar</button>
+            <button hlmBtn class="gap-1.5" type="button" variant="ghost" (click)="cerrarFormulario()"><ng-icon name="lucideX" class="text-[length:--spacing(4)]" />Cancelar</button>
           </div>
         </form>
       </section>
@@ -165,8 +165,9 @@ const ROLES: readonly Cuenta['rol'][] = ['admin', 'staff', 'cliente'];
                 <td hlmTd>{{ fila.fecha_creacion }}</td>
                 <td hlmTd>
                   <div class="flex gap-2">
-                    <button hlmBtn type="button" size="sm" variant="secondary" (click)="editar(fila)">Editar</button>
-                    <button hlmBtn type="button" size="sm" variant="destructive" (click)="pendiente.set(fila)">
+                    <button hlmBtn class="gap-1.5" type="button" size="sm" variant="secondary" (click)="editar(fila)"><ng-icon name="lucidePencil" class="text-[length:--spacing(4)]" />Editar</button>
+                    <button hlmBtn class="gap-1.5" type="button" size="sm" variant="destructive" (click)="pendiente.set(fila)">
+                      <ng-icon name="lucideTrash2" class="text-[length:--spacing(4)]" />
                       Borrar
                     </button>
                   </div>

@@ -1,5 +1,6 @@
 import { Component, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { NgIcon } from '@ng-icons/core';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
 import { ClaseConCupo } from '../models/clase.model';
@@ -8,7 +9,7 @@ import { CupoBarComponent } from './cupo-bar.component';
 
 @Component({
   selector: 'app-clase-card',
-  imports: [RouterLink, CupoBarComponent, HlmButtonImports, HlmCardImports],
+  imports: [RouterLink, CupoBarComponent, NgIcon, HlmButtonImports, HlmCardImports],
   template: `
     <article hlmCard class="gap-3 p-4">
       <div hlmCardHeader>
@@ -28,7 +29,7 @@ import { CupoBarComponent } from './cupo-bar.component';
         } @else if (item().plazasLibres === 0) {
           <p class="font-semibold text-muted-foreground">Completa</p>
         } @else {
-          <button hlmBtn class="w-full" type="button" (click)="reservar.emit(item().clase.id_clase)">Reservar</button>
+          <button hlmBtn class="w-full gap-1.5" type="button" (click)="reservar.emit(item().clase.id_clase)"><ng-icon name="lucideCalendarCheck" class="text-[length:--spacing(4)]" />Reservar</button>
         }
       </div>
     </article>
