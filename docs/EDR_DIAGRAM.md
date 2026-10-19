@@ -4,6 +4,9 @@
 > (`Diagrama_ER.png`, copiado en este repo como
 > [Diagrama_ER.png](Diagrama_ER.png)). El diccionario de datos completo está en
 > [DATABASE_SPEC.md](DATABASE_SPEC.md).
+>
+> **Esquema 0.5 (ADR 0002):** la identidad (nombre, email) vive solo en
+> `USERS`; `CLIENTES` guarda únicamente el perfil del socio.
 
 ```mermaid
 erDiagram
@@ -27,8 +30,6 @@ erDiagram
 
     CLIENTES {
         int id_cliente PK "AUTO_INCREMENT"
-        varchar nombre "VARCHAR(100) NOT NULL"
-        varchar email UK "VARCHAR(150) UNIQUE"
         date fecha_inscripcion "solo PRD"
         varchar estado_membresia "VARCHAR(20): Activo | Inactivo | Suspendido"
     }
