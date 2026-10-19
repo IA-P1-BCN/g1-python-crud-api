@@ -4,6 +4,7 @@ import { vi } from 'vitest';
 import { ApiError } from '../../../core/http/peticion';
 import { CuentasApi } from '../../../services/api/recursos.api';
 import { esperarCarga } from '../../../testing/esperar';
+import { limpiarToasts, mensajesDeToast } from '../../../testing/toast';
 import { Cuenta } from '../../../shared/models/cuenta.model';
 import { CuentasPage } from './cuentas.page';
 
@@ -27,6 +28,7 @@ describe('CuentasPage', () => {
 
   beforeEach(async () => {
     sessionStorage.clear();
+    limpiarToasts();
     api = {
       listar: vi.fn(() => Promise.resolve([CUENTA])),
       reemplazar: vi.fn((id: number) => Promise.resolve({ ...CUENTA, id, nombre: 'Editada' })),
@@ -78,7 +80,7 @@ describe('CuentasPage', () => {
     await esperarCarga(fixture);
 
     expect(api.reemplazar).toHaveBeenCalledWith(21, { nombre: 'Demo Editada', email: 'demo@example.com' });
-    expect(texto()).toContain('Cuenta actualizada');
+    expect(mensajesDeToast()).toContain('Cuenta actualizada');
   });
 
   it('incluye la contraseña nueva solo si tiene al menos 12 caracteres', async () => {
@@ -115,6 +117,6 @@ describe('CuentasPage', () => {
     enviarFormulario('filtros');
     await esperarCarga(fixture);
 
-    expect(texto()).toContain('No se pudieron validar las credenciales');
+    expect(mensajesDeToast()).toContain('No se pudieron validar las credenciales');
   });
 });

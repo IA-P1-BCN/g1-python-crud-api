@@ -1,33 +1,35 @@
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { toast } from '@spartan-ng/brain/sonner';
+import { HlmButtonImports } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { SessionService } from '../../../core/auth/session.service';
 import { ClaseService } from '../../../services/clase.service';
 import { ReservaService, SinPlazasError, YaReservadaError } from '../../../services/reserva.service';
 import { textoDeError } from '../../../core/http/peticion';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog.component';
-import { ToastComponent } from '../../../shared/components/toast.component';
 import { CupoBarComponent } from '../../../shared/components/cupo-bar.component';
-import { HlmButtonImports } from '@spartan-ng/helm/button';
-import { HlmCardImports } from '@spartan-ng/helm/card';
 import { formatearFechaHora } from '../../../shared/format/fecha';
 import { Clase, CupoClase } from '../../../shared/models/clase.model';
-
-interface Aviso {
-  readonly mensaje: string;
-  readonly tipo: 'exito' | 'error';
-}
 
 /** Detalle de una clase con plazas disponibles y reserva (como space-detail de la referencia). */
 @Component({
   selector: 'app-clase-detalle',
-  imports: [RouterLink, ConfirmDialogComponent, ToastComponent, CupoBarComponent, HlmButtonImports, HlmCardImports],
+  imports: [RouterLink, ConfirmDialogComponent, CupoBarComponent, HlmButtonImports, HlmCardImports, HlmSkeletonImports],
   template: `
     <a class="mb-4 inline-block text-sm text-primary" routerLink="/marketplace/resultados">← Volver al catálogo</a>
 
-    <app-toast [mensaje]="aviso()?.mensaje ?? null" [tipo]="aviso()?.tipo ?? 'exito'" />
-
     @if (cargando()) {
-      <p class="text-sm text-muted-foreground">Cargando clase…</p>
+      <article hlmCard class="max-w-2xl gap-3 p-6">
+        <div hlmCardHeader><div hlmSkeleton class="h-8 w-64"></div></div>
+        <div hlmCardContent class="flex flex-col gap-3">
+          <div hlmSkeleton class="h-4 w-48"></div>
+          <div hlmSkeleton class="h-4 w-40"></div>
+          <div hlmSkeleton class="h-2 w-full"></div>
+          <div hlmSkeleton class="h-9 w-36"></div>
+        </div>
+      </article>
     } @else if (clase() === null) {
       <p class="text-sm text-muted-foreground">No se pudo cargar la clase.</p>
     } @else {
@@ -81,7 +83,6 @@ export class ClaseDetallePage {
   protected readonly cupo = signal<CupoClase | null>(null);
   protected readonly reservadaPorMi = signal(false);
   protected readonly confirmar = signal(false);
-  protected readonly aviso = signal<Aviso | null>(null);
 
   protected get fecha(): string {
     const c = this.clase();
@@ -97,17 +98,16 @@ export class ClaseDetallePage {
     const c = this.clase();
     const idCliente = this.session.idCliente();
     if (c === null || idCliente === null) {
-      this.aviso.set({ mensaje: 'Tu cuenta no tiene ficha de socio', tipo: 'error' });
+      toast.error('Tu cuenta no tiene ficha de socio');
       return;
     }
-    this.aviso.set(null);
     try {
       await this.reservas.crear(idCliente, c.id_clase);
-      this.aviso.set({ mensaje: 'Reserva confirmada', tipo: 'exito' });
+      toast.success('Reserva confirmada');
       this.reservadaPorMi.set(true);
       this.cupo.set(await this.clases.cupo(c.id_clase));
     } catch (error) {
-      this.aviso.set({ mensaje: mensajeDe(error), tipo: 'error' });
+      toast.error(mensajeDe(error));
       this.cupo.set(await this.clases.cupo(c.id_clase).catch(() => null));
     }
   }

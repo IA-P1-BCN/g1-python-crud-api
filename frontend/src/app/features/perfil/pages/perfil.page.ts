@@ -1,40 +1,45 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { toast } from '@spartan-ng/brain/sonner';
 import { HlmBadgeImports } from '@spartan-ng/helm/badge';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmLabelImports } from '@spartan-ng/helm/label';
+import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { SessionService } from '../../../core/auth/session.service';
 import { textoDeError } from '../../../core/http/peticion';
 import { CuentasApi } from '../../../services/api/recursos.api';
-import { ToastComponent } from '../../../shared/components/toast.component';
 import { Cuenta } from '../../../shared/models/cuenta.model';
-
-interface Aviso {
-  readonly mensaje: string;
-  readonly tipo: 'exito' | 'error';
-}
 
 /** Perfil propio: consulta GET /v1/users/me y edición con PATCH. */
 @Component({
   selector: 'app-perfil',
   imports: [
     ReactiveFormsModule,
-    ToastComponent,
     HlmBadgeImports,
     HlmButtonImports,
     HlmCardImports,
+    HlmFieldImports,
     HlmInputImports,
     HlmLabelImports,
+    HlmSkeletonImports,
   ],
   template: `
     <h1 class="mb-4 text-3xl font-semibold">Mi perfil</h1>
 
-    <app-toast [mensaje]="aviso()?.mensaje ?? null" [tipo]="aviso()?.tipo ?? 'exito'" />
-
     @if (cargando()) {
-      <p class="text-sm text-muted-foreground">Cargando perfil…</p>
+      <section hlmCard class="mb-6 max-w-2xl gap-3 p-4">
+        <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+          @for (campo of [1, 2, 3, 4, 5, 6]; track campo) {
+            <div class="flex flex-col gap-1">
+              <div hlmSkeleton class="h-4 w-24"></div>
+              <div hlmSkeleton class="h-4 w-40"></div>
+            </div>
+          }
+        </div>
+      </section>
     } @else if (cuenta(); as datos) {
       <section hlmCard class="mb-6 max-w-2xl p-4">
         <dl class="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
@@ -70,26 +75,22 @@ interface Aviso {
       <section hlmCard class="max-w-2xl p-4">
         <h2 class="mb-3 text-lg font-semibold">Editar mis datos</h2>
         <form id="formulario" [formGroup]="form" class="grid gap-3" (submit)="guardar($event)">
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="nombre-perfil">Nombre *</label>
+          <div hlmField>
+            <label hlmFieldLabel for="nombre-perfil">Nombre *</label>
             <input hlmInput id="nombre-perfil" formControlName="nombre" />
             @if (mostrarError('nombre')) {
-              <p class="text-sm text-destructive">
-                El nombre es obligatorio (máx. 100 caracteres).
-              </p>
+              <hlm-field-error>El nombre es obligatorio (máx. 100 caracteres).</hlm-field-error>
             }
           </div>
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="email-perfil">Email *</label>
+          <div hlmField>
+            <label hlmFieldLabel for="email-perfil">Email *</label>
             <input hlmInput id="email-perfil" type="email" formControlName="email" />
             @if (mostrarError('email')) {
-              <p class="text-sm text-destructive">
-                El email es obligatorio y debe ser válido (máx. 150).
-              </p>
+              <hlm-field-error>El email es obligatorio y debe ser válido (máx. 150).</hlm-field-error>
             }
           </div>
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="password-perfil">Contraseña nueva (opcional)</label>
+          <div hlmField>
+            <label hlmFieldLabel for="password-perfil">Contraseña nueva (opcional)</label>
             <input
               hlmInput
               id="password-perfil"
@@ -98,13 +99,11 @@ interface Aviso {
               formControlName="password"
             />
             @if (mostrarError('password')) {
-              <p class="text-sm text-destructive">
-                La contraseña debe tener entre 12 y 128 caracteres.
-              </p>
+              <hlm-field-error>La contraseña debe tener entre 12 y 128 caracteres.</hlm-field-error>
             }
           </div>
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="current-password-perfil">Contraseña actual (para cambiarla)</label>
+          <div hlmField>
+            <label hlmFieldLabel for="current-password-perfil">Contraseña actual (para cambiarla)</label>
             <input
               hlmInput
               id="current-password-perfil"
@@ -113,9 +112,7 @@ interface Aviso {
               formControlName="current_password"
             />
             @if (mostrarError('current_password')) {
-              <p class="text-sm text-destructive">
-                Introduce tu contraseña actual (máx. 128 caracteres).
-              </p>
+              <hlm-field-error>Introduce tu contraseña actual (máx. 128 caracteres).</hlm-field-error>
             }
           </div>
           <div class="flex gap-2">
@@ -132,7 +129,6 @@ export class PerfilPage {
 
   protected readonly cargando = signal(true);
   protected readonly cuenta = signal<Cuenta | null>(null);
-  protected readonly aviso = signal<Aviso | null>(null);
 
   protected readonly form = new FormGroup({
     nombre: new FormControl('', {
@@ -180,7 +176,6 @@ export class PerfilPage {
       return;
     }
     const { nombre, email, password, current_password } = this.form.getRawValue();
-    this.aviso.set(null);
     try {
       const actualizado = await this.api.actualizarYo({
         nombre: nombre.trim(),
@@ -188,10 +183,10 @@ export class PerfilPage {
         ...(password === '' ? {} : { password, current_password }),
       });
       this.aplicar(actualizado);
-      this.aviso.set({ mensaje: 'Perfil actualizado', tipo: 'exito' });
+      toast.success('Perfil actualizado');
       this.form.controls.password.setValue('');
     } catch (error) {
-      this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });
+      toast.error(textoDeError(error));
     }
   }
 
@@ -222,7 +217,7 @@ export class PerfilPage {
       });
     } catch (error) {
       this.cuenta.set(null);
-      this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });
+      toast.error(textoDeError(error));
     } finally {
       this.cargando.set(false);
     }

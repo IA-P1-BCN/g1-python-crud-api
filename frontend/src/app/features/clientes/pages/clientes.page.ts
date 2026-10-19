@@ -1,23 +1,23 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideInbox } from '@ng-icons/lucide';
+import { toast } from '@spartan-ng/brain/sonner';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmEmptyImports } from '@spartan-ng/helm/empty';
+import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmLabelImports } from '@spartan-ng/helm/label';
+import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { textoDeError } from '../../../core/http/peticion';
 import { ClientesApi, ClienteEntrada } from '../../../services/api/recursos.api';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog.component';
 import { EstadoBadgeComponent } from '../../../shared/components/estado-badge.component';
-import { ToastComponent } from '../../../shared/components/toast.component';
 import { EstadoMembresia, Cliente } from '../../../shared/models/cliente.model';
 
 const ESTADOS: readonly EstadoMembresia[] = ['Activo', 'Inactivo', 'Suspendido'];
-
-interface Aviso {
-  readonly mensaje: string;
-  readonly tipo: 'exito' | 'error';
-}
 
 /** Gestión de clientes: listado con filtros, alta, edición y baja (/v1/clientes). */
 @Component({
@@ -26,13 +26,17 @@ interface Aviso {
     ReactiveFormsModule,
     ConfirmDialogComponent,
     EstadoBadgeComponent,
-    ToastComponent,
+    NgIcon,
     HlmButtonImports,
     HlmCardImports,
+    HlmEmptyImports,
+    HlmFieldImports,
     HlmInputImports,
     HlmLabelImports,
+    HlmSkeletonImports,
     HlmTableImports,
   ],
+  providers: [provideIcons({ lucideInbox })],
   template: `
     <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
       <h1 class="text-3xl font-semibold">Clientes</h1>
@@ -57,36 +61,34 @@ interface Aviso {
       <button hlmBtn type="button" variant="ghost" (click)="limpiar()">Limpiar</button>
     </form>
 
-    <app-toast [mensaje]="aviso()?.mensaje ?? null" [tipo]="aviso()?.tipo ?? 'exito'" />
-
     @if (formulario(); as modo) {
       <section hlmCard class="mb-4 p-4">
         <h2 class="mb-3 text-lg font-semibold">{{ modo === 'crear' ? 'Nuevo cliente' : 'Editar cliente' }}</h2>
         <form id="formulario" [formGroup]="form" class="grid gap-3 sm:grid-cols-2" (submit)="guardar($event)">
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="nombre-cliente">Nombre *</label>
+          <div hlmField>
+            <label hlmFieldLabel for="nombre-cliente">Nombre *</label>
             <input hlmInput id="nombre-cliente" formControlName="nombre" />
             @if (mostrarError('nombre')) {
-              <p class="text-sm text-destructive">El nombre es obligatorio (máx. 100 caracteres).</p>
+              <hlm-field-error>El nombre es obligatorio (máx. 100 caracteres).</hlm-field-error>
             }
           </div>
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="email-cliente">Email</label>
+          <div hlmField>
+            <label hlmFieldLabel for="email-cliente">Email</label>
             <input hlmInput id="email-cliente" type="email" formControlName="email" />
             @if (mostrarError('email')) {
-              <p class="text-sm text-destructive">El email no tiene un formato válido (máx. 150).</p>
+              <hlm-field-error>El email no tiene un formato válido (máx. 150).</hlm-field-error>
             }
           </div>
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="membresia-cliente">Estado de membresía *</label>
+          <div hlmField>
+            <label hlmFieldLabel for="membresia-cliente">Estado de membresía *</label>
             <select hlmInput id="membresia-cliente" formControlName="estado_membresia">
               @for (estado of estados; track estado) {
                 <option [value]="estado">{{ estado }}</option>
               }
             </select>
           </div>
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="fecha-cliente">Fecha de inscripción</label>
+          <div hlmField>
+            <label hlmFieldLabel for="fecha-cliente">Fecha de inscripción</label>
             <input hlmInput id="fecha-cliente" type="date" formControlName="fecha_inscripcion" />
           </div>
           <div class="flex gap-2 sm:col-span-2">
@@ -98,9 +100,37 @@ interface Aviso {
     }
 
     @if (cargando()) {
-      <p class="text-sm text-muted-foreground">Cargando clientes…</p>
+      <div hlmTableContainer>
+        <table hlmTable>
+          <thead hlmTHead>
+            <tr hlmTr>
+              <th hlmTh>ID</th>
+              <th hlmTh>Nombre</th>
+              <th hlmTh>Email</th>
+              <th hlmTh>Estado</th>
+              <th hlmTh>Inscripción</th>
+              <th hlmTh>Acciones</th>
+            </tr>
+          </thead>
+          <tbody hlmTBody>
+            @for (fila of [1, 2, 3]; track fila) {
+              <tr hlmTr>
+                @for (col of [1, 2, 3, 4, 5, 6]; track col) {
+                  <td hlmTd><span hlmSkeleton class="h-4 w-full"></span></td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     } @else if (items().length === 0) {
-      <p class="text-sm text-muted-foreground">No hay clientes que coincidan.</p>
+      <div hlmEmpty>
+        <div hlmEmptyHeader>
+          <div hlmEmptyMedia variant="icon"><ng-icon name="lucideInbox" /></div>
+          <p hlmEmptyTitle>No hay clientes</p>
+          <p hlmEmptyDescription>Prueba con otros filtros o crea uno nuevo con «Nuevo cliente».</p>
+        </div>
+      </div>
     } @else {
       <div hlmTableContainer>
         <table hlmTable>
@@ -159,7 +189,6 @@ export class ClientesPage {
   protected readonly formulario = signal<'crear' | 'editar' | null>(null);
   protected readonly editandoId = signal<number | null>(null);
   protected readonly pendiente = signal<Cliente | null>(null);
-  protected readonly aviso = signal<Aviso | null>(null);
 
   protected readonly filtroQ = new FormControl('', { nonNullable: true });
   protected readonly filtroEstado = new FormControl('', { nonNullable: true });
@@ -198,7 +227,6 @@ export class ClientesPage {
   protected nuevo(): void {
     this.form.reset({ nombre: '', email: '', estado_membresia: 'Activo', fecha_inscripcion: '' });
     this.editandoId.set(null);
-    this.aviso.set(null);
     this.formulario.set('crear');
   }
 
@@ -210,7 +238,6 @@ export class ClientesPage {
       fecha_inscripcion: fila.fecha_inscripcion ?? '',
     });
     this.editandoId.set(fila.id_cliente);
-    this.aviso.set(null);
     this.formulario.set('editar');
   }
 
@@ -232,35 +259,33 @@ export class ClientesPage {
     }
     const datos: ClienteEntrada = this.datosDelFormulario();
     const modo = this.formulario();
-    this.aviso.set(null);
     try {
       if (modo === 'crear') {
         await this.api.crearCliente(datos);
-        this.aviso.set({ mensaje: 'Cliente creado', tipo: 'exito' });
+        toast.success('Cliente creado');
       } else {
         const id = this.editandoId();
         if (id === null) {
           return;
         }
         await this.api.reemplazar(id, datos);
-        this.aviso.set({ mensaje: 'Cliente actualizado', tipo: 'exito' });
+        toast.success('Cliente actualizado');
       }
       this.cerrarFormulario();
       await this.cargar();
     } catch (error) {
-      this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });
+      toast.error(textoDeError(error));
     }
   }
 
   protected async borrar(fila: Cliente): Promise<void> {
     this.pendiente.set(null);
-    this.aviso.set(null);
     try {
       await this.api.eliminar(fila.id_cliente);
-      this.aviso.set({ mensaje: 'Cliente eliminado', tipo: 'exito' });
+      toast.success('Cliente eliminado');
       await this.cargar();
     } catch (error) {
-      this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });
+      toast.error(textoDeError(error));
     }
   }
 
@@ -287,7 +312,7 @@ export class ClientesPage {
       );
     } catch (error) {
       this.items.set([]);
-      this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });
+      toast.error(textoDeError(error));
     } finally {
       this.cargando.set(false);
     }

@@ -44,3 +44,23 @@
   admin, Dashboard/Clientes/Entrenadores/Clases; sin sesión, solo el logo.
   El resto sigue en el menú desplegable. Spec «Cabecera por rol» y test
   nuevo del shell; `npm test` 125 passed, `task spec:validate` 24/24.
+- **Ampliación 2026-10-19 (4)**: «Repaso Spartan completo» de UI (petición
+  de la usuaria, guía `.agents/skills/spartan`). Instalados con el CLI
+  `@spartan-ng/cli` los componentes que faltaban (`field`, `separator`,
+  `skeleton`, `empty`, `spinner`, `sonner`) en `shared/ui/` con sus paths
+  en `tsconfig.json`; `package.json`/lock sin cambios (el CLI re-fijó
+  `@ng-icons`, se revirtió; no añade dependencias). `<hlm-toaster />`
+  global en `app.html`. En las 15 páginas con formulario/listado:
+  formularios de alta/edición a `hlmField` + `hlm-field-error` (los de
+  filtro/búsqueda sin validación conservan `hlmLabel`); estados de carga
+  `<p>Cargando…</p>` → `hlmSkeleton` (tabla o tarjeta según la página);
+  estados vacíos → `hlmEmpty` (selectores de atributo); y avisos
+  `app-toast`/signal `aviso` → `toast.success/error` de `@spartan-ng/brain/sonner`.
+  Helper de test `testing/toast.ts` (`mensajesDeToast`/`limpiarToasts`
+  sobre la cola global `toastState`); 8 specs adaptados (los mensajes de
+  toast ya no están en el DOM de la página). Verificación: `npm test`
+  125 passed (27 ficheros), `npm run build` ok, `task spec:validate` 24/24,
+  `task lint`, `task test` 376 passed, frontend reconstruido en Docker y
+  smoke (`/`, `/health`). **No comprobado en navegador manual**: smoke
+  visual de skeleton/empty/toast con la API real; se deja a la revisión
+  humana. `barras-chart` y dark mode quedan fuera de este alcance.

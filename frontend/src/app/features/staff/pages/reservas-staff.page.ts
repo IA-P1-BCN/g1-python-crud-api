@@ -1,13 +1,17 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideInbox } from '@ng-icons/lucide';
+import { toast } from '@spartan-ng/brain/sonner';
+import { HlmButtonImports } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmEmptyImports } from '@spartan-ng/helm/empty';
+import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
+import { HlmTableImports } from '@spartan-ng/helm/table';
 import { textoDeError } from '../../../core/http/peticion';
 import { ClaseService } from '../../../services/clase.service';
 import { ReservasApi } from '../../../services/api/recursos.api';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog.component';
-import { ToastComponent } from '../../../shared/components/toast.component';
-import { HlmButtonImports } from '@spartan-ng/helm/button';
-import { HlmCardImports } from '@spartan-ng/helm/card';
-import { HlmTableImports } from '@spartan-ng/helm/table';
 import { formatearFechaHora } from '../../../shared/format/fecha';
 import { Clase } from '../../../shared/models/clase.model';
 import { Reserva } from '../../../shared/models/reserva.model';
@@ -18,27 +22,58 @@ interface Fila {
   readonly horario: string;
 }
 
-interface Aviso {
-  readonly mensaje: string;
-  readonly tipo: 'exito' | 'error';
-}
-
 /** Reservas del alcance del staff (las de sus clases): cancela y marca asistencia. */
 @Component({
   selector: 'app-reservas-staff',
-  imports: [RouterLink, ConfirmDialogComponent, ToastComponent, HlmButtonImports, HlmCardImports, HlmTableImports],
+  imports: [
+    RouterLink,
+    ConfirmDialogComponent,
+    NgIcon,
+    HlmButtonImports,
+    HlmCardImports,
+    HlmEmptyImports,
+    HlmSkeletonImports,
+    HlmTableImports,
+  ],
+  providers: [provideIcons({ lucideInbox })],
   template: `
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-3xl font-semibold">Reservas de mis clases</h1>
       <a hlmBtn variant="outline" routerLink="/staff">Volver al panel</a>
     </div>
 
-    <app-toast [mensaje]="aviso()?.mensaje ?? null" [tipo]="aviso()?.tipo ?? 'exito'" />
-
     @if (cargando()) {
-      <p class="text-sm text-muted-foreground">Cargando reservas…</p>
+      <div hlmTableContainer>
+        <table hlmTable>
+          <thead hlmTHead>
+            <tr hlmTr>
+              <th hlmTh>ID</th>
+              <th hlmTh>Clase</th>
+              <th hlmTh>Horario</th>
+              <th hlmTh>Reserva</th>
+              <th hlmTh>Asistencia</th>
+              <th hlmTh>Acciones</th>
+            </tr>
+          </thead>
+          <tbody hlmTBody>
+            @for (fila of [1, 2, 3]; track fila) {
+              <tr hlmTr>
+                @for (col of [1, 2, 3, 4, 5, 6]; track col) {
+                  <td hlmTd><span hlmSkeleton class="h-4 w-full"></span></td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     } @else if (filas().length === 0) {
-      <p class="text-sm text-muted-foreground">No hay reservas en tus clases.</p>
+      <div hlmEmpty>
+        <div hlmEmptyHeader>
+          <div hlmEmptyMedia variant="icon"><ng-icon name="lucideInbox" /></div>
+          <p hlmEmptyTitle>No hay reservas en tus clases.</p>
+          <p hlmEmptyDescription>Aparecerán aquí cuando un cliente reserve una de tus clases.</p>
+        </div>
+      </div>
     } @else {
       <div hlmTableContainer>
         <table hlmTable>
@@ -98,36 +133,33 @@ export class ReservasStaffPage {
   protected readonly cargando = signal(true);
   protected readonly filas = signal<Fila[]>([]);
   protected readonly pendiente = signal<Fila | null>(null);
-  protected readonly aviso = signal<Aviso | null>(null);
 
   constructor() {
     void this.cargar();
   }
 
   protected async marcarAsistencia(fila: Fila): Promise<void> {
-    this.aviso.set(null);
     try {
       await this.reservasApi.reemplazar(fila.reserva.id_reserva, {
         id_cliente: fila.reserva.id_cliente,
         id_clase: fila.reserva.id_clase,
         asistio: true,
       });
-      this.aviso.set({ mensaje: 'Asistencia registrada', tipo: 'exito' });
+      toast.success('Asistencia registrada');
       await this.cargar();
     } catch (error) {
-      this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });
+      toast.error(textoDeError(error));
     }
   }
 
   protected async cancelar(fila: Fila): Promise<void> {
     this.pendiente.set(null);
-    this.aviso.set(null);
     try {
       await this.reservasApi.eliminar(fila.reserva.id_reserva);
-      this.aviso.set({ mensaje: 'Reserva cancelada', tipo: 'exito' });
+      toast.success('Reserva cancelada');
       await this.cargar();
     } catch (error) {
-      this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });
+      toast.error(textoDeError(error));
     }
   }
 
@@ -148,10 +180,9 @@ export class ReservasStaffPage {
           .filter((x): x is Fila => x !== null)
           .sort((a, b) => b.horario.localeCompare(a.horario)),
       );
-      this.aviso.set(null);
     } catch (error) {
       this.filas.set([]);
-      this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });
+      toast.error(textoDeError(error));
     } finally {
       this.cargando.set(false);
     }

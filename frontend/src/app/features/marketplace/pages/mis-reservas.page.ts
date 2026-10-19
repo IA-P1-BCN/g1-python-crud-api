@@ -1,13 +1,17 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideInbox } from '@ng-icons/lucide';
+import { toast } from '@spartan-ng/brain/sonner';
+import { HlmButtonImports } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmEmptyImports } from '@spartan-ng/helm/empty';
+import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
+import { HlmTabsImports } from '@spartan-ng/helm/tabs';
 import { SessionService } from '../../../core/auth/session.service';
 import { ClaseService } from '../../../services/clase.service';
 import { ReservaService } from '../../../services/reserva.service';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog.component';
-import { ToastComponent } from '../../../shared/components/toast.component';
-import { HlmButtonImports } from '@spartan-ng/helm/button';
-import { HlmCardImports } from '@spartan-ng/helm/card';
-import { HlmTabsImports } from '@spartan-ng/helm/tabs';
 import { esPasada, formatearFechaHora } from '../../../shared/format/fecha';
 import { Clase } from '../../../shared/models/clase.model';
 
@@ -18,14 +22,19 @@ interface FilaReserva {
   readonly horario: string;
 }
 
-interface Aviso {
-  readonly mensaje: string;
-  readonly tipo: 'exito' | 'error';
-}
-
 @Component({
   selector: 'app-mis-reservas',
-  imports: [ConfirmDialogComponent, RouterLink, ToastComponent, HlmButtonImports, HlmCardImports, HlmTabsImports],
+  imports: [
+    ConfirmDialogComponent,
+    RouterLink,
+    NgIcon,
+    HlmButtonImports,
+    HlmCardImports,
+    HlmEmptyImports,
+    HlmSkeletonImports,
+    HlmTabsImports,
+  ],
+  providers: [provideIcons({ lucideInbox })],
   template: `
     <h1 class="mb-4 text-3xl font-semibold">Mis reservas</h1>
 
@@ -36,18 +45,32 @@ interface Aviso {
       </hlm-tabs-list>
     </hlm-tabs>
 
-    <app-toast [mensaje]="aviso()?.mensaje ?? null" [tipo]="aviso()?.tipo ?? 'exito'" />
-
     @if (cargando()) {
-      <p class="text-sm text-muted-foreground">Cargando reservas…</p>
-    } @else if (visibles().length === 0) {
-      <p class="text-sm text-muted-foreground">
-        @if (pestana() === 'proximas') {
-          Aún no tienes reservas. <a class="font-semibold text-primary" routerLink="/marketplace/resultados">Ver clases</a>
-        } @else {
-          No tienes clases pasadas.
+      <ul class="grid list-none gap-3 p-0">
+        @for (fila of [1, 2, 3]; track fila) {
+          <li hlmCard class="flex-row items-center justify-between gap-4 p-4">
+            <div class="flex flex-col gap-2">
+              <div hlmSkeleton class="h-5 w-48"></div>
+              <div hlmSkeleton class="h-4 w-32"></div>
+            </div>
+            <div hlmSkeleton class="h-8 w-32"></div>
+          </li>
         }
-      </p>
+      </ul>
+    } @else if (visibles().length === 0) {
+      <div hlmEmpty>
+        <div hlmEmptyHeader>
+          <div hlmEmptyMedia variant="icon"><ng-icon name="lucideInbox" /></div>
+          @if (pestana() === 'proximas') {
+            <p hlmEmptyTitle>Aún no tienes reservas.</p>
+            <p hlmEmptyDescription>
+              <a class="font-semibold text-primary" routerLink="/marketplace/resultados">Ver clases</a>
+            </p>
+          } @else {
+            <p hlmEmptyTitle>No tienes clases pasadas.</p>
+          }
+        </div>
+      </div>
     } @else {
       <ul class="grid list-none gap-3 p-0">
         @for (fila of visibles(); track fila.id_reserva) {
@@ -88,7 +111,6 @@ export class MisReservasPage {
     pasadas: [],
   });
   protected readonly pendiente = signal<FilaReserva | null>(null);
-  protected readonly aviso = signal<Aviso | null>(null);
 
   protected readonly visibles = computed(() =>
     this.pestana() === 'proximas' ? this.filas().proximas : this.filas().pasadas,
@@ -100,13 +122,12 @@ export class MisReservasPage {
 
   protected async cancelar(fila: FilaReserva): Promise<void> {
     this.pendiente.set(null);
-    this.aviso.set(null);
     try {
       await this.reservas.cancelar(fila.id_reserva);
-      this.aviso.set({ mensaje: 'Reserva cancelada', tipo: 'exito' });
+      toast.success('Reserva cancelada');
       await this.cargar();
     } catch {
-      this.aviso.set({ mensaje: 'No se pudo cancelar la reserva. Inténtalo de nuevo.', tipo: 'error' });
+      toast.error('No se pudo cancelar la reserva. Inténtalo de nuevo.');
     }
   }
 

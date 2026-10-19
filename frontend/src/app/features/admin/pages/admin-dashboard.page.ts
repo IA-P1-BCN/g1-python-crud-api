@@ -1,5 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { toast } from '@spartan-ng/brain/sonner';
+import { HlmButtonImports } from '@spartan-ng/helm/button';
+import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { textoDeError } from '../../../core/http/peticion';
 import {
   ClientesApi,
@@ -8,9 +12,6 @@ import {
 } from '../../../services/api/recursos.api';
 import { ClaseService } from '../../../services/clase.service';
 import { BarrasChartComponent, BarraDato } from '../../../shared/components/barras-chart.component';
-import { ToastComponent } from '../../../shared/components/toast.component';
-import { HlmButtonImports } from '@spartan-ng/helm/button';
-import { HlmCardImports } from '@spartan-ng/helm/card';
 
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
@@ -20,14 +21,12 @@ const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'o
  */
 @Component({
   selector: 'app-admin-dashboard',
-  imports: [RouterLink, BarrasChartComponent, ToastComponent, HlmButtonImports, HlmCardImports],
+  imports: [RouterLink, BarrasChartComponent, HlmButtonImports, HlmCardImports, HlmSkeletonImports],
   template: `
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-3xl font-semibold">Dashboard</h1>
       <a hlmBtn variant="outline" routerLink="/admin/cuentas">Gestionar cuentas</a>
     </div>
-
-    <app-toast [mensaje]="aviso()" [tipo]="'error'" />
 
     <p class="mb-4 text-sm text-muted-foreground">
       Datos reales de la API (hasta 100 registros por listado). Reservas:
@@ -36,7 +35,14 @@ const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'o
     </p>
 
     @if (cargando()) {
-      <p class="text-sm text-muted-foreground">Cargando métricas…</p>
+      <section class="grid gap-4 lg:grid-cols-2">
+        @for (tarjeta of [1, 2, 3, 4]; track tarjeta) {
+          <article hlmCard class="gap-3 p-4">
+            <div hlmCardHeader><div hlmSkeleton class="h-6 w-48"></div></div>
+            <div hlmCardContent><div hlmSkeleton class="h-48 w-full"></div></div>
+          </article>
+        }
+      </section>
     } @else {
       <section class="grid gap-4 lg:grid-cols-2">
         <article hlmCard class="gap-3 p-4">
@@ -74,7 +80,6 @@ export class AdminDashboardPage {
   private readonly clases = inject(ClaseService);
 
   protected readonly cargando = signal(true);
-  protected readonly aviso = signal<string | null>(null);
   protected readonly totalReservas = signal(0);
   protected readonly totalClientes = signal(0);
   protected readonly totalEntrenadores = signal(0);
@@ -137,9 +142,8 @@ export class AdminDashboardPage {
             valor,
           })),
       );
-      this.aviso.set(null);
     } catch (error) {
-      this.aviso.set(textoDeError(error));
+      toast.error(textoDeError(error));
     } finally {
       this.cargando.set(false);
     }

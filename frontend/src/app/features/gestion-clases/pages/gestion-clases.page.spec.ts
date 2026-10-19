@@ -4,6 +4,7 @@ import { vi } from 'vitest';
 import { ApiError } from '../../../core/http/peticion';
 import { ClasesApi, ClaseEntrada, EntrenadoresApi } from '../../../services/api/recursos.api';
 import { esperarCarga } from '../../../testing/esperar';
+import { limpiarToasts, mensajesDeToast } from '../../../testing/toast';
 import { Clase } from '../../../shared/models/clase.model';
 import { Entrenador } from '../../../shared/models/entrenador.model';
 import { GestionClasesPage } from './gestion-clases.page';
@@ -30,6 +31,7 @@ describe('GestionClasesPage', () => {
 
   beforeEach(async () => {
     sessionStorage.clear();
+    limpiarToasts();
     clases = {
       listar: vi.fn(() => Promise.resolve([CLASE])),
       crearClase: vi.fn((datos: ClaseEntrada) => Promise.resolve({ id_clase: 2, ...datos })),
@@ -89,7 +91,7 @@ describe('GestionClasesPage', () => {
       capacidad_max: 12,
       id_entrenador: 1,
     });
-    expect(texto()).toContain('Clase creada');
+    expect(mensajesDeToast()).toContain('Clase creada');
   });
 
   it('no crea nada sin entrenador seleccionado', () => {
@@ -123,6 +125,6 @@ describe('GestionClasesPage', () => {
     enviarFormulario('formulario');
     await esperarCarga(fixture);
 
-    expect(texto()).toContain('La capacidad no puede ser menor que las reservas');
+    expect(mensajesDeToast()).toContain('La capacidad no puede ser menor que las reservas');
   });
 });

@@ -4,6 +4,7 @@ import { vi } from 'vitest';
 import { ApiError } from '../../../core/http/peticion';
 import { ClientesApi, ClienteEntrada } from '../../../services/api/recursos.api';
 import { esperarCarga } from '../../../testing/esperar';
+import { limpiarToasts, mensajesDeToast } from '../../../testing/toast';
 import { Cliente } from '../../../shared/models/cliente.model';
 import { ClientesPage } from './clientes.page';
 
@@ -26,6 +27,7 @@ describe('ClientesPage', () => {
 
   beforeEach(async () => {
     sessionStorage.clear();
+    limpiarToasts();
     api = {
       listar: vi.fn(() => Promise.resolve([CLIENTE])),
       crearCliente: vi.fn((datos: ClienteEntrada) =>
@@ -90,7 +92,7 @@ describe('ClientesPage', () => {
       estado_membresia: 'Inactivo',
       fecha_inscripcion: '2026-10-15',
     });
-    expect(texto()).toContain('Cliente creado');
+    expect(mensajesDeToast()).toContain('Cliente creado');
   });
 
   it('no crea nada con un email inválido y marca el campo', () => {
@@ -127,7 +129,7 @@ describe('ClientesPage', () => {
       estado_membresia: 'Suspendido',
       fecha_inscripcion: '2026-10-01',
     });
-    expect(texto()).toContain('Cliente actualizado');
+    expect(mensajesDeToast()).toContain('Cliente actualizado');
   });
 
   it('muestra el detalle del conflicto si la API rechaza el borrado', async () => {
@@ -143,7 +145,7 @@ describe('ClientesPage', () => {
       .click();
     await esperarCarga(fixture);
 
-    expect(texto()).toContain('La operación entra en conflicto con un registro o relación existente');
+    expect(mensajesDeToast()).toContain('La operación entra en conflicto con un registro o relación existente');
     expect(api.listar).toHaveBeenCalledTimes(1);
   });
 });

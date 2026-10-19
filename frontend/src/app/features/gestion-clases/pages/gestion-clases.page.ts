@@ -1,22 +1,22 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideInbox } from '@ng-icons/lucide';
+import { toast } from '@spartan-ng/brain/sonner';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmEmptyImports } from '@spartan-ng/helm/empty';
+import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmLabelImports } from '@spartan-ng/helm/label';
+import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { textoDeError } from '../../../core/http/peticion';
 import { ClasesApi, ClaseEntrada, EntrenadoresApi } from '../../../services/api/recursos.api';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog.component';
-import { ToastComponent } from '../../../shared/components/toast.component';
 import { formatearFechaHora } from '../../../shared/format/fecha';
 import { Clase } from '../../../shared/models/clase.model';
 import { Entrenador } from '../../../shared/models/entrenador.model';
-
-interface Aviso {
-  readonly mensaje: string;
-  readonly tipo: 'exito' | 'error';
-}
 
 /** Gestión de clases: CRUD con entrenador y horario UTC (/v1/clases). */
 @Component({
@@ -24,13 +24,17 @@ interface Aviso {
   imports: [
     ReactiveFormsModule,
     ConfirmDialogComponent,
-    ToastComponent,
+    NgIcon,
     HlmButtonImports,
     HlmCardImports,
+    HlmEmptyImports,
+    HlmFieldImports,
     HlmInputImports,
     HlmLabelImports,
+    HlmSkeletonImports,
     HlmTableImports,
   ],
+  providers: [provideIcons({ lucideInbox })],
   template: `
     <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
       <h1 class="text-3xl font-semibold">Gestión de clases</h1>
@@ -46,35 +50,33 @@ interface Aviso {
       <button hlmBtn type="button" variant="ghost" (click)="limpiar()">Limpiar</button>
     </form>
 
-    <app-toast [mensaje]="aviso()?.mensaje ?? null" [tipo]="aviso()?.tipo ?? 'exito'" />
-
     @if (formulario(); as modo) {
       <section hlmCard class="mb-4 p-4">
         <h2 class="mb-3 text-lg font-semibold">{{ modo === 'crear' ? 'Nueva clase' : 'Editar clase' }}</h2>
         <form id="formulario" [formGroup]="form" class="grid gap-3 sm:grid-cols-2" (submit)="guardar($event)">
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="nombre-clase">Nombre *</label>
+          <div hlmField>
+            <label hlmFieldLabel for="nombre-clase">Nombre *</label>
             <input hlmInput id="nombre-clase" formControlName="nombre_clase" />
             @if (mostrarError('nombre_clase')) {
-              <p class="text-sm text-destructive">El nombre es obligatorio (máx. 50 caracteres).</p>
+              <hlm-field-error>El nombre es obligatorio (máx. 50 caracteres).</hlm-field-error>
             }
           </div>
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="horario-clase">Horario (UTC) *</label>
+          <div hlmField>
+            <label hlmFieldLabel for="horario-clase">Horario (UTC) *</label>
             <input hlmInput id="horario-clase" type="datetime-local" formControlName="horario" />
             @if (mostrarError('horario')) {
-              <p class="text-sm text-destructive">El horario es obligatorio.</p>
+              <hlm-field-error>El horario es obligatorio.</hlm-field-error>
             }
           </div>
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="capacidad-clase">Capacidad máxima *</label>
+          <div hlmField>
+            <label hlmFieldLabel for="capacidad-clase">Capacidad máxima *</label>
             <input hlmInput id="capacidad-clase" type="number" formControlName="capacidad_max" />
             @if (mostrarError('capacidad_max')) {
-              <p class="text-sm text-destructive">La capacidad debe ser un número mayor que cero.</p>
+              <hlm-field-error>La capacidad debe ser un número mayor que cero.</hlm-field-error>
             }
           </div>
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="entrenador-clase">Entrenador *</label>
+          <div hlmField>
+            <label hlmFieldLabel for="entrenador-clase">Entrenador *</label>
             <select hlmInput id="entrenador-clase" formControlName="id_entrenador">
               <option value="">Elige un entrenador</option>
               @for (entrenador of entrenadores(); track entrenador.id_entrenador) {
@@ -82,7 +84,7 @@ interface Aviso {
               }
             </select>
             @if (mostrarError('id_entrenador')) {
-              <p class="text-sm text-destructive">El entrenador es obligatorio.</p>
+              <hlm-field-error>El entrenador es obligatorio.</hlm-field-error>
             } @else if (entrenadores().length === 0) {
               <p class="text-sm text-muted-foreground">No hay entrenadores: da de alta alguno primero.</p>
             }
@@ -96,9 +98,37 @@ interface Aviso {
     }
 
     @if (cargando()) {
-      <p class="text-sm text-muted-foreground">Cargando clases…</p>
+      <div hlmTableContainer>
+        <table hlmTable>
+          <thead hlmTHead>
+            <tr hlmTr>
+              <th hlmTh>ID</th>
+              <th hlmTh>Clase</th>
+              <th hlmTh>Horario</th>
+              <th hlmTh>Capacidad</th>
+              <th hlmTh>Entrenador</th>
+              <th hlmTh>Acciones</th>
+            </tr>
+          </thead>
+          <tbody hlmTBody>
+            @for (fila of [1, 2, 3]; track fila) {
+              <tr hlmTr>
+                @for (col of [1, 2, 3, 4, 5, 6]; track col) {
+                  <td hlmTd><span hlmSkeleton class="h-4 w-full"></span></td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     } @else if (items().length === 0) {
-      <p class="text-sm text-muted-foreground">No hay clases que coincidan.</p>
+      <div hlmEmpty>
+        <div hlmEmptyHeader>
+          <div hlmEmptyMedia variant="icon"><ng-icon name="lucideInbox" /></div>
+          <p hlmEmptyTitle>No hay clases que coincidan.</p>
+          <p hlmEmptyDescription>Prueba con otros filtros o crea una nueva con «Nueva clase».</p>
+        </div>
+      </div>
     } @else {
       <div hlmTableContainer>
         <table hlmTable>
@@ -159,7 +189,6 @@ export class GestionClasesPage {
   protected readonly formulario = signal<'crear' | 'editar' | null>(null);
   protected readonly editandoId = signal<number | null>(null);
   protected readonly pendiente = signal<Clase | null>(null);
-  protected readonly aviso = signal<Aviso | null>(null);
 
   protected readonly filtroQ = new FormControl('', { nonNullable: true });
 
@@ -197,7 +226,6 @@ export class GestionClasesPage {
   protected nuevaClase(): void {
     this.form.reset({ nombre_clase: '', horario: '', capacidad_max: '', id_entrenador: '' });
     this.editandoId.set(null);
-    this.aviso.set(null);
     this.formulario.set('crear');
   }
 
@@ -209,7 +237,6 @@ export class GestionClasesPage {
       id_entrenador: String(fila.id_entrenador),
     });
     this.editandoId.set(fila.id_clase);
-    this.aviso.set(null);
     this.formulario.set('editar');
   }
 
@@ -235,35 +262,33 @@ export class GestionClasesPage {
     }
     const datos = this.datosDelFormulario();
     const modo = this.formulario();
-    this.aviso.set(null);
     try {
       if (modo === 'crear') {
         await this.clases.crearClase(datos);
-        this.aviso.set({ mensaje: 'Clase creada', tipo: 'exito' });
+        toast.success('Clase creada');
       } else {
         const id = this.editandoId();
         if (id === null) {
           return;
         }
         await this.clases.reemplazar(id, datos);
-        this.aviso.set({ mensaje: 'Clase actualizada', tipo: 'exito' });
+        toast.success('Clase actualizada');
       }
       this.cerrarFormulario();
       await this.cargar();
     } catch (error) {
-      this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });
+      toast.error(textoDeError(error));
     }
   }
 
   protected async borrar(fila: Clase): Promise<void> {
     this.pendiente.set(null);
-    this.aviso.set(null);
     try {
       await this.clases.eliminar(fila.id_clase);
-      this.aviso.set({ mensaje: 'Clase eliminada', tipo: 'exito' });
+      toast.success('Clase eliminada');
       await this.cargar();
     } catch (error) {
-      this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });
+      toast.error(textoDeError(error));
     }
   }
 
@@ -289,7 +314,7 @@ export class GestionClasesPage {
       this.entrenadores.set(entrenadores);
     } catch (error) {
       this.items.set([]);
-      this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });
+      toast.error(textoDeError(error));
     } finally {
       this.cargando.set(false);
     }

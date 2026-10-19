@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { esperarCarga } from '../../../testing/esperar';
+import { limpiarToasts, mensajesDeToast } from '../../../testing/toast';
 import { provideRouter } from '@angular/router';
 import { ClaseService } from '../../../services/clase.service';
 import { ReservaService } from '../../../services/reserva.service';
@@ -14,6 +15,7 @@ describe('MisReservasPage', () => {
 
   beforeEach(async () => {
     sessionStorage.clear();
+    limpiarToasts();
     await TestBed.configureTestingModule({
       imports: [MisReservasPage],
       providers: [
@@ -55,7 +57,7 @@ describe('MisReservasPage', () => {
 
     [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Sí, cancelar')!.click();
     await esperarCarga(fixture);
-    expect(texto()).toContain('Reserva cancelada');
+    expect(mensajesDeToast()).toContain('Reserva cancelada');
     expect(texto()).toContain('Aún no tienes reservas');
   });
 });
