@@ -182,16 +182,28 @@ def test_seed_staff_email_ocupado_no_modifica(seed_session):
 
 
 def test_seed_staff_entrenador_ya_vinculado_se_omite(seed_session):
+    """Auto-suficiente: crea su propio entrenador ya vinculado por otra cuenta."""
     session = seed_session
     hasher = Argon2PasswordHasher()
-    email = f"staff-{uuid4().hex}@example.com"
-    entrenador = session.scalar(select(EntrenadorRecord).order_by(
-        EntrenadorRecord.id_entrenador
-    ).limit(1))
-    assert entrenador is not None, "Ejecuta task seed antes de esta prueba"
-    resultado = seed_staff(
-        session, hasher, accounts=((email, entrenador.nombre, "Yoga"),)
+    nombre = f"Entrenador {uuid4().hex[:8]}"
+    session.add(EntrenadorRecord(nombre=nombre, especialidad="Yoga"))
+    session.flush()
+    entrenador = session.scalar(
+        select(EntrenadorRecord).where(EntrenadorRecord.nombre == nombre)
     )
+    session.add(
+        CuentaRecord(
+            nombre=nombre,
+            email=f"vinculo-{uuid4().hex}@example.com",
+            password_hash=hasher.hash("otra contraseña segura"),
+            rol="staff",
+            activo=True,
+            id_entrenador=entrenador.id_entrenador,
+        )
+    )
+    session.flush()
+    email = f"staff-{uuid4().hex}@example.com"
+    resultado = seed_staff(session, hasher, accounts=((email, nombre, "Yoga"),))
     assert resultado == {"creadas": 0, "omitidas": 1}
     assert (
         session.scalar(select(CuentaRecord).where(CuentaRecord.email == email)) is None
