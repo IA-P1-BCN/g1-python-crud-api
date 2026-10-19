@@ -93,18 +93,38 @@ imagen. El frontend es la build de Angular servida por nginx, que reenvía
 
 ## Cuentas demo
 
-Tres cuentas permiten probar los tres roles en `/docs`, todas con datos
+Estas cuentas permiten probar los tres roles en el frontend y `/docs`, con datos
 ficticios y hash Argon2id en la base (nunca texto plano):
 
 | Email | Rol | Contraseña | Origen |
 |---|---|---|---|
 | `admin@gymflow.com` | admin | `ADMIN_PASSWORD` de tu `.env` | `task seed` |
+| `admin.demo@gymflow.com` | admin demo | `AdminDemo56789012` | `task seed` |
 | `staff@gymflow.com` | staff | `Demo56789012` | `task seed` (vinculada a un Entrenador) |
 | `demo@gymflow.com` | cliente | `Demo56789012` | migración `ca6c9ed6b7e8` |
 
 La cuenta `demo@gymflow.com` está activa y queda vinculada a un Cliente
 `Activo` con un pago, para poder iniciar sesión y reservar. El admin del seed
 usa `ADMIN_EMAIL` / `ADMIN_PASSWORD` (por defecto `admin@gymflow.com`).
+
+### Administrador demo en Render
+
+Abre **https://g1-gymflow-api.onrender.com/login** e inicia sesión con
+**`admin.demo@gymflow.com` / `AdminDemo56789012`**. Es una Cuenta de demostración
+con rol admin, activa y sin vínculo Cliente/Entrenador. Su contraseña es pública
+deliberadamente para probar la administración del gimnasio; no es la clave del
+administrador privado configurado mediante `ADMIN_PASSWORD`.
+
+El seed guarda solo su hash Argon2id. Tras integrar este cambio en `main`, Render
+lo ejecuta automáticamente antes de iniciar la API, usando Aiven y las variables
+ya configuradas. No requiere un comando Task dentro de la imagen: el equivalente
+es `python -m scripts.seed_gym`. Local: `task migrate && task seed`; en Compose
+ya arrancado: `docker compose exec -T api python -m scripts.seed_gym`.
+
+Repetir el seed conserva las credenciales, rol, estado y vínculos existentes.
+Si ese email pertenece a otra Cuenta o Cliente, se omite el alta sin modificarlo;
+el log indica la omisión y las credenciales públicas no se garantizan en ese caso.
+Reserva este email para la demo; usa otro `ADMIN_EMAIL` para el admin privado.
 
 ## Configuración del equipo
 

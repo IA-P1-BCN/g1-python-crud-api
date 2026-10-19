@@ -252,6 +252,11 @@ src/
 
 - `Cuenta` vive en dominio y `CuentaRecord` en la tabla `users`;
   `id_cliente` es nullable, UNIQUE y FK RESTRICT. Borrar Cuenta conserva Cliente.
+- El seed crea una Cuenta admin demo separada: `admin.demo@gymflow.com`,
+  contraseña pública `AdminDemo56789012` (README), activa y sin vínculos.
+  Solo se almacena hash Argon2id. Si email de Cuenta o Cliente ya existe,
+  se omite sin cambiar contraseña, rol, activo ni vínculos. ADMIN_EMAIL y
+  ADMIN_PASSWORD siguen siendo configuración privada del admin inicial.
 - Contraseñas Argon2id mediante `PasswordHasher` (Protocol) y pwdlib en infraestructura.
   Los hashes no aparecen en repr de Cuenta ni en respuestas HTTP.
 - El seed crea admin y cuentas inactivas para clientes con email válido; no inventa
