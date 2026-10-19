@@ -1,6 +1,7 @@
 # 2026-10-19 — Admin demo público (continuación #118/#29)
 
-- **Spec:** [add-admin-demo](../../openspec/changes/add-admin-demo/).
+- **PR/spec:** [#130](https://github.com/IA-P1-BCN/g1-python-crud-api/pull/130),
+  [add-admin-demo](../../openspec/changes/add-admin-demo/).
 - **Herramienta/modelo:** OpenCode, OpenAI gpt-6.1-sol. Flujo de verificación
   `gymflow-verify` disponible en esta sesión aplicado a spec, lint y tests.
 - **Prompts clave:** cargar el seed del despliegue y publicar en README una

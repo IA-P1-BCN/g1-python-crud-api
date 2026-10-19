@@ -5,4 +5,4 @@
 ## 2. Verificación
 - [x] 2.1 Probar creación, login admin, repetición y conflictos.
 - [x] 2.2 Validar spec, lint y suite; ejecutar seed local.
-- [ ] 2.3 Publicar PR y registrar limitaciones de acceso a Render.
+- [x] 2.3 Publicar PR y registrar limitaciones de acceso a Render.
