@@ -104,6 +104,30 @@ se limitan a 100 registros por página.
 - **WHEN** los listados están vacíos
 - **THEN** cada gráfica muestra un estado vacío en lugar de un error
 
+### Requirement: Cabecera por rol
+La cabecera del shell SHALL mostrar los enlaces más usados de cada rol,
+sin enlaces de otros roles: `cliente` ve catálogo y mis reservas; `staff`
+ve «Mi panel» y mis clases; `admin` ve dashboard, clientes, entrenadores
+y clases. El resto de destinos (perfil, reservas del staff, pagos, cuentas,
+export) vive en el menú desplegable. Sin sesión la cabecera solo muestra
+el logo. La barra inferior móvil replica los enlaces del rol.
+
+#### Scenario: Rol cliente
+- **WHEN** la sesión tiene rol `cliente`
+- **THEN** la cabecera muestra catálogo y mis reservas, sin enlaces de staff ni admin
+
+#### Scenario: Rol staff
+- **WHEN** la sesión tiene rol `staff`
+- **THEN** la cabecera muestra «Mi panel» y mis clases, sin enlaces de marketplace ni admin
+
+#### Scenario: Rol admin
+- **WHEN** la sesión tiene rol `admin`
+- **THEN** la cabecera muestra dashboard, clientes, entrenadores y clases, sin catálogo, mis reservas ni perfil
+
+#### Scenario: Sin sesión
+- **WHEN** no hay sesión
+- **THEN** la cabecera solo muestra el logo
+
 ### Requirement: Menú por rol
 El menú de sesión SHALL mostrar para `cliente` el catálogo, «Mis reservas» y
 «Mi perfil»; para `staff` además «Mi panel» y sus pantallas; para `admin`

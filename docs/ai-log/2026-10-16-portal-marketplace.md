@@ -38,3 +38,9 @@
 - **Ampliación 2026-10-19 (2)**: el login de staff sin `returnUrl` aterriza
   en `/staff` (su panel). Spec «Destino tras el login» y tests actualizados;
   `npm test` 120 passed, `task spec:validate` 24/24, frontend reconstruido.
+- **Ampliación 2026-10-19 (3)**: la cabecera del shell pasa a ser reactiva
+  por rol (antes tenía Catálogo/Mis reservas/Mi perfil hardcodeados para
+  todos): cliente ve catálogo y mis reservas; staff, Mi panel y Mis clases;
+  admin, Dashboard/Clientes/Entrenadores/Clases; sin sesión, solo el logo.
+  El resto sigue en el menú desplegable. Spec «Cabecera por rol» y test
+  nuevo del shell; `npm test` 125 passed, `task spec:validate` 24/24.
