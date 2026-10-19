@@ -23,6 +23,15 @@ class IdentidadCliente:
 
 
 @dataclass(frozen=True, kw_only=True)
+class IdentidadEntrenador:
+    """Cuenta staff vinculada a un entrenador, resuelta de `users`."""
+
+    id_entrenador: int
+    id_user: int | None = None
+    email: str | None = None
+
+
+@dataclass(frozen=True, kw_only=True)
 class Entrenador:
     nombre: str
     especialidad: str | None = None

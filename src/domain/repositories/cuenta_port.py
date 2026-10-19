@@ -24,7 +24,16 @@ class CuentaRepository(Protocol):
 
     def delete(self, cuenta: Cuenta) -> None: ...
 
-    def create_cliente(self, nombre: str, email: str) -> int: ...
+    def create_cliente(self) -> int: ...
+
+    def create_entrenador(
+        self,
+        nombre: str,
+        especialidad: str | None,
+        telefono: str | None,
+        email: str,
+        password_hash: str,
+    ) -> Cuenta: ...
 
     def entrenador_exists(self, id_entrenador: int) -> bool: ...
 

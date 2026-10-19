@@ -17,6 +17,7 @@ from src.domain.entities.gym import (
     Cliente,
     Entrenador,
     IdentidadCliente,
+    IdentidadEntrenador,
     Pago,
     Reserva,
 )
@@ -33,6 +34,7 @@ class MemoryRepository:
         self.data = {entity: {} for entity in ID_FIELDS}
         self.sequences = {entity: 0 for entity in ID_FIELDS}
         self.identities: dict[int, IdentidadCliente] = {}
+        self.staff_accounts: dict[int, IdentidadEntrenador] = {}
 
     @contextmanager
     def transaction(self):
@@ -48,6 +50,13 @@ class MemoryRepository:
             id_cliente: identidad
             for id_cliente, identidad in self.identities.items()
             if id_cliente in id_clientes
+        }
+
+    def accounts_for_entrenadores(self, id_entrenadores):
+        return {
+            id_entrenador: cuenta
+            for id_entrenador, cuenta in self.staff_accounts.items()
+            if id_entrenador in id_entrenadores
         }
 
     def list(self, entity_type, offset, limit, filters=None, scope=None):

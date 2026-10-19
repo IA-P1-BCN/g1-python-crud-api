@@ -73,6 +73,16 @@ import { Entrenador } from '../../../shared/models/entrenador.model';
               <hlm-field-error>Máximo 20 caracteres.</hlm-field-error>
             }
           </div>
+          @if (modo === 'crear') {
+            <div hlmField>
+              <label hlmFieldLabel for="email-entrenador">Email de acceso *</label>
+              <input hlmInput id="email-entrenador" type="email" formControlName="email" placeholder="entrenador@gymflow.com" />
+              @if (mostrarError('email')) {
+                <hlm-field-error>Introduce un email válido; será su usuario de acceso.</hlm-field-error>
+              }
+              <p hlmFieldDescription>Se crea su cuenta staff (contraseña inicial Demo56789012).</p>
+            </div>
+          }
           <div class="flex gap-2 sm:col-span-2">
             <button hlmBtn class="gap-1.5" type="submit">
               @if (modo === 'crear') {
@@ -97,13 +107,14 @@ import { Entrenador } from '../../../shared/models/entrenador.model';
               <th hlmTh>Nombre</th>
               <th hlmTh>Especialidad</th>
               <th hlmTh>Teléfono</th>
+              <th hlmTh>Cuenta</th>
               <th hlmTh>Acciones</th>
             </tr>
           </thead>
           <tbody hlmTBody>
             @for (fila of [1, 2, 3]; track fila) {
               <tr hlmTr>
-                @for (col of [1, 2, 3, 4, 5]; track col) {
+                @for (col of [1, 2, 3, 4, 5, 6]; track col) {
                   <td hlmTd><span hlmSkeleton class="h-4 w-full"></span></td>
                 }
               </tr>
@@ -128,6 +139,7 @@ import { Entrenador } from '../../../shared/models/entrenador.model';
               <th hlmTh>Nombre</th>
               <th hlmTh>Especialidad</th>
               <th hlmTh>Teléfono</th>
+              <th hlmTh>Cuenta</th>
               <th hlmTh>Acciones</th>
             </tr>
           </thead>
@@ -138,6 +150,13 @@ import { Entrenador } from '../../../shared/models/entrenador.model';
                 <td hlmTd>{{ fila.nombre }}</td>
                 <td hlmTd>{{ fila.especialidad ?? '—' }}</td>
                 <td hlmTd>{{ fila.telefono ?? '—' }}</td>
+                <td hlmTd>
+                  @if (fila.email; as email) {
+                    {{ email }}
+                  } @else {
+                    <span class="text-muted-foreground">sin cuenta</span>
+                  }
+                </td>
                 <td hlmTd>
                   <div class="flex gap-2">
                     <button hlmBtn class="gap-1.5" type="button" size="sm" variant="secondary" (click)="editar(fila)"><ng-icon name="lucidePencil" class="text-[length:--spacing(4)]" />Editar</button>
@@ -185,6 +204,10 @@ export class EntrenadoresPage {
     }),
     especialidad: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(100)] }),
     telefono: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(20)] }),
+    email: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.email],
+    }),
   });
 
   constructor() {
@@ -202,7 +225,7 @@ export class EntrenadoresPage {
   }
 
   protected nuevo(): void {
-    this.form.reset({ nombre: '', especialidad: '', telefono: '' });
+    this.form.reset({ nombre: '', especialidad: '', telefono: '', email: '' });
     this.editandoId.set(null);
     this.formulario.set('crear');
   }
@@ -212,6 +235,7 @@ export class EntrenadoresPage {
       nombre: fila.nombre,
       especialidad: fila.especialidad ?? '',
       telefono: fila.telefono ?? '',
+      email: '',
     });
     this.editandoId.set(fila.id_entrenador);
     this.formulario.set('editar');
@@ -222,7 +246,9 @@ export class EntrenadoresPage {
     this.editandoId.set(null);
   }
 
-  protected mostrarError(campo: 'nombre' | 'especialidad' | 'telefono'): boolean {
+  protected mostrarError(
+    campo: 'nombre' | 'especialidad' | 'telefono' | 'email',
+  ): boolean {
     const control = this.form.controls[campo];
     return control.touched && control.invalid;
   }
@@ -233,18 +259,22 @@ export class EntrenadoresPage {
       this.form.markAllAsTouched();
       return;
     }
-    const datos = this.datosDelFormulario();
     const modo = this.formulario();
     try {
       if (modo === 'crear') {
-        await this.api.crearEntrenador(datos);
-        toast.success('Entrenador creado');
+        const creado = await this.api.crearEntrenador(this.datosDelFormulario(true));
+        toast.success(
+          creado.email
+            ? `Entrenador creado. Cuenta staff: ${creado.email} (contraseña Demo56789012)`
+            : 'Entrenador creado',
+          { duration: 8000 },
+        );
       } else {
         const id = this.editandoId();
         if (id === null) {
           return;
         }
-        await this.api.reemplazar(id, datos);
+        await this.api.reemplazar(id, this.datosDelFormulario(false));
         toast.success('Entrenador actualizado');
       }
       this.cerrarFormulario();
@@ -265,13 +295,19 @@ export class EntrenadoresPage {
     }
   }
 
-  private datosDelFormulario(): EntrenadorEntrada {
-    const { nombre, especialidad, telefono } = this.form.getRawValue();
-    return {
+  private datosDelFormulario(conEmail: boolean): EntrenadorEntrada & {
+    email?: string;
+  } {
+    const { nombre, especialidad, telefono, email } = this.form.getRawValue();
+    const base: EntrenadorEntrada = {
       nombre: nombre.trim(),
       especialidad: especialidad.trim() === '' ? null : especialidad.trim(),
       telefono: telefono.trim() === '' ? null : telefono.trim(),
     };
+    if (!conEmail) {
+      return base;
+    }
+    return { ...base, email: email.trim() };
   }
 
   private async cargar(): Promise<void> {

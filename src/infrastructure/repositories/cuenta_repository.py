@@ -65,6 +65,33 @@ class SqlAlchemyCuentaRepository:
         statement = statement.order_by(CuentaRecord.id).offset(offset).limit(limit)
         return [self._entity(record) for record in self._session.scalars(statement)]
 
+    def create_entrenador(
+        self,
+        nombre: str,
+        especialidad: str | None,
+        telefono: str | None,
+        email: str,
+        password_hash: str,
+    ) -> Cuenta:
+        """Alta conjunta en un mismo flush: Entrenador + Cuenta staff vinculada."""
+        entrenador = EntrenadorRecord(
+            nombre=nombre, especialidad=especialidad, telefono=telefono
+        )
+        self._session.add(entrenador)
+        self._session.flush()
+        cuenta = CuentaRecord(
+            nombre=nombre,
+            email=email,
+            password_hash=password_hash,
+            rol="staff",
+            activo=True,
+            id_entrenador=entrenador.id_entrenador,
+        )
+        self._session.add(cuenta)
+        self._session.flush()
+        self._session.refresh(cuenta)
+        return self._entity(cuenta)
+
     def create_cliente(self) -> int:
         record = ClienteRecord(
             estado_membresia="Inactivo",

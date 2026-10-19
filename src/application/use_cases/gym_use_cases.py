@@ -11,6 +11,7 @@ from src.domain.entities.gym import (
     Entrenador,
     GymEntity,
     IdentidadCliente,
+    IdentidadEntrenador,
     Pago,
     Reserva,
 )
@@ -136,6 +137,13 @@ class GymUseCases:
         """Enriquece respuestas con la identidad de `users` (solo lectura)."""
         with self._repository.transaction():
             return self._repository.identities_for_clientes(id_clientes)
+
+    def accounts_for_entrenadores(
+        self, id_entrenadores: list[int]
+    ) -> dict[int, IdentidadEntrenador]:
+        """Enriquece respuestas con la Cuenta staff vinculada (solo lectura)."""
+        with self._repository.transaction():
+            return self._repository.accounts_for_entrenadores(id_entrenadores)
 
     def get[T: GymEntity](self, entity_type: type[T], entity_id: int) -> T:
         self._check_operation(entity_type)
