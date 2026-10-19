@@ -4,6 +4,7 @@ import { vi } from 'vitest';
 import { ApiError } from '../../../core/http/peticion';
 import { ClientesApi, PagosApi } from '../../../services/api/recursos.api';
 import { esperarCarga } from '../../../testing/esperar';
+import { limpiarToasts, mensajesDeToast } from '../../../testing/toast';
 import { Cliente } from '../../../shared/models/cliente.model';
 import { Pago, PagoEntrada } from '../../../shared/models/pago.model';
 import { PagosPage } from './pagos.page';
@@ -36,6 +37,7 @@ describe('PagosPage', () => {
 
   beforeEach(async () => {
     sessionStorage.clear();
+    limpiarToasts();
     pagos = {
       listar: vi.fn(() => Promise.resolve([PAGO])),
       crearPago: vi.fn((datos: PagoEntrada) => Promise.resolve({ id_pago: 8, ...datos })),
@@ -110,7 +112,7 @@ describe('PagosPage', () => {
       fecha_pago: '2026-10-15',
       metodo_pago: 'Tarjeta',
     });
-    expect(texto()).toContain('Pago creado');
+    expect(mensajesDeToast()).toContain('Pago creado');
   });
 
   it('muestra el 404 de la API si el cliente no existe', async () => {
@@ -122,7 +124,7 @@ describe('PagosPage', () => {
     enviarFormulario('formulario');
     await esperarCarga(fixture);
 
-    expect(texto()).toContain('Cliente con id 99 no existe');
+    expect(mensajesDeToast()).toContain('Cliente con id 99 no existe');
     expect(texto()).toContain('Nuevo pago');
   });
 });

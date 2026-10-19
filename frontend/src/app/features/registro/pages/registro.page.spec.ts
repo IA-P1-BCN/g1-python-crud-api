@@ -74,7 +74,7 @@ describe('RegistroPage', () => {
       password: 'contraseña-larga-1',
       crear_cliente: true,
     });
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/login', {
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/auth/login', {
       state: { mensaje: 'Cuenta creada. Ya puedes iniciar sesión' },
     });
   });

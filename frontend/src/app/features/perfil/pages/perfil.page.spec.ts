@@ -6,6 +6,7 @@ import { USUARIO_ANA } from '../../../core/auth/usuarios-prueba';
 import { ApiError } from '../../../core/http/peticion';
 import { CuentasApi } from '../../../services/api/recursos.api';
 import { esperarCarga } from '../../../testing/esperar';
+import { limpiarToasts, mensajesDeToast } from '../../../testing/toast';
 import { Cuenta } from '../../../shared/models/cuenta.model';
 import { PerfilPage } from './perfil.page';
 
@@ -25,6 +26,7 @@ describe('PerfilPage', () => {
 
   beforeEach(async () => {
     sessionStorage.clear();
+    limpiarToasts();
     api = {
       yo: vi.fn(() => Promise.resolve(CUENTA)),
       actualizarYo: vi.fn(
@@ -78,7 +80,7 @@ describe('PerfilPage', () => {
       nombre: 'Ana Editada',
       email: 'ana.nuevo@example.com',
     });
-    expect(texto()).toContain('Perfil actualizado');
+    expect(mensajesDeToast()).toContain('Perfil actualizado');
     const sesion = TestBed.inject(SessionService).usuario();
     expect(sesion?.nombre).toBe('Ana Editada');
     expect(sesion?.email).toBe('ana.nuevo@example.com');
@@ -125,7 +127,7 @@ describe('PerfilPage', () => {
     });
     enviar();
     await esperarCarga(fixture);
-    expect(texto()).toContain('La contraseña actual es incorrecta');
+    expect(mensajesDeToast()).toContain('La contraseña actual es incorrecta');
     expect(TestBed.inject(SessionService).usuario()?.email).toBe(CUENTA.email);
   });
 
@@ -141,7 +143,7 @@ describe('PerfilPage', () => {
     enviar();
     await esperarCarga(fixture);
 
-    expect(texto()).toContain('Email de Cuenta ya registrado');
+    expect(mensajesDeToast()).toContain('Email de Cuenta ya registrado');
     const sesion = TestBed.inject(SessionService).usuario();
     expect(sesion?.email).toBe('cliente@gym.test');
   });

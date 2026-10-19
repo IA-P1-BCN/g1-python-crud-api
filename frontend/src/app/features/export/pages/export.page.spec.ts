@@ -5,6 +5,7 @@ import { ApiError } from '../../../core/http/peticion';
 import { NetworkError } from '../../../core/auth/auth.errors';
 import { ExportApi } from '../../../services/api/recursos.api';
 import { esperarCarga } from '../../../testing/esperar';
+import { limpiarToasts, mensajesDeToast } from '../../../testing/toast';
 import { ExportPage } from './export.page';
 
 interface Descarga {
@@ -24,6 +25,7 @@ describe('ExportPage', () => {
   let ultima: Descarga | undefined;
 
   beforeEach(async () => {
+    limpiarToasts();
     descargas = [];
     ultima = undefined;
     // jsdom no implementa URL.createObjectURL: se captura el blob aquí y el
@@ -90,7 +92,7 @@ describe('ExportPage', () => {
     expect(descargas[0].nombre).toBe('clientes.csv');
     expect(await descargas[0].blob.text()).toBe('id_cliente,nombre\n1,Ana\n');
     expect(descargas[0].blob.type).toContain('text/csv');
-    expect(texto()).toContain('Descarga de clientes completada');
+    expect(mensajesDeToast()).toContain('Descarga de clientes completada');
   });
 
   it('muestra el error sin descargar si la API falla', async () => {
@@ -99,7 +101,7 @@ describe('ExportPage', () => {
     await esperarCarga(fixture);
 
     expect(descargas).toHaveLength(0);
-    expect(texto()).toContain('No se pudo conectar con el servidor');
+    expect(mensajesDeToast()).toContain('No se pudo conectar con el servidor. Inténtalo de nuevo.');
   });
 
   it('muestra el detalle del error del servidor', async () => {
@@ -107,6 +109,6 @@ describe('ExportPage', () => {
     botonTabla('Clases').click();
     await esperarCarga(fixture);
 
-    expect(texto()).toContain('Base de datos no disponible');
+    expect(mensajesDeToast()).toContain('Base de datos no disponible');
   });
 });

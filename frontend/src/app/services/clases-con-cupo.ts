@@ -1,6 +1,6 @@
 import { ClaseConCupo } from '../shared/models/clase.model';
 import { Reserva } from '../shared/models/reserva.model';
-import { ClaseService } from './clase.service';
+import { ClaseService, FiltrosClase } from './clase.service';
 import { ReservaService } from './reserva.service';
 
 /**
@@ -11,11 +11,12 @@ export async function cargarClasesConCupo(
   clases: ClaseService,
   reservas: ReservaService,
   idCliente: number | null,
+  filtros: FiltrosClase = {},
 ): Promise<ClaseConCupo[]> {
   const mias: Promise<Reserva[]> =
     idCliente === null ? Promise.resolve([]) : reservas.listarDeCliente(idCliente);
   const [lista, entrenadores, reservadasPorMi] = await Promise.all([
-    clases.listar(),
+    clases.listar(filtros),
     clases.listarEntrenadores(),
     mias,
   ]);

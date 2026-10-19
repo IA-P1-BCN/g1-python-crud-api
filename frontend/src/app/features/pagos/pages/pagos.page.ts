@@ -1,14 +1,19 @@
 import { Component, inject, signal } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideInbox } from '@ng-icons/lucide';
+import { toast } from '@spartan-ng/brain/sonner';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmEmptyImports } from '@spartan-ng/helm/empty';
+import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmLabelImports } from '@spartan-ng/helm/label';
+import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { textoDeError } from '../../../core/http/peticion';
 import { ClientesApi, PagosApi } from '../../../services/api/recursos.api';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog.component';
-import { ToastComponent } from '../../../shared/components/toast.component';
 import { Cliente } from '../../../shared/models/cliente.model';
 import { Pago, PagoEntrada } from '../../../shared/models/pago.model';
 
@@ -23,28 +28,27 @@ function montoPositivo(control: AbstractControl): ValidationErrors | null {
   return null;
 }
 
-interface Aviso {
-  readonly mensaje: string;
-  readonly tipo: 'exito' | 'error';
-}
-
 /** Gestión de pagos: CRUD con filtros por cliente y método (/v1/pagos). */
 @Component({
   selector: 'app-pagos',
   imports: [
     ReactiveFormsModule,
     ConfirmDialogComponent,
-    ToastComponent,
+    NgIcon,
     HlmButtonImports,
     HlmCardImports,
+    HlmEmptyImports,
+    HlmFieldImports,
     HlmInputImports,
     HlmLabelImports,
+    HlmSkeletonImports,
     HlmTableImports,
   ],
+  providers: [provideIcons({ lucideInbox })],
   template: `
     <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
-      <h1 class="text-3xl font-semibold">Pagos</h1>
-      <button hlmBtn type="button" (click)="nuevo()">Nuevo pago</button>
+      <h1 class="inline-flex items-center gap-2 text-3xl font-semibold"><ng-icon name="lucideCreditCard" class="text-[length:--spacing(6)]" />Pagos</h1>
+      <button hlmBtn class="gap-1.5" type="button" (click)="nuevo()"><ng-icon name="lucidePlus" class="text-[length:--spacing(4)]" />Nuevo pago</button>
     </div>
 
     <form id="filtros" class="mb-4 flex flex-wrap items-end gap-3" (submit)="buscar($event)">
@@ -65,14 +69,12 @@ interface Aviso {
       <button hlmBtn type="button" variant="ghost" (click)="limpiar()">Limpiar</button>
     </form>
 
-    <app-toast [mensaje]="aviso()?.mensaje ?? null" [tipo]="aviso()?.tipo ?? 'exito'" />
-
     @if (formulario(); as modo) {
       <section hlmCard class="mb-4 p-4">
         <h2 class="mb-3 text-lg font-semibold">{{ modo === 'crear' ? 'Nuevo pago' : 'Editar pago' }}</h2>
         <form id="formulario" [formGroup]="form" class="grid gap-3 sm:grid-cols-2" (submit)="guardar($event)">
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="cliente-pago">Cliente *</label>
+          <div hlmField>
+            <label hlmFieldLabel for="cliente-pago">Cliente *</label>
             <select hlmInput id="cliente-pago" formControlName="id_cliente">
               <option value="">Elige un cliente</option>
               @for (cliente of clientes(); track cliente.id_cliente) {
@@ -80,27 +82,27 @@ interface Aviso {
               }
             </select>
             @if (mostrarError('id_cliente')) {
-              <p class="text-sm text-destructive">El cliente es obligatorio.</p>
+              <hlm-field-error>El cliente es obligatorio.</hlm-field-error>
             } @else if (clientes().length === 0) {
               <p class="text-sm text-muted-foreground">No hay clientes: da de alta alguno primero.</p>
             }
           </div>
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="monto-pago">Monto (€) *</label>
+          <div hlmField>
+            <label hlmFieldLabel for="monto-pago">Monto (€) *</label>
             <input hlmInput id="monto-pago" inputmode="decimal" placeholder="35.00" formControlName="monto" />
             @if (mostrarError('monto')) {
-              <p class="text-sm text-destructive">El monto debe ser mayor que cero y con dos decimales como máximo.</p>
+              <hlm-field-error>El monto debe ser mayor que cero y con dos decimales como máximo.</hlm-field-error>
             }
           </div>
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="fecha-pago">Fecha de pago *</label>
+          <div hlmField>
+            <label hlmFieldLabel for="fecha-pago">Fecha de pago *</label>
             <input hlmInput id="fecha-pago" type="date" formControlName="fecha_pago" />
             @if (mostrarError('fecha_pago')) {
-              <p class="text-sm text-destructive">La fecha es obligatoria.</p>
+              <hlm-field-error>La fecha es obligatoria.</hlm-field-error>
             }
           </div>
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="metodo-pago">Método</label>
+          <div hlmField>
+            <label hlmFieldLabel for="metodo-pago">Método</label>
             <select hlmInput id="metodo-pago" formControlName="metodo_pago">
               <option value="">Sin método</option>
               @for (metodo of metodos; track metodo) {
@@ -109,17 +111,52 @@ interface Aviso {
             </select>
           </div>
           <div class="flex gap-2 sm:col-span-2">
-            <button hlmBtn type="submit">{{ modo === 'crear' ? 'Crear' : 'Guardar' }}</button>
-            <button hlmBtn type="button" variant="ghost" (click)="cerrarFormulario()">Cancelar</button>
+            <button hlmBtn class="gap-1.5" type="submit">
+              @if (modo === 'crear') {
+                <ng-icon name="lucidePlus" class="text-[length:--spacing(4)]" />
+              } @else {
+                <ng-icon name="lucideCircleCheck" class="text-[length:--spacing(4)]" />
+              }
+              {{ modo === 'crear' ? 'Crear' : 'Guardar' }}
+            </button>
+            <button hlmBtn class="gap-1.5" type="button" variant="ghost" (click)="cerrarFormulario()"><ng-icon name="lucideX" class="text-[length:--spacing(4)]" />Cancelar</button>
           </div>
         </form>
       </section>
     }
 
     @if (cargando()) {
-      <p class="text-sm text-muted-foreground">Cargando pagos…</p>
+      <div hlmTableContainer>
+        <table hlmTable>
+          <thead hlmTHead>
+            <tr hlmTr>
+              <th hlmTh>ID</th>
+              <th hlmTh>Cliente</th>
+              <th hlmTh>Monto</th>
+              <th hlmTh>Fecha</th>
+              <th hlmTh>Método</th>
+              <th hlmTh>Acciones</th>
+            </tr>
+          </thead>
+          <tbody hlmTBody>
+            @for (fila of [1, 2, 3]; track fila) {
+              <tr hlmTr>
+                @for (col of [1, 2, 3, 4, 5, 6]; track col) {
+                  <td hlmTd><span hlmSkeleton class="h-4 w-full"></span></td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     } @else if (items().length === 0) {
-      <p class="text-sm text-muted-foreground">No hay pagos que coincidan.</p>
+      <div hlmEmpty>
+        <div hlmEmptyHeader>
+          <div hlmEmptyMedia variant="icon"><ng-icon name="lucideInbox" /></div>
+          <p hlmEmptyTitle>No hay pagos que coincidan.</p>
+          <p hlmEmptyDescription>Prueba con otros filtros o registra un pago nuevo.</p>
+        </div>
+      </div>
     } @else {
       <div hlmTableContainer>
         <table hlmTable>
@@ -143,8 +180,9 @@ interface Aviso {
                 <td hlmTd>{{ fila.metodo_pago ?? '—' }}</td>
                 <td hlmTd>
                   <div class="flex gap-2">
-                    <button hlmBtn type="button" size="sm" variant="secondary" (click)="editar(fila)">Editar</button>
-                    <button hlmBtn type="button" size="sm" variant="destructive" (click)="pendiente.set(fila)">
+                    <button hlmBtn class="gap-1.5" type="button" size="sm" variant="secondary" (click)="editar(fila)"><ng-icon name="lucidePencil" class="text-[length:--spacing(4)]" />Editar</button>
+                    <button hlmBtn class="gap-1.5" type="button" size="sm" variant="destructive" (click)="pendiente.set(fila)">
+                      <ng-icon name="lucideTrash2" class="text-[length:--spacing(4)]" />
                       Borrar
                     </button>
                   </div>
@@ -180,7 +218,6 @@ export class PagosPage {
   protected readonly formulario = signal<'crear' | 'editar' | null>(null);
   protected readonly editandoId = signal<number | null>(null);
   protected readonly pendiente = signal<Pago | null>(null);
-  protected readonly aviso = signal<Aviso | null>(null);
 
   protected readonly filtroCliente = new FormControl('', { nonNullable: true });
   protected readonly filtroMetodo = new FormControl('', { nonNullable: true });
@@ -215,7 +252,6 @@ export class PagosPage {
   protected nuevo(): void {
     this.form.reset({ id_cliente: '', monto: '', fecha_pago: '', metodo_pago: '' });
     this.editandoId.set(null);
-    this.aviso.set(null);
     this.formulario.set('crear');
   }
 
@@ -227,7 +263,6 @@ export class PagosPage {
       metodo_pago: fila.metodo_pago ?? '',
     });
     this.editandoId.set(fila.id_pago);
-    this.aviso.set(null);
     this.formulario.set('editar');
   }
 
@@ -253,35 +288,33 @@ export class PagosPage {
     }
     const datos = this.datosDelFormulario();
     const modo = this.formulario();
-    this.aviso.set(null);
     try {
       if (modo === 'crear') {
         await this.api.crearPago(datos);
-        this.aviso.set({ mensaje: 'Pago creado', tipo: 'exito' });
+        toast.success('Pago creado');
       } else {
         const id = this.editandoId();
         if (id === null) {
           return;
         }
         await this.api.reemplazar(id, datos);
-        this.aviso.set({ mensaje: 'Pago actualizado', tipo: 'exito' });
+        toast.success('Pago actualizado');
       }
       this.cerrarFormulario();
       await this.cargar();
     } catch (error) {
-      this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });
+      toast.error(textoDeError(error));
     }
   }
 
   protected async borrar(fila: Pago): Promise<void> {
     this.pendiente.set(null);
-    this.aviso.set(null);
     try {
       await this.api.eliminar(fila.id_pago);
-      this.aviso.set({ mensaje: 'Pago eliminado', tipo: 'exito' });
+      toast.success('Pago eliminado');
       await this.cargar();
     } catch (error) {
-      this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });
+      toast.error(textoDeError(error));
     }
   }
 
@@ -311,7 +344,7 @@ export class PagosPage {
       this.clientes.set(clientes);
     } catch (error) {
       this.items.set([]);
-      this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });
+      toast.error(textoDeError(error));
     } finally {
       this.cargando.set(false);
     }

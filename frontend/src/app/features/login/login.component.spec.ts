@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, Router, provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import {
   AuthService,
@@ -8,7 +8,7 @@ import {
 } from '../../core/auth/auth.service';
 import { InvalidCredentialsError, NetworkError } from '../../core/auth/auth.errors';
 import { SessionService } from '../../core/auth/session.service';
-import { USUARIO_ANA } from '../../core/auth/usuarios-prueba';
+import { USUARIO_ADMIN, USUARIO_ANA, USUARIO_STAFF } from '../../core/auth/usuarios-prueba';
 import { LoginComponent } from './login.component';
 
 class AuthServiceFalso extends AuthService {
@@ -71,7 +71,25 @@ describe('LoginComponent', () => {
 
     expect(auth.login).toHaveBeenCalledWith('cliente@gym.test', 'cliente123');
     expect(TestBed.inject(SessionService).usuario()).toEqual(USUARIO_ANA);
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/marketplace');
+  });
+
+  it('el admin entra directo al dashboard', async () => {
+    auth.login.mockResolvedValue(USUARIO_ADMIN);
+    rellenar('admin@gym.test', 'admin123');
+    enviar();
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/admin');
+  });
+
+  it('el staff entra directo a su panel', async () => {
+    auth.login.mockResolvedValue(USUARIO_STAFF);
+    rellenar('staff@gym.test', 'staff123');
+    enviar();
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/staff');
   });
 
   it('muestra el error de credenciales y permanece en login', async () => {
@@ -111,8 +129,44 @@ describe('LoginComponent', () => {
     expect(boton.disabled).toBe(false);
   });
 
-  it('ofrece enlace a /registro', () => {
-    const enlace = (fixture.nativeElement as HTMLElement).querySelector('a[href="/registro"]');
+  it('ofrece enlace a /auth/registro', () => {
+    const enlace = (fixture.nativeElement as HTMLElement).querySelector('a[href="/auth/registro"]');
     expect(enlace?.textContent).toContain('Crear cuenta');
+  });
+});
+
+describe('LoginComponent con returnUrl del guard', () => {
+  let fixture: ComponentFixture<LoginComponent>;
+  let auth: AuthServiceFalso;
+  let router: Router;
+
+  beforeEach(async () => {
+    sessionStorage.clear();
+    auth = new AuthServiceFalso();
+    await TestBed.configureTestingModule({
+      imports: [LoginComponent],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: auth },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { queryParamMap: convertToParamMap({ returnUrl: '/perfil' }) } },
+        },
+      ],
+    }).compileComponents();
+
+    router = TestBed.inject(Router);
+    vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    fixture = TestBed.createComponent(LoginComponent);
+    fixture.detectChanges();
+  });
+
+  it('una returnUrl válida se respeta también para el admin', async () => {
+    auth.login.mockResolvedValue(USUARIO_ADMIN);
+    fixture.componentInstance['form'].setValue({ email: 'admin@gym.test', password: 'admin123' });
+    (fixture.nativeElement as HTMLElement).querySelector('form')!.dispatchEvent(new Event('submit'));
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/perfil');
   });
 });

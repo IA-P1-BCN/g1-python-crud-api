@@ -1,23 +1,23 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { lucideInbox } from '@ng-icons/lucide';
+import { toast } from '@spartan-ng/brain/sonner';
 import { HlmBadgeImports } from '@spartan-ng/helm/badge';
 import { HlmButtonImports } from '@spartan-ng/helm/button';
 import { HlmCardImports } from '@spartan-ng/helm/card';
+import { HlmEmptyImports } from '@spartan-ng/helm/empty';
+import { HlmFieldImports } from '@spartan-ng/helm/field';
 import { HlmInputImports } from '@spartan-ng/helm/input';
 import { HlmLabelImports } from '@spartan-ng/helm/label';
+import { HlmSkeletonImports } from '@spartan-ng/helm/skeleton';
 import { HlmTableImports } from '@spartan-ng/helm/table';
 import { textoDeError } from '../../../core/http/peticion';
 import { CuentasApi } from '../../../services/api/recursos.api';
 import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog.component';
-import { ToastComponent } from '../../../shared/components/toast.component';
 import { Cuenta } from '../../../shared/models/cuenta.model';
 
 const ROLES: readonly Cuenta['rol'][] = ['admin', 'staff', 'cliente'];
-
-interface Aviso {
-  readonly mensaje: string;
-  readonly tipo: 'exito' | 'error';
-}
 
 /** Panel de cuentas: listado con filtros, edición PUT y baja (/v1/users, JWT). */
 @Component({
@@ -25,17 +25,21 @@ interface Aviso {
   imports: [
     ReactiveFormsModule,
     ConfirmDialogComponent,
-    ToastComponent,
+    NgIcon,
     HlmBadgeImports,
     HlmButtonImports,
     HlmCardImports,
+    HlmEmptyImports,
+    HlmFieldImports,
     HlmInputImports,
     HlmLabelImports,
+    HlmSkeletonImports,
     HlmTableImports,
   ],
+  providers: [provideIcons({ lucideInbox })],
   template: `
     <div class="mb-4 flex flex-wrap items-end justify-between gap-3">
-      <h1 class="text-3xl font-semibold">Cuentas</h1>
+      <h1 class="inline-flex items-center gap-2 text-3xl font-semibold"><ng-icon name="lucideUserCog" class="text-[length:--spacing(6)]" />Cuentas</h1>
     </div>
 
     <form id="filtros" class="mb-4 flex flex-wrap items-end gap-3" (submit)="buscar($event)">
@@ -64,48 +68,76 @@ interface Aviso {
       <button hlmBtn type="button" variant="ghost" (click)="limpiar()">Limpiar</button>
     </form>
 
-    <app-toast [mensaje]="aviso()?.mensaje ?? null" [tipo]="aviso()?.tipo ?? 'exito'" />
-
     @if (formulario()) {
       <section hlmCard class="mb-4 p-4">
         <h2 class="mb-3 text-lg font-semibold">Editar cuenta</h2>
         <form id="formulario" [formGroup]="form" class="grid gap-3 sm:grid-cols-2" (submit)="guardar($event)">
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="nombre-cuenta">Nombre *</label>
+          <div hlmField>
+            <label hlmFieldLabel for="nombre-cuenta">Nombre *</label>
             <input hlmInput id="nombre-cuenta" formControlName="nombre" />
             @if (mostrarError('nombre')) {
-              <p class="text-sm text-destructive">El nombre es obligatorio (máx. 100 caracteres).</p>
+              <hlm-field-error>El nombre es obligatorio (máx. 100 caracteres).</hlm-field-error>
             }
           </div>
-          <div class="flex flex-col gap-1">
-            <label hlmLabel for="email-cuenta">Email *</label>
+          <div hlmField>
+            <label hlmFieldLabel for="email-cuenta">Email *</label>
             <input hlmInput id="email-cuenta" type="email" formControlName="email" />
             @if (mostrarError('email')) {
-              <p class="text-sm text-destructive">El email es obligatorio y debe ser válido (máx. 150).</p>
+              <hlm-field-error>El email es obligatorio y debe ser válido (máx. 150).</hlm-field-error>
             }
           </div>
-          <div class="flex flex-col gap-1 sm:col-span-2">
-            <label hlmLabel for="password-cuenta">Contraseña nueva (opcional)</label>
+          <div hlmField class="sm:col-span-2">
+            <label hlmFieldLabel for="password-cuenta">Contraseña nueva (opcional)</label>
             <input hlmInput id="password-cuenta" type="password" placeholder="Déjala vacía para conservarla" formControlName="password" />
             @if (mostrarError('password')) {
-              <p class="text-sm text-destructive">La contraseña debe tener entre 12 y 128 caracteres.</p>
+              <hlm-field-error>La contraseña debe tener entre 12 y 128 caracteres.</hlm-field-error>
             }
           </div>
           <p class="text-sm text-muted-foreground sm:col-span-2">
             Rol, estado y vínculo con cliente no se editan aquí.
           </p>
           <div class="flex gap-2 sm:col-span-2">
-            <button hlmBtn type="submit">Guardar</button>
-            <button hlmBtn type="button" variant="ghost" (click)="cerrarFormulario()">Cancelar</button>
+            <button hlmBtn class="gap-1.5" type="submit"><ng-icon name="lucideCircleCheck" class="text-[length:--spacing(4)]" />Guardar</button>
+            <button hlmBtn class="gap-1.5" type="button" variant="ghost" (click)="cerrarFormulario()"><ng-icon name="lucideX" class="text-[length:--spacing(4)]" />Cancelar</button>
           </div>
         </form>
       </section>
     }
 
     @if (cargando()) {
-      <p class="text-sm text-muted-foreground">Cargando cuentas…</p>
+      <div hlmTableContainer>
+        <table hlmTable>
+          <thead hlmTHead>
+            <tr hlmTr>
+              <th hlmTh>ID</th>
+              <th hlmTh>Nombre</th>
+              <th hlmTh>Email</th>
+              <th hlmTh>Rol</th>
+              <th hlmTh>Activa</th>
+              <th hlmTh>Cliente</th>
+              <th hlmTh>Creada</th>
+              <th hlmTh>Acciones</th>
+            </tr>
+          </thead>
+          <tbody hlmTBody>
+            @for (fila of [1, 2, 3]; track fila) {
+              <tr hlmTr>
+                @for (col of [1, 2, 3, 4, 5, 6, 7, 8]; track col) {
+                  <td hlmTd><span hlmSkeleton class="h-4 w-full"></span></td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     } @else if (items().length === 0) {
-      <p class="text-sm text-muted-foreground">No hay cuentas que coincidan.</p>
+      <div hlmEmpty>
+        <div hlmEmptyHeader>
+          <div hlmEmptyMedia variant="icon"><ng-icon name="lucideInbox" /></div>
+          <p hlmEmptyTitle>No hay cuentas que coincidan.</p>
+          <p hlmEmptyDescription>Prueba con otros filtros o ajusta la búsqueda.</p>
+        </div>
+      </div>
     } @else {
       <div hlmTableContainer>
         <table hlmTable>
@@ -133,8 +165,9 @@ interface Aviso {
                 <td hlmTd>{{ fila.fecha_creacion }}</td>
                 <td hlmTd>
                   <div class="flex gap-2">
-                    <button hlmBtn type="button" size="sm" variant="secondary" (click)="editar(fila)">Editar</button>
-                    <button hlmBtn type="button" size="sm" variant="destructive" (click)="pendiente.set(fila)">
+                    <button hlmBtn class="gap-1.5" type="button" size="sm" variant="secondary" (click)="editar(fila)"><ng-icon name="lucidePencil" class="text-[length:--spacing(4)]" />Editar</button>
+                    <button hlmBtn class="gap-1.5" type="button" size="sm" variant="destructive" (click)="pendiente.set(fila)">
+                      <ng-icon name="lucideTrash2" class="text-[length:--spacing(4)]" />
                       Borrar
                     </button>
                   </div>
@@ -168,7 +201,6 @@ export class CuentasPage {
   protected readonly formulario = signal(false);
   protected readonly editandoId = signal<number | null>(null);
   protected readonly pendiente = signal<Cuenta | null>(null);
-  protected readonly aviso = signal<Aviso | null>(null);
 
   protected readonly filtroQ = new FormControl('', { nonNullable: true });
   protected readonly filtroRol = new FormControl('', { nonNullable: true });
@@ -208,7 +240,6 @@ export class CuentasPage {
   protected editar(fila: Cuenta): void {
     this.form.setValue({ nombre: fila.nombre, email: fila.email, password: '' });
     this.editandoId.set(fila.id);
-    this.aviso.set(null);
     this.formulario.set(true);
   }
 
@@ -233,30 +264,28 @@ export class CuentasPage {
       return;
     }
     const { nombre, email, password } = this.form.getRawValue();
-    this.aviso.set(null);
     try {
       await this.api.reemplazar(id, {
         nombre: nombre.trim(),
         email: email.trim(),
         ...(password === '' ? {} : { password }),
       });
-      this.aviso.set({ mensaje: 'Cuenta actualizada', tipo: 'exito' });
+      toast.success('Cuenta actualizada');
       this.cerrarFormulario();
       await this.cargar();
     } catch (error) {
-      this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });
+      toast.error(textoDeError(error));
     }
   }
 
   protected async borrar(fila: Cuenta): Promise<void> {
     this.pendiente.set(null);
-    this.aviso.set(null);
     try {
       await this.api.eliminar(fila.id);
-      this.aviso.set({ mensaje: 'Cuenta eliminada', tipo: 'exito' });
+      toast.success('Cuenta eliminada');
       await this.cargar();
     } catch (error) {
-      this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });
+      toast.error(textoDeError(error));
     }
   }
 
@@ -275,7 +304,7 @@ export class CuentasPage {
       );
     } catch (error) {
       this.items.set([]);
-      this.aviso.set({ mensaje: textoDeError(error), tipo: 'error' });
+      toast.error(textoDeError(error));
     } finally {
       this.cargando.set(false);
     }

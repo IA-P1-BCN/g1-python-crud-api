@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { ClaseService } from './clase.service';
+import { ClaseService, FiltrosClase } from './clase.service';
 import { ClasesApi, EntrenadoresApi } from './api/recursos.api';
 
 /** Clases y entrenadores reales (/v1/clases y /v1/entrenadores). */
@@ -8,8 +8,12 @@ export class HttpClaseService extends ClaseService {
   private readonly clases = inject(ClasesApi);
   private readonly entrenadores = inject(EntrenadoresApi);
 
-  listar() {
-    return this.clases.listar();
+  listar(filtros: FiltrosClase = {}) {
+    return this.clases.listar(filtros);
+  }
+
+  obtener(idClase: number) {
+    return this.clases.obtener(idClase);
   }
 
   listarEntrenadores() {

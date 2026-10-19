@@ -4,6 +4,7 @@ import { vi } from 'vitest';
 import { ApiError } from '../../../core/http/peticion';
 import { EntrenadoresApi, EntrenadorEntrada } from '../../../services/api/recursos.api';
 import { esperarCarga } from '../../../testing/esperar';
+import { limpiarToasts, mensajesDeToast } from '../../../testing/toast';
 import { Entrenador } from '../../../shared/models/entrenador.model';
 import { EntrenadoresPage } from './entrenadores.page';
 
@@ -25,6 +26,7 @@ describe('EntrenadoresPage', () => {
 
   beforeEach(async () => {
     sessionStorage.clear();
+    limpiarToasts();
     api = {
       listar: vi.fn(() => Promise.resolve([ENTRENADOR])),
       crearEntrenador: vi.fn((datos: EntrenadorEntrada) =>
@@ -80,7 +82,7 @@ describe('EntrenadoresPage', () => {
       especialidad: null,
       telefono: '600 000 000',
     });
-    expect(texto()).toContain('Entrenador creado');
+    expect(mensajesDeToast()).toContain('Entrenador creado');
   });
 
   it('muestra el conflicto si la API rechaza borrar un entrenador con clases', async () => {
@@ -94,7 +96,7 @@ describe('EntrenadoresPage', () => {
       .click();
     await esperarCarga(fixture);
 
-    expect(texto()).toContain('La operación entra en conflicto con un registro o relación existente');
+    expect(mensajesDeToast()).toContain('La operación entra en conflicto con un registro o relación existente');
     expect(api.listar).toHaveBeenCalledTimes(1);
   });
 });

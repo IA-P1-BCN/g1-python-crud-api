@@ -16,3 +16,11 @@ export const USUARIO_STAFF: UsuarioAutenticado = {
   rol: 'staff',
   id_cliente: null,
 };
+
+export const USUARIO_ADMIN: UsuarioAutenticado = {
+  id: 3,
+  nombre: 'Admin Gym',
+  email: 'admin@gym.test',
+  rol: 'admin',
+  id_cliente: null,
+};

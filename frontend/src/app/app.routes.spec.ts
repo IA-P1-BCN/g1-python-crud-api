@@ -2,33 +2,68 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from './app.routes';
+import { AuthService, UsuarioAutenticado } from './core/auth/auth.service';
+import { SessionService } from './core/auth/session.service';
+import { USUARIO_ANA, USUARIO_STAFF } from './core/auth/usuarios-prueba';
 import { ClaseService } from './services/clase.service';
 import { ReservaService } from './services/reserva.service';
+import { ReservasApi } from './services/api/recursos.api';
 
-describe('portal en la raíz', () => {
+describe('rutas del portal rediseñado', () => {
   beforeEach(() => {
     sessionStorage.clear();
     TestBed.configureTestingModule({
       providers: [
         provideRouter(routes),
-        { provide: ClaseService, useValue: { listar: async () => [], listarEntrenadores: async () => [] } },
-        { provide: ReservaService, useValue: { listarDeCliente: async () => [] } },
+        {
+          provide: AuthService,
+          useValue: { login: async () => USUARIO_ANA, register: async () => undefined },
+        },
+        {
+          provide: ClaseService,
+          useValue: {
+            listar: async () => [],
+            obtener: async () => null,
+            listarEntrenadores: async () => [],
+            cupo: async () => null,
+          },
+        },
+        { provide: ReservaService, useValue: { listarDeCliente: async () => [], crear: async () => ({}) } },
+        { provide: ReservasApi, useValue: { listar: async () => [], reemplazar: async () => ({}), eliminar: async () => undefined } },
       ],
     });
   });
 
-  it('muestra el shell y el inicio en /', async () => {
+  it('la raíz redirige al marketplace; sin sesión, el guard envía a login', async () => {
     const harness = await RouterTestingHarness.create('/');
-    expect(harness.routeNativeElement?.textContent).toContain('Próxima clase');
-    expect(harness.routeNativeElement?.querySelector('a[href="/clases"]')).not.toBeNull();
+    const router = TestBed.inject(Router);
+    expect(router.url).toContain('/auth/login');
+    expect(router.url).toContain('returnUrl');
+    expect(harness.routeNativeElement?.textContent).toContain('GymFlow');
   });
 
-  it('redirige las rutas antiguas al portal y sus pantallas en raíz', async () => {
-    const harness = await RouterTestingHarness.create('/portal');
+  it('con sesión, la raíz muestra el home del marketplace', async () => {
+    TestBed.inject(SessionService).iniciar(USUARIO_ANA);
+    const harness = await RouterTestingHarness.create('/');
     const router = TestBed.inject(Router);
-    expect(router.url).toBe('/');
-    await harness.navigateByUrl('/portal/clases');
-    expect(router.url).toBe('/clases');
-    expect(harness.routeNativeElement?.textContent).toContain('Clases');
+    expect(router.url).toBe('/marketplace');
+    expect(harness.routeNativeElement?.textContent).toContain('Reserva tu plaza');
+  });
+
+  it('las rutas antiguas redirigen a las nuevas y respetan el guard', async () => {
+    const router = TestBed.inject(Router);
+    const harness = await RouterTestingHarness.create('/login');
+    expect(router.url).toContain('/auth/login');
+    await harness.navigateByUrl('/clientes');
+    expect(router.url).toContain('/auth/login');
+    expect(router.url).toContain('returnUrl');
+  });
+
+  it('con sesión de staff, la raíz y el marketplace redirigen a su panel', async () => {
+    TestBed.inject(SessionService).iniciar(USUARIO_STAFF);
+    const harness = await RouterTestingHarness.create('/marketplace');
+    const router = TestBed.inject(Router);
+    expect(router.url).toBe('/staff');
+    expect(harness.routeNativeElement?.textContent).toContain('Mis clases');
   });
 });

@@ -58,7 +58,7 @@ export class LoginComponent {
     try {
       const usuario = await this.auth.login(email, password);
       this.session.iniciar(usuario);
-      await this.router.navigateByUrl(this.destino());
+      await this.router.navigateByUrl(this.destino(usuario.rol));
     } catch (error) {
       this.mensajeError.set(mensajeParaError(error));
     } finally {
@@ -66,15 +66,17 @@ export class LoginComponent {
     }
   }
 
-  /** Solo acepta destinos de la aplicación; por defecto vuelve a la raíz. */
-  private destino(): string {
+  /** Solo acepta destinos de la aplicación; sin returnUrl admin va al dashboard y staff a su panel. */
+  private destino(rol: string): string {
     const returnUrl = this.ruta.snapshot.queryParamMap.get('returnUrl');
-    const destinos = ['portal', 'clases', 'reservas', 'perfil', 'clientes',
-      'entrenadores', 'gestion-clases', 'pagos', 'cuentas', 'export'];
+    const destinos = ['marketplace', 'staff', 'admin', 'perfil'];
     if (returnUrl?.startsWith('/') && destinos.includes(returnUrl.split(/[/?#]/)[1])) {
       return returnUrl;
     }
-    return '/';
+    if (rol === 'admin') {
+      return '/admin';
+    }
+    return rol === 'staff' ? '/staff' : '/marketplace';
   }
 }
 
