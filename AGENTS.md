@@ -21,8 +21,10 @@ convenciones debe actualizarse aquí en el mismo PR.
   NO son referencia; solo se migró el plan de su Projects) y se repartió por
   niveles: V2-Esencial → milestone #2 (Nivel medio), V2-Medio+Avanzado →
   milestone #3 (Nivel Avanzado), V2-Experto → milestone #4 (Nivel Experto).
-- **Cuenta ≠ Cliente** (ADR `docs/adr/0001-cuenta-separada-de-cliente.md`,
-  glosario en `CONTEXT.md`): tabla `users` (email único, `password_hash`,
+- **Cuenta ≠ Cliente y identidad solo en users** (ADRs
+  `docs/adr/0001-cuenta-separada-de-cliente.md` y
+  `docs/adr/0002-identidad-solo-en-users.md`):
+  `clientes` no almacena nombre ni email (esquema 0.5): tabla `users` (email único, `password_hash`,
   `activo`, Rol) separada de `clientes`, con vínculo 1:1 opcional. Roles:
   `admin`, `staff`, `cliente`. Los endpoints V2 son literales a la spec:
   `/v1/auth/register`, `/v1/auth/login`, `/v1/users/me`, `/v1/users`;
