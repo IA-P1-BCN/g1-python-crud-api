@@ -37,10 +37,16 @@ def get_cuenta_repository(
     return SqlAlchemyCuentaRepository(session)
 
 
-def get_cuenta_controller(
+def get_cuenta_use_cases(
     repository: Annotated[CuentaRepository, Depends(get_cuenta_repository)],
+) -> CuentaUseCases:
+    return CuentaUseCases(repository, Argon2PasswordHasher())
+
+
+def get_cuenta_controller(
+    use_cases: Annotated[CuentaUseCases, Depends(get_cuenta_use_cases)],
 ) -> CuentaController:
-    return CuentaController(CuentaUseCases(repository, Argon2PasswordHasher()))
+    return CuentaController(use_cases)
 
 
 @lru_cache

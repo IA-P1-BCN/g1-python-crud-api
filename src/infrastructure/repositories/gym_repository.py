@@ -15,6 +15,7 @@ from src.domain.entities.gym import (
     Entrenador,
     GymEntity,
     IdentidadCliente,
+    IdentidadEntrenador,
     Pago,
     Reserva,
 )
@@ -159,6 +160,21 @@ class SqlAlchemyGymRepository:
                 id_user=row.id,
                 nombre=row.nombre,
                 email=row.email,
+            )
+            for row in self._session.execute(statement)
+        }
+
+    def accounts_for_entrenadores(
+        self, id_entrenadores: list[int]
+    ) -> dict[int, IdentidadEntrenador]:
+        if not id_entrenadores:
+            return {}
+        statement = select(
+            CuentaRecord.id, CuentaRecord.email, CuentaRecord.id_entrenador
+        ).where(CuentaRecord.id_entrenador.in_(id_entrenadores))
+        return {
+            row.id_entrenador: IdentidadEntrenador(
+                id_entrenador=row.id_entrenador, id_user=row.id, email=row.email
             )
             for row in self._session.execute(statement)
         }

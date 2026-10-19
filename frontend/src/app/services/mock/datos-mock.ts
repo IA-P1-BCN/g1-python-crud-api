@@ -6,8 +6,8 @@ import { Reserva } from '../../shared/models/reserva.model';
 export const ID_ANA = 1;
 
 export const ENTRENADORES_MOCK: readonly Entrenador[] = [
-  { id_entrenador: 1, nombre: 'Laura Martín', especialidad: 'Yoga y Pilates', telefono: null },
-  { id_entrenador: 2, nombre: 'Carlos Ruiz', especialidad: 'Spinning y Zumba', telefono: null },
+  { id_entrenador: 1, nombre: 'Laura Martín', especialidad: 'Yoga y Pilates', telefono: null, id_user: 91, email: 'entrenador1@gymflow.com' },
+  { id_entrenador: 2, nombre: 'Carlos Ruiz', especialidad: 'Spinning y Zumba', telefono: null, id_user: 92, email: 'entrenador2@gymflow.com' },
 ];
 
 export const CLASES_MOCK: readonly Clase[] = [

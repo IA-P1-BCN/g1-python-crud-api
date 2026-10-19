@@ -112,10 +112,14 @@ def clase(api):
 
 
 def editable(entity, id_field):
-    """PUT sustituye editables; la identidad resuelta (id_user) no se envía."""
-    excluidos = {"fecha_reserva", id_field}
-    if "id_user" in entity:
-        excluidos |= {"id_user", "nombre", "email"}
+    """PUT sustituye editables; la identidad resuelta (id_user/email) no se envía.
+
+    En clientes el nombre tampoco se envía (vive en users); en entrenadores
+    el nombre sí es editable.
+    """
+    excluidos = {"fecha_reserva", id_field, "id_user", "email"}
+    if "especialidad" not in entity:  # entrenadores conservan su nombre editable
+        excluidos.add("nombre")
     return {key: value for key, value in entity.items() if key not in excluidos}
 
 
@@ -153,9 +157,21 @@ def test_crud_de_las_cinco_entidades(api, clase):
     for resource, id_field, entity, changes in cases:
         detail = f"/v1/{resource}/{entity[id_field]}"
         assert api.client.get(detail).json() == entity
-        listed = api.client.get(f"/v1/{resource}")
-        assert listed.status_code == 200
-        assert entity in listed.json()
+        # La BD compartida con el seed supera una página: buscar en todas.
+        offset = 0
+        encontrado = False
+        while True:
+            page = api.client.get(
+                f"/v1/{resource}", params={"offset": offset, "limit": 100}
+            )
+            assert page.status_code == 200
+            if entity in page.json():
+                encontrado = True
+                break
+            if len(page.json()) < 100:
+                break
+            offset += 100
+        assert encontrado
         updated = api.client.put(detail, json=editable(entity, id_field) | changes)
         assert updated.status_code == 200, updated.text
         for key, value in changes.items():

@@ -4,4 +4,7 @@ export interface Entrenador {
   readonly nombre: string;
   readonly especialidad: string | null;
   readonly telefono: string | null;
+  /** Cuenta staff vinculada, resuelta de users (null si no tiene). */
+  readonly id_user: number | null;
+  readonly email: string | null;
 }

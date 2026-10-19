@@ -13,6 +13,10 @@ from src.domain.list_filters import ListFilters
 from src.domain.repositories.cuenta_port import CuentaRepository
 from src.domain.security import PasswordHasher
 
+# Contraseña inicial de las cuentas staff creadas por la API (#134),
+# coherente con el patrón demo del seed documentado en el README.
+CONTRASENA_STAFF_INICIAL = "Demo56789012"
+
 
 class CuentaUseCases:
     def __init__(self, repository: CuentaRepository, hasher: PasswordHasher) -> None:
@@ -107,6 +111,22 @@ class CuentaUseCases:
         if password is not None:
             cuenta.password_hash = self._hasher.hash(password)
         return self._repository.update(cuenta)
+
+    def registrar_entrenador(
+        self, nombre: str, especialidad: str | None, telefono: str | None, email: str
+    ) -> Cuenta:
+        """Crea Entrenador y su Cuenta staff activa en una misma transacción."""
+        email = email.lower()
+        with self._repository.transaction():
+            if self._repository.get_by_email(email) is not None:
+                raise ConflictError("Email de Cuenta ya registrado")
+            return self._repository.create_entrenador(
+                nombre,
+                especialidad,
+                telefono,
+                email,
+                self._hasher.hash(CONTRASENA_STAFF_INICIAL),
+            )
 
     def register(
         self, nombre: str, email: str, password: str, crear_cliente: bool = False

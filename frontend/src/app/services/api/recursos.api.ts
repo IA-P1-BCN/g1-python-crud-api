@@ -47,7 +47,8 @@ export class ClientesApi extends RecursoApi<Cliente, ClienteEntrada> {
 @Injectable({ providedIn: 'root' })
 export class EntrenadoresApi extends RecursoApi<Entrenador, EntrenadorEntrada> {
   protected readonly ruta = '/entrenadores';
-  crearEntrenador(datos: EntrenadorEntrada): Promise<Entrenador> {
+  /** Con email, la API crea también la Cuenta staff en la misma transacción (#134). */
+  crearEntrenador(datos: EntrenadorEntrada & { email?: string }): Promise<Entrenador> {
     return this.crear(datos);
   }
 }

@@ -129,23 +129,35 @@ aplicadas en #10 se indican arriba):
   cliente, ¿borra sus pagos/reservas o se bloquea si tiene historial?). Los
   documentos del cliente no lo especifican.
 
-## Cuenta (V2, #53)
+## USERS — Cuenta (V2, #53)
 
-Tabla `users`, separada de `clientes`: `id` INT PK, `nombre` VARCHAR(100),
-`email` VARCHAR(150) NOT NULL UNIQUE, `password_hash` VARCHAR(255),
-`activo` BOOLEAN DEFAULT TRUE, `fecha_creacion` DATETIME UTC,
-`rol` VARCHAR(20) CHECK admin/staff/cliente y `id_cliente` INT nullable UNIQUE
-FK RESTRICT. Borrar Cuenta conserva Cliente; borrar Cliente vinculado se bloquea.
-El seed no cambia membresía ni reinicia contraseñas.
+Tabla de identidad y acceso, separada de las entidades de negocio. Desde el
+esquema 0.5 (ADR 0002) es la **única** tabla con nombre y email.
 
-Desde #106, `users.id_entrenador` es INT nullable, UNIQUE y FK RESTRICT hacia
-`entrenadores.id_entrenador`. Representa el vínculo opcional 1:1 Cuenta–Entrenador,
-independiente del vínculo Cuenta–Cliente. Solo admin asigna una Cuenta staff
-mediante la API; el rol vigente decide permisos incluso si queda un vínculo
-tras un cambio administrativo de rol. Borrar Cuenta conserva Entrenador y
-borrar un Entrenador vinculado devuelve 409. No se deduce ninguna relación por
-email/nombre. La migración `7a0f6a730e04` añade el campo sin alterar filas
-existentes e inserta la versión de esquema 0.4 en `versions`.
+| Campo | Tipo / Restricción | Rol | Descripción |
+|---|---|---|---|
+| `id` | `INT AUTO_INCREMENT` | PK | Identificador de la Cuenta (JWT `sub`). |
+| `nombre` | `VARCHAR(100) NOT NULL` | — | Nombre de la persona. Fuente única (0.5). |
+| `email` | `VARCHAR(150) NOT NULL UNIQUE` | — | Email normalizado en minúsculas; credencial de login. |
+| `password_hash` | `VARCHAR(255)` | — | Hash **Argon2id** (pwdlib); nunca texto plano ni en respuestas. |
+| `activo` | `BOOLEAN DEFAULT TRUE` | — | Puede iniciar sesión; independiente del estado de membresía. |
+| `fecha_creacion` | `DATETIME` UTC | — | Alta de la Cuenta. |
+| `rol` | `VARCHAR(20) CHECK ('admin','staff','cliente')` | — | Predeterminado `cliente`; decide permisos. |
+| `id_cliente` | `INT NULL UNIQUE` | FK → `CLIENTES`, `RESTRICT` | Vínculo opcional 1:1 con el socio. |
+| `id_entrenador` | `INT NULL UNIQUE` | FK → `ENTRENADORES`, `RESTRICT` | Vínculo opcional 1:1 con el entrenador (cuenta staff, #106). |
+
+**Cardinalidades y borrado**
+
+| Relación | Cardinalidad | Efecto |
+|---|---|---|
+| `USERS` ↔ `CLIENTES` | 0..1 : 0..1 (por `id_cliente`) | Borrar Cuenta conserva el Cliente; borrar Cliente vinculado se bloquea (409). |
+| `USERS` ↔ `ENTRENADORES` | 0..1 : 0..1 (por `id_entrenador`) | Borrar Cuenta conserva el Entrenador; borrar Entrenador vinculado se bloquea (409). |
+
+Notas: el vínculo con Entrenador lo asigna solo un admin por la API
+(`PUT /v1/users/{id}/entrenador`); el rol vigente decide permisos aunque
+quede un vínculo tras un cambio de rol, y no se deduce ninguna relación por
+email/nombre. La migración `7a0f6a730e04` (esquema 0.4) añadió
+`id_entrenador` sin alterar filas existentes.
 
 ## Identidad única en `users` (esquema 0.5, #132)
 

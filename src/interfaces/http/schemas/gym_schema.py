@@ -32,8 +32,21 @@ class EntrenadorInput(ApiSchema):
     telefono: str | None = Field(default=None, min_length=1, max_length=20)
 
 
+class EntrenadorCreate(EntrenadorInput):
+    """Alta de entrenador; con email se crea también su Cuenta staff (#134)."""
+
+    email: EmailStr | None = Field(
+        default=None,
+        max_length=150,
+        description="Crea la Cuenta staff vinculada en la misma transacción",
+    )
+
+
 class EntrenadorResponse(EntrenadorInput):
     id_entrenador: int
+    # Cuenta staff vinculada, resuelta de users (null si no tiene).
+    id_user: int | None = None
+    email: EmailStr | None = Field(default=None, max_length=150)
 
 
 class ClaseInput(ApiSchema):

@@ -69,7 +69,8 @@ base, nunca texto plano):
 
 También existen `boxeo@gymflow.com` y `spinning@gymflow.com` (staff de sus
 entrenadores) y 22 socios `socio01..socio22@gymflow.com` (contraseña
-`Demo56789012`) creados por el seed.
+`Demo56789012`) creados por el seed. Los entrenadores creados desde el panel
+de admin con email reciben también la contraseña inicial `Demo56789012`.
 
 **En Render:** <https://g1-gymflow-api.onrender.com/login> con
 `admin.demo@gymflow.com / AdminDemo56789012` (contraseña pública

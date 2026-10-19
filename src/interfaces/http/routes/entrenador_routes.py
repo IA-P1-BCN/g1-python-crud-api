@@ -4,15 +4,27 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Path, Query, Response
 
+from src.application.use_cases.cuenta_use_cases import CuentaUseCases
 from src.application.use_cases.gym_use_cases import GymUseCases
+from src.domain.entities.cuenta import Cuenta
 from src.interfaces.http.controllers import entrenador_controller as controller
-from src.interfaces.http.dependencies import get_gym_use_cases
+from src.interfaces.http.dependencies import (
+    get_cuenta_use_cases,
+    get_gym_use_cases,
+    requires_admin,
+)
 from src.interfaces.http.errors import CRUD_ERRORS, LIST_ERRORS
-from src.interfaces.http.schemas.gym_schema import EntrenadorInput, EntrenadorResponse
+from src.interfaces.http.schemas.gym_schema import (
+    EntrenadorCreate,
+    EntrenadorInput,
+    EntrenadorResponse,
+)
 from src.interfaces.http.schemas.list_query import EntrenadorQuery
 
 router = APIRouter(prefix="/entrenadores", tags=["entrenadores"])
 UseCases = Annotated[GymUseCases, Depends(get_gym_use_cases)]
+CuentaUseCasesDep = Annotated[CuentaUseCases, Depends(get_cuenta_use_cases)]
+AdminCuenta = Annotated[Cuenta, Depends(requires_admin)]
 EntityId = Annotated[int, Path(gt=0, le=2147483647)]
 
 
@@ -43,11 +55,16 @@ def get_entrenador(id_entrenador: EntityId, use_cases: UseCases) -> EntrenadorRe
     "",
     response_model=EntrenadorResponse,
     status_code=201,
-    summary="Crea entrenador",
+    summary="Crea entrenador (con email, crea también su Cuenta staff)",
     responses=CRUD_ERRORS,
 )
-def create_entrenador(data: EntrenadorInput, use_cases: UseCases) -> EntrenadorResponse:
-    return controller.create_entrenador(use_cases, data)
+def create_entrenador(
+    data: EntrenadorCreate,
+    use_cases: UseCases,
+    cuentas: CuentaUseCasesDep,
+    admin: AdminCuenta,
+) -> EntrenadorResponse:
+    return controller.create_entrenador(use_cases, cuentas, data)
 
 
 @router.put(
