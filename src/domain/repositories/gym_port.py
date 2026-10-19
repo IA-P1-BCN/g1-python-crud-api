@@ -3,13 +3,17 @@
 from contextlib import AbstractContextManager
 from typing import Protocol
 
-from src.domain.entities.gym import GymEntity
+from src.domain.entities.gym import GymEntity, IdentidadCliente
 from src.domain.gym_scope import GymScope
 from src.domain.list_filters import ListFilters
 
 
 class GymRepository(Protocol):
     def transaction(self) -> AbstractContextManager[None]: ...
+
+    def identities_for_clientes(
+        self, id_clientes: list[int]
+    ) -> dict[int, IdentidadCliente]: ...
 
     def list[T: GymEntity](
         self,

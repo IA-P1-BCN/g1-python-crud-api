@@ -13,7 +13,7 @@ from src.interfaces.http.dependencies import get_gym_repository
 @pytest.fixture
 def secured_gym(authenticated_accounts, repository):
     client, accounts, _ = authenticated_accounts
-    repository.add(Cliente(nombre="Otro", estado_membresia="Activo"))
+    repository.add(Cliente(estado_membresia="Activo"))
     repository.add(Entrenador(nombre="Otra entrenadora"))
     for trainer in (2, 1):
         repository.add(
@@ -140,7 +140,7 @@ def test_cliente_reserva_solo_lo_suyo_y_no_marca_asistencia(secured_gym):
     )
     assert (
         client.put(
-            "/v1/clientes/1", json={"nombre": "X", "estado_membresia": "Activo"}
+            "/v1/clientes/1", json={"estado_membresia": "Activo"}
         ).status_code
         == 403
     )

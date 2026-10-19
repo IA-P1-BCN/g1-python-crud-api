@@ -8,6 +8,10 @@ from starlette.staticfiles import StaticFiles
 
 SPA_ROUTES = {
     "",
+    "auth",
+    "marketplace",
+    "staff",
+    "admin",
     "portal",
     "login",
     "registro",

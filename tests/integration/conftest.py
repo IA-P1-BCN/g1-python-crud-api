@@ -7,7 +7,7 @@ from uuid import uuid4
 import httpx
 import pytest
 import uvicorn
-from sqlalchemy import delete, inspect, text
+from sqlalchemy import delete, inspect, select, text
 from sqlalchemy.exc import OperationalError
 
 from src.infrastructure.database.engine import SessionLocal, engine
@@ -52,11 +52,20 @@ def accounts_api(base_url):
             yield client, emails
         finally:
             with SessionLocal.begin() as session:
+                ids_clientes = session.scalars(
+                    select(CuentaRecord.id_cliente).where(
+                        CuentaRecord.email.in_(emails)
+                    )
+                )
                 session.execute(
                     delete(CuentaRecord).where(CuentaRecord.email.in_(emails))
                 )
                 session.execute(
-                    delete(ClienteRecord).where(ClienteRecord.email.in_(emails))
+                    delete(ClienteRecord).where(
+                        ClienteRecord.id_cliente.in_(
+                            [valor for valor in ids_clientes if valor is not None]
+                        )
+                    )
                 )
 
 

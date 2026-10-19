@@ -10,6 +10,7 @@ from src.domain.entities.gym import (
     CupoClase,
     Entrenador,
     GymEntity,
+    IdentidadCliente,
     Pago,
     Reserva,
 )
@@ -128,6 +129,13 @@ class GymUseCases:
             raise ForbiddenError("La exportación requiere rol admin")
         with self._repository.transaction():
             return self._repository.list_all(entity_type)
+
+    def identities_for_clientes(
+        self, id_clientes: list[int]
+    ) -> dict[int, IdentidadCliente]:
+        """Enriquece respuestas con la identidad de `users` (solo lectura)."""
+        with self._repository.transaction():
+            return self._repository.identities_for_clientes(id_clientes)
 
     def get[T: GymEntity](self, entity_type: type[T], entity_id: int) -> T:
         self._check_operation(entity_type)

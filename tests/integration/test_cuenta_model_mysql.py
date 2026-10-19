@@ -37,7 +37,7 @@ def test_migracion_unicidad_y_vinculo(account_session):
         session.scalar(select(VersionRecord).where(VersionRecord.version == "0.3"))
         is not None
     )
-    cliente = ClienteRecord(nombre="Prueba", estado_membresia="Activo")
+    cliente = ClienteRecord(estado_membresia="Activo")
     session.add(cliente)
     session.flush()
     email = f"{uuid4().hex}@example.com"
@@ -73,8 +73,7 @@ def test_migracion_unicidad_y_vinculo(account_session):
 
 def test_seed_no_duplica_ni_modifica_cuentas(account_session):
     session = account_session
-    email = f"{uuid4().hex}@example.com"
-    member = ClienteRecord(nombre="Socio", email=email, estado_membresia="Suspendido")
+    member = ClienteRecord(estado_membresia="Suspendido")
     session.add(member)
     session.flush()
     admin_email = f"{uuid4().hex}@example.com"
@@ -84,12 +83,15 @@ def test_seed_no_duplica_ni_modifica_cuentas(account_session):
     admin = session.scalar(
         select(CuentaRecord).where(CuentaRecord.email == admin_email)
     )
-    linked = session.scalar(
-        select(CuentaRecord).where(CuentaRecord.id_cliente == member.id_cliente)
-    )
     assert hasher.verify(password, admin.password_hash)
     assert admin.rol == "admin" and admin.activo and admin.id_cliente is None
-    assert linked.rol == "cliente" and not linked.activo
+    # Las cuentas de socios las crea el seed demo; el cliente queda intacto.
+    assert (
+        session.scalar(
+            select(CuentaRecord).where(CuentaRecord.id_cliente == member.id_cliente)
+        )
+        is None
+    )
     assert member.estado_membresia == "Suspendido"
     previous = {r.id: r.password_hash for r in session.scalars(select(CuentaRecord))}
     assert (

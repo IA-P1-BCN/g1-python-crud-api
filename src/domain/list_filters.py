@@ -6,7 +6,7 @@ from datetime import date, datetime
 from src.domain.entities.gym import Clase, Cliente, Entrenador
 
 SEARCH_FIELDS = {
-    Cliente: ("nombre", "email"),
+    Cliente: (),
     Entrenador: ("nombre", "especialidad", "telefono"),
     Clase: ("nombre_clase",),
 }

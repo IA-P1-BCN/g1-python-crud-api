@@ -11,7 +11,15 @@ from fastapi.testclient import TestClient
 
 from main import app
 from src.domain.entities.cuenta import Cuenta
-from src.domain.entities.gym import ID_FIELDS, Clase, Cliente, Entrenador, Pago, Reserva
+from src.domain.entities.gym import (
+    ID_FIELDS,
+    Clase,
+    Cliente,
+    Entrenador,
+    IdentidadCliente,
+    Pago,
+    Reserva,
+)
 from src.domain.list_filters import SEARCH_FIELDS
 from src.interfaces.http.dependencies import (
     get_cuenta_repository,
@@ -24,6 +32,7 @@ class MemoryRepository:
     def __init__(self):
         self.data = {entity: {} for entity in ID_FIELDS}
         self.sequences = {entity: 0 for entity in ID_FIELDS}
+        self.identities: dict[int, IdentidadCliente] = {}
 
     @contextmanager
     def transaction(self):
@@ -33,6 +42,13 @@ class MemoryRepository:
         except Exception:
             self.data = snapshot
             raise
+
+    def identities_for_clientes(self, id_clientes):
+        return {
+            id_cliente: identidad
+            for id_cliente, identidad in self.identities.items()
+            if id_cliente in id_clientes
+        }
 
     def list(self, entity_type, offset, limit, filters=None, scope=None):
         rows = list(self.data[entity_type].values())
@@ -130,7 +146,10 @@ class MemoryRepository:
 @pytest.fixture
 def repository():
     repo = MemoryRepository()
-    repo.add(Cliente(nombre="Ana", estado_membresia="Activo"))
+    repo.add(Cliente(estado_membresia="Activo"))
+    repo.identities[1] = IdentidadCliente(
+        id_cliente=1, id_user=10, nombre="Ana", email="ana@example.com"
+    )
     repo.add(Entrenador(nombre="Luis", especialidad="Yoga"))
     repo.add(
         Clase(

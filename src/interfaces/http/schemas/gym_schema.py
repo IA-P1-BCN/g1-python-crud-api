@@ -14,14 +14,16 @@ class ApiSchema(BaseModel):
 
 
 class ClienteInput(ApiSchema):
-    nombre: str = Field(min_length=1, max_length=100, examples=["Ana García"])
-    email: EmailStr | None = Field(default=None, max_length=150)
     estado_membresia: Literal["Activo", "Inactivo", "Suspendido"]
     fecha_inscripcion: date | None = None
 
 
 class ClienteResponse(ClienteInput):
     id_cliente: int
+    # Identidad resuelta de la Cuenta vinculada; nunca se guarda en clientes.
+    id_user: int | None = None
+    nombre: str | None = Field(default=None, max_length=100)
+    email: EmailStr | None = Field(default=None, max_length=150)
 
 
 class EntrenadorInput(ApiSchema):
@@ -66,6 +68,10 @@ class ReservaResponse(ReservaInput):
     fecha_reserva: datetime = Field(
         description="Fecha UTC generada al crear la reserva"
     )
+    # Persona que reserva, resuelta de la Cuenta del cliente vía users.
+    id_user: int | None = None
+    nombre: str | None = Field(default=None, max_length=100)
+    email: EmailStr | None = Field(default=None, max_length=150)
 
 
 class PagoInput(ApiSchema):

@@ -38,3 +38,26 @@ def test_sin_build_no_monta_spa(tmp_path):
     mount_spa(app, tmp_path)
     with TestClient(app) as client:
         assert client.get("/").status_code == 404
+
+
+def test_rutas_nuevas_del_portal_sirven_index(tmp_path):
+    """Refrescar o enlazar rutas del rediseno no debe dar 404 JSON (#132)."""
+    (tmp_path / "index.html").write_text("<app-root>portal</app-root>")
+    app = FastAPI()
+    mount_spa(app, tmp_path)
+    with TestClient(app) as client:
+        for ruta in (
+            "/auth/login",
+            "/marketplace",
+            "/marketplace/clases/5",
+            "/marketplace/mis-reservas",
+            "/staff",
+            "/staff/reservas",
+            "/admin",
+            "/admin/dashboard",
+            "/perfil",
+        ):
+            response = client.get(ruta)
+            assert response.status_code == 200, ruta
+            assert response.text == "<app-root>portal</app-root>"
+        assert client.get("/v1/no-existe").status_code == 404

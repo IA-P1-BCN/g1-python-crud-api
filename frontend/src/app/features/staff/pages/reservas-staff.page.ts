@@ -50,6 +50,7 @@ interface Fila {
               <th hlmTh>ID</th>
               <th hlmTh>Clase</th>
               <th hlmTh>Horario</th>
+              <th hlmTh>Persona</th>
               <th hlmTh>Reserva</th>
               <th hlmTh>Asistencia</th>
               <th hlmTh>Acciones</th>
@@ -58,7 +59,7 @@ interface Fila {
           <tbody hlmTBody>
             @for (fila of [1, 2, 3]; track fila) {
               <tr hlmTr>
-                @for (col of [1, 2, 3, 4, 5, 6]; track col) {
+                @for (col of [1, 2, 3, 4, 5, 6, 7]; track col) {
                   <td hlmTd><span hlmSkeleton class="h-4 w-full"></span></td>
                 }
               </tr>
@@ -82,6 +83,7 @@ interface Fila {
               <th hlmTh>ID</th>
               <th hlmTh>Clase</th>
               <th hlmTh>Horario</th>
+              <th hlmTh>Persona</th>
               <th hlmTh>Reserva</th>
               <th hlmTh>Asistencia</th>
               <th hlmTh>Acciones</th>
@@ -93,6 +95,16 @@ interface Fila {
                 <td hlmTd>{{ fila.reserva.id_reserva }}</td>
                 <td hlmTd>{{ fila.nombreClase }}</td>
                 <td hlmTd>{{ formatear(fila.horario) }}</td>
+                <td hlmTd>
+                  @if (fila.reserva.nombre; as nombre) {
+                    <div>{{ nombre }}</div>
+                    @if (fila.reserva.email; as email) {
+                      <div class="text-xs text-muted-foreground">{{ email }}</div>
+                    }
+                  } @else {
+                    <span class="text-muted-foreground">Cliente #{{ fila.reserva.id_cliente }}</span>
+                  }
+                </td>
                 <td hlmTd>{{ formatear(fila.reserva.fecha_reserva) }}</td>
                 <td hlmTd>{{ fila.reserva.asistio ? 'Asistió' : 'Pendiente' }}</td>
                 <td hlmTd>

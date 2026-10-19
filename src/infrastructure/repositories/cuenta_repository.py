@@ -65,10 +65,8 @@ class SqlAlchemyCuentaRepository:
         statement = statement.order_by(CuentaRecord.id).offset(offset).limit(limit)
         return [self._entity(record) for record in self._session.scalars(statement)]
 
-    def create_cliente(self, nombre: str, email: str) -> int:
+    def create_cliente(self) -> int:
         record = ClienteRecord(
-            nombre=nombre,
-            email=email,
             estado_membresia="Inactivo",
             fecha_inscripcion=datetime.now(UTC).date(),
         )

@@ -30,7 +30,7 @@ TABLES: dict[ExportTable, type[GymEntity]] = {
 
 # Columnas de exportación por entidad, con el ID primero (orden amigable en Excel).
 CSV_FIELDS: dict[type[GymEntity], list[str]] = {
-    Cliente: ["id_cliente", "nombre", "estado_membresia", "email", "fecha_inscripcion"],
+    Cliente: ["id_cliente", "estado_membresia", "fecha_inscripcion"],
     Entrenador: ["id_entrenador", "nombre", "especialidad", "telefono"],
     Clase: ["id_clase", "nombre_clase", "horario", "capacidad_max", "id_entrenador"],
     Reserva: ["id_reserva", "id_cliente", "id_clase", "fecha_reserva", "asistio"],
