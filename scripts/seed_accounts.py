@@ -16,6 +16,8 @@ from src.infrastructure.database.models import (
 
 STAFF_EMAIL = "staff@gymflow.com"
 DEMO_PASSWORD = "Demo56789012"
+ADMIN_DEMO_EMAIL = "admin.demo@gymflow.com"
+ADMIN_DEMO_PASSWORD = "AdminDemo56789012"
 
 
 def validate_admin_password(password: str | None) -> str:
@@ -89,6 +91,33 @@ def seed_accounts(
         session.flush()
         counts["creadas"] += 1
     return counts
+
+
+def seed_admin_demo(
+    session: Session,
+    hasher: PasswordHasher,
+    demo_email: str = ADMIN_DEMO_EMAIL,
+) -> dict[str, int]:
+    """Cuenta pública de demostración; nunca modifica identidades existentes."""
+    occupied_account = session.scalar(
+        select(CuentaRecord).where(CuentaRecord.email == demo_email)
+    )
+    occupied_client = session.scalar(
+        select(ClienteRecord).where(ClienteRecord.email == demo_email)
+    )
+    if occupied_account is not None or occupied_client is not None:
+        return {"creadas": 0, "omitidas": 1}
+    session.add(
+        CuentaRecord(
+            nombre="Administración Demo GymFlow",
+            email=demo_email,
+            password_hash=hasher.hash(ADMIN_DEMO_PASSWORD),
+            rol="admin",
+            activo=True,
+        )
+    )
+    session.flush()
+    return {"creadas": 1, "omitidas": 0}
 
 
 def seed_staff(

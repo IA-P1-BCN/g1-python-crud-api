@@ -9,13 +9,16 @@ from sqlalchemy.exc import OperationalError
 
 from config.settings import get_settings
 from scripts.seed_accounts import (
+    ADMIN_DEMO_PASSWORD,
     DEMO_PASSWORD,
     STAFF_EMAIL,
     seed_accounts,
+    seed_admin_demo,
     seed_staff,
 )
 from src.infrastructure.database.engine import SessionLocal, engine
 from src.infrastructure.database.models import (
+    ClienteRecord,
     CuentaRecord,
     EntrenadorRecord,
 )
@@ -61,7 +64,9 @@ def test_seed_staff_crea_vinculo_y_es_idempotente(seed_session):
     hasher = Argon2PasswordHasher()
     if _entrenador_libre(session) is None:
         session.add(
-            EntrenadorRecord(nombre=f"Entrenador {uuid4().hex[:8]}", especialidad="Yoga")
+            EntrenadorRecord(
+                nombre=f"Entrenador {uuid4().hex[:8]}", especialidad="Yoga"
+            )
         )
         session.flush()
     email = f"staff-{uuid4().hex}@example.com"
@@ -82,6 +87,88 @@ def test_seed_staff_crea_vinculo_y_es_idempotente(seed_session):
     assert (
         session.scalar(select(CuentaRecord).where(CuentaRecord.email == email))
     ).id_entrenador == entrenador.id_entrenador
+
+
+def test_admin_demo_argon2_y_repeticion_conserva_ediciones(seed_session):
+    session = seed_session
+    hasher = Argon2PasswordHasher()
+    email = f"admin-demo-{uuid4().hex}@example.com"
+    assert seed_admin_demo(session, hasher, email) == {"creadas": 1, "omitidas": 0}
+    cuenta = session.scalar(select(CuentaRecord).where(CuentaRecord.email == email))
+    assert cuenta.rol == "admin" and cuenta.activo
+    assert cuenta.id_cliente is None and cuenta.id_entrenador is None
+    assert cuenta.password_hash.startswith("$argon2id$")
+    assert hasher.verify(ADMIN_DEMO_PASSWORD, cuenta.password_hash)
+    cuenta.activo = False
+    cuenta.rol = "cliente"
+    cuenta.password_hash = hasher.hash("otra contraseña de prueba")
+    session.flush()
+    previous = _hashes(session)
+    assert seed_admin_demo(session, hasher, email) == {"creadas": 0, "omitidas": 1}
+    session.refresh(cuenta)
+    assert not cuenta.activo and cuenta.rol == "cliente"
+    assert _hashes(session) == previous
+
+
+@pytest.mark.parametrize("tipo", ["cuenta", "cliente"])
+def test_admin_demo_no_se_apropia_de_email(seed_session, tipo):
+    session = seed_session
+    hasher = Argon2PasswordHasher()
+    email = f"ocupado-{uuid4().hex}@example.com"
+    cliente = ClienteRecord(nombre="Titular", email=email, estado_membresia="Inactivo")
+    session.add(cliente)
+    session.flush()
+    if tipo == "cuenta":
+        cuenta = CuentaRecord(
+            nombre="Titular",
+            email=email,
+            rol="cliente",
+            activo=False,
+            id_cliente=cliente.id_cliente,
+            password_hash=hasher.hash("otra contraseña de prueba"),
+        )
+        session.add(cuenta)
+        session.flush()
+    previous = _hashes(session)
+    assert seed_admin_demo(session, hasher, email) == {"creadas": 0, "omitidas": 1}
+    assert _hashes(session) == previous
+    session.refresh(cliente)
+    assert cliente.estado_membresia == "Inactivo"
+    if tipo == "cuenta":
+        session.refresh(cuenta)
+        assert cuenta.rol == "cliente" and not cuenta.activo
+        assert cuenta.id_cliente == cliente.id_cliente
+    else:
+        assert (
+            session.scalar(select(CuentaRecord).where(CuentaRecord.email == email))
+            is None
+        )
+
+
+def test_admin_demo_login_y_listado_admin(seed_session, base_url):
+    email = f"admin-login-{uuid4().hex}@example.com"
+    seed_admin_demo(seed_session, Argon2PasswordHasher(), email)
+    seed_session.commit()
+    try:
+        with httpx.Client(base_url=base_url, timeout=10) as client:
+            response = client.post(
+                "/v1/auth/login",
+                data={"username": email, "password": ADMIN_DEMO_PASSWORD},
+            )
+            assert response.status_code == 200
+            headers = {"Authorization": f"Bearer {response.json()['access_token']}"}
+            profile = client.get("/v1/users/me", headers=headers)
+            assert profile.status_code == 200
+            assert profile.json()["rol"] == "admin"
+            assert "password_hash" not in profile.text
+            assert client.get("/v1/users", headers=headers).status_code == 200
+    finally:
+        seed_session.rollback()
+        cuenta = seed_session.scalar(
+            select(CuentaRecord).where(CuentaRecord.email == email)
+        )
+        seed_session.delete(cuenta)
+        seed_session.commit()
 
 
 def test_seed_staff_email_ocupado_no_modifica(seed_session):
@@ -143,12 +230,15 @@ def test_seed_staff_sin_entrenador_libre_se_omite(seed_session):
 
 def _password_admin():
     ajustes = get_settings()
+    # El seed conserva claves existentes: no asumir que ADMIN_PASSWORD actual
+    # coincide con la de un admin persistido en ejecuciones anteriores.
+    email = f"admin-test-{uuid4().hex}@example.com"
     valor = (
         ajustes.admin_password.get_secret_value() if ajustes.admin_password else None
     )
     if valor is not None and 12 <= len(valor) <= 128:
-        return valor, ajustes.admin_email
-    return DEMO_PASSWORD, ajustes.admin_email
+        return valor, email
+    return DEMO_PASSWORD, email
 
 
 def test_login_cuentas_demo(base_url):
