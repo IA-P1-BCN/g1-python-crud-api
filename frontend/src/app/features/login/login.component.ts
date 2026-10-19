@@ -66,14 +66,17 @@ export class LoginComponent {
     }
   }
 
-  /** Solo acepta destinos de la aplicación; sin returnUrl el admin va al dashboard. */
+  /** Solo acepta destinos de la aplicación; sin returnUrl admin va al dashboard y staff a su panel. */
   private destino(rol: string): string {
     const returnUrl = this.ruta.snapshot.queryParamMap.get('returnUrl');
     const destinos = ['marketplace', 'staff', 'admin', 'perfil'];
     if (returnUrl?.startsWith('/') && destinos.includes(returnUrl.split(/[/?#]/)[1])) {
       return returnUrl;
     }
-    return rol === 'admin' ? '/admin' : '/marketplace';
+    if (rol === 'admin') {
+      return '/admin';
+    }
+    return rol === 'staff' ? '/staff' : '/marketplace';
   }
 }
 

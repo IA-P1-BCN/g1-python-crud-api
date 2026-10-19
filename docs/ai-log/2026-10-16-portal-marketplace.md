@@ -35,3 +35,6 @@
   y el login de admin sin `returnUrl` aterriza en `/admin` (dashboard).
   Specs del cambio y tests de menú/login actualizados; `npm test` 119 passed,
   `task spec:validate` 24/24 y frontend reconstruido en Docker.
+- **Ampliación 2026-10-19 (2)**: el login de staff sin `returnUrl` aterriza
+  en `/staff` (su panel). Spec «Destino tras el login» y tests actualizados;
+  `npm test` 120 passed, `task spec:validate` 24/24, frontend reconstruido.

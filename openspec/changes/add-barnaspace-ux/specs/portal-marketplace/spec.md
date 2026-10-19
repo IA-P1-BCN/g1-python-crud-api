@@ -122,13 +122,17 @@ registro.
 
 ### Requirement: Destino tras el login
 Tras un login válido, la aplicación SHALL redirigir al admin a `/admin`
-(dashboard) cuando no hay `returnUrl`; cliente y staff irán a `/marketplace`.
-Una `returnUrl` válida (secciones marketplace, staff, admin o perfil) se
-respeta para cualquier rol.
+(dashboard) y al staff a `/staff` (su panel) cuando no hay `returnUrl`;
+los clientes irán a `/marketplace`. Una `returnUrl` válida (secciones
+marketplace, staff, admin o perfil) se respeta para cualquier rol.
 
 #### Scenario: Admin sin returnUrl
 - **WHEN** un usuario con rol `admin` inicia sesión sin returnUrl
 - **THEN** se navega a `/admin`
+
+#### Scenario: Staff sin returnUrl
+- **WHEN** un usuario con rol `staff` inicia sesión sin returnUrl
+- **THEN** se navega a `/staff`
 
 #### Scenario: Cliente sin returnUrl
 - **WHEN** un usuario con rol `cliente` inicia sesión sin returnUrl

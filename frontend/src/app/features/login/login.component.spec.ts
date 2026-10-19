@@ -8,7 +8,7 @@ import {
 } from '../../core/auth/auth.service';
 import { InvalidCredentialsError, NetworkError } from '../../core/auth/auth.errors';
 import { SessionService } from '../../core/auth/session.service';
-import { USUARIO_ADMIN, USUARIO_ANA } from '../../core/auth/usuarios-prueba';
+import { USUARIO_ADMIN, USUARIO_ANA, USUARIO_STAFF } from '../../core/auth/usuarios-prueba';
 import { LoginComponent } from './login.component';
 
 class AuthServiceFalso extends AuthService {
@@ -81,6 +81,15 @@ describe('LoginComponent', () => {
     await new Promise((r) => setTimeout(r, 0));
 
     expect(router.navigateByUrl).toHaveBeenCalledWith('/admin');
+  });
+
+  it('el staff entra directo a su panel', async () => {
+    auth.login.mockResolvedValue(USUARIO_STAFF);
+    rellenar('staff@gym.test', 'staff123');
+    enviar();
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/staff');
   });
 
   it('muestra el error de credenciales y permanece en login', async () => {
